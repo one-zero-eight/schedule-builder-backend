@@ -9,6 +9,7 @@ import pandas as pd
 import requests
 from openpyxl.utils import column_index_from_string
 
+from src.domain.interfaces.parser import ICoursesParser
 from src.domain.dtos.booking import BookingWithTeacherAndGroup
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
@@ -48,7 +49,7 @@ def get_dataframes_pipeline(parser, xlsx) -> dict[str, pd.DataFrame]:
     return dfs
 
 
-class CoreCoursesParser:
+class CoreCoursesParser(ICoursesParser):
     """
     Elective parser class
     """

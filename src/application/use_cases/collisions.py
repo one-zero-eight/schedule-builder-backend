@@ -56,3 +56,4 @@ class CollisionsChecker(ICollisionsChecker):
         )
         collisions = dict()
         collisions["room"] = self.get_collsisions_by_room(timeslots)
+        return collisions
