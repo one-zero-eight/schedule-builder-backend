@@ -17,6 +17,7 @@ from src.parsers.utils import (
     get_sheets,
     split_range_to_xy,
 )
+from src.domain.dtos.booking import BookingWithTeacherAndGroup
 
 
 # noinspection InsecureHash
@@ -88,9 +89,9 @@ class CoreCoursesParser:
                     df = value
                     break
             # -------- Fill merged cells with values --------
-            CoreCoursesParser.merge_cells(df, xlsx_file, target.sheet_name)
+            self.merge_cells(df, xlsx_file, target.sheet_name)
             # -------- Select range --------
-            df = CoreCoursesParser.select_range(df, target.range)
+            df = self.select_range(df, target.range)
             # -------- Fill empty cells --------
             df = df.replace(r"^\s*$", np.nan, regex=True)
             # -------- Strip, translate and remove trailing spaces --------
@@ -119,9 +120,8 @@ class CoreCoursesParser:
         # ------- Return xlsx file as BytesIO object -------
         return io.BytesIO(response.content)
 
-    @classmethod
     def merge_cells(
-        cls, df: pd.DataFrame, xlsx: io.BytesIO, target_sheet_name: str
+        self, df: pd.DataFrame, xlsx: io.BytesIO, target_sheet_name: str
     ):
         """
         Merge cells in dataframe
@@ -151,8 +151,7 @@ class CoreCoursesParser:
             # fill merged cells with value
             df.iloc[start_row : end_row + 1, start_col : end_col + 1] = value
 
-    @classmethod
-    def select_range(cls, df: pd.DataFrame, target_range: str) -> pd.DataFrame:
+    def select_range(self, df: pd.DataFrame, target_range: str) -> pd.DataFrame:
         """
         Select range from dataframe
 
@@ -171,9 +170,8 @@ class CoreCoursesParser:
             start_col : end_col + 1,
         ]
 
-    @classmethod
     def set_weekday_and_time_as_index(
-        cls, df: pd.DataFrame, column: int = 0
+        self, df: pd.DataFrame, column: int = 0
     ) -> pd.DataFrame:
         """
         Set time column as index and process it to datetime format
@@ -232,9 +230,8 @@ class CoreCoursesParser:
         df.drop("delete", inplace=True, level=0)
         return df
 
-    @classmethod
     def set_course_and_group_as_header(
-        cls, df: pd.DataFrame, rows: tuple = (0, 1)
+        self, df: pd.DataFrame, rows: tuple = (0, 1)
     ) -> pd.DataFrame:
         """
         Set course and group as header
@@ -259,9 +256,8 @@ class CoreCoursesParser:
         df.columns = multiindex
         return df
 
-    @classmethod
     def split_df_by_courses(
-        cls, df: pd.DataFrame, time_columns: list[int]
+        self, df: pd.DataFrame, time_columns: list[int]
     ) -> list[pd.DataFrame]:
         """
         Split dataframe by "Week *" rows
@@ -286,7 +282,7 @@ class CoreCoursesParser:
             split_dfs.append(split_df)
         return split_dfs
 
-    def get_final_data(self):
+    def get_all_timeslots(self) -> list[BookingWithTeacherAndGroup]:
         xlsx = self.get_xlsx_file(spreadsheet_id=config.SPREADSHEET_ID)
 
         dfs = get_dataframes_pipeline(self, xlsx)
@@ -306,17 +302,31 @@ class CoreCoursesParser:
                 # -------- Set course and group as header; weekday and timeslot as index --------
                 self.set_course_and_group_as_header(course_df)
                 self.set_weekday_and_time_as_index(course_df)
-                # -------- Process cells and generate events --------
                 event_generators = (
                     course_df
-                    # -------- Group by weekday and time --------
                     .groupby(level=[0, 1], sort=False)
-                    # -------- Apply CoreCourseCell to each cell --------
-                    # .map(lambda x: None if all(pd.isna(y) for y in x) else CoreCourseCell(value=x))
-                    # # -------- Generate events from processed cells --------
-                    # .apply(self.generate_events_from_processed_column, target=target)
                 )
-                # -------- Append generated events to events list --------
-                events.extend(chain.from_iterable(event_generators))
-                # return course_df
-        return events
+                events.extend(event_generators)
+
+        timeslots_objects = []
+        for timeslot, timeslot_df in events:
+            weekday, (start_time, end_time) = timeslot
+            for column, cell_values_series in timeslot_df.items():
+                cell_values_series: pd.Series
+                year, group = column
+                if pd.isna(cell_values_series).all():
+                    continue
+                else:
+                    subject, teacher, location = cell_values_series.values
+                timeslots_objects.append(
+                    BookingWithTeacherAndGroup(
+                        weekday=weekday,
+                        start=start_time,
+                        end=end_time,
+                        group=group,
+                        teacher=teacher,
+                        room=location,
+                    )
+                )
+
+        return timeslots_objects

@@ -1,12 +1,13 @@
-from datetime import datetime
+from datetime import time
 
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 
 
 class BaseBookingDTO(BaseModel):
-    start: datetime = Field(..., description="Start time of room reservation")
-    end: datetime = Field(..., description="End time of room reservation")
+    weekday: str = Field(..., max_length=15)
+    start: time = Field(..., description="Start time of room reservation")
+    end: time = Field(..., description="End time of room reservation")
     room: str = Field(..., max_length=10, description="Room for reservation")
 
     @model_validator(mode="after")
@@ -18,6 +19,6 @@ class BaseBookingDTO(BaseModel):
 
 class BookingWithTeacherAndGroup(BaseBookingDTO):
     teacher: str = Field(..., max_length=50, description="Teacher on lesson")
-    group_name: str = Field(
-        ..., max_length=10, description="Name of the group"
+    group: str = Field(
+        ..., max_length=25, description="Name of the group"
     )
