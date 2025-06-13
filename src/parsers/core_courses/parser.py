@@ -287,6 +287,8 @@ class CoreCoursesParser(ICoursesParser):
 
     def identify_room(self, location: str) -> str:
         location = location.strip().rstrip()
+        if "ONLINE" in location:
+            return location
         guess = location.split()[0]
         if not guess.isnumeric():
             return location

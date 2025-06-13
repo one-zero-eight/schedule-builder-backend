@@ -27,7 +27,7 @@ class CollisionsChecker(ICollisionsChecker):
         return False
 
     def is_online_slot(slot: BookingWithTeacherAndGroup) -> bool:
-        return "ONLINE" in slot.location
+        return "ONLINE" == slot.location
 
     def get_collsisions_by_room(
         self, timeslots: list[BookingWithTeacherAndGroup]
