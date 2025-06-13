@@ -19,6 +19,4 @@ class BaseBookingDTO(BaseModel):
 
 class BookingWithTeacherAndGroup(BaseBookingDTO):
     teacher: str = Field(..., max_length=50, description="Teacher on lesson")
-    group: str = Field(
-        ..., max_length=25, description="Name of the group"
-    )
+    group: str = Field(..., max_length=25, description="Name of the group")

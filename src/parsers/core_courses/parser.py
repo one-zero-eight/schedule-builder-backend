@@ -9,6 +9,7 @@ import pandas as pd
 import requests
 from openpyxl.utils import column_index_from_string
 
+from src.domain.dtos.booking import BookingWithTeacherAndGroup
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
 from src.parsers.utils import (
@@ -17,7 +18,6 @@ from src.parsers.utils import (
     get_sheets,
     split_range_to_xy,
 )
-from src.domain.dtos.booking import BookingWithTeacherAndGroup
 
 
 # noinspection InsecureHash
@@ -151,7 +151,9 @@ class CoreCoursesParser:
             # fill merged cells with value
             df.iloc[start_row : end_row + 1, start_col : end_col + 1] = value
 
-    def select_range(self, df: pd.DataFrame, target_range: str) -> pd.DataFrame:
+    def select_range(
+        self, df: pd.DataFrame, target_range: str
+    ) -> pd.DataFrame:
         """
         Select range from dataframe
 
@@ -282,9 +284,10 @@ class CoreCoursesParser:
             split_dfs.append(split_df)
         return split_dfs
 
-    def get_all_timeslots(self) -> list[BookingWithTeacherAndGroup]:
-        xlsx = self.get_xlsx_file(spreadsheet_id=config.SPREADSHEET_ID)
-
+    def get_all_timeslots(
+        self, spreadsheet_id: str
+    ) -> list[BookingWithTeacherAndGroup]:
+        xlsx = self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs = get_dataframes_pipeline(self, xlsx)
 
         events = []
@@ -302,10 +305,7 @@ class CoreCoursesParser:
                 # -------- Set course and group as header; weekday and timeslot as index --------
                 self.set_course_and_group_as_header(course_df)
                 self.set_weekday_and_time_as_index(course_df)
-                event_generators = (
-                    course_df
-                    .groupby(level=[0, 1], sort=False)
-                )
+                event_generators = course_df.groupby(level=[0, 1], sort=False)
                 events.extend(event_generators)
 
         timeslots_objects = []
