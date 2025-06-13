@@ -26,6 +26,9 @@ class CollisionsChecker(ICollisionsChecker):
             return True
         return False
 
+    def is_online_slot(slot: BookingWithTeacherAndGroup) -> bool:
+        return "ONLINE" in slot.location
+
     def get_collsisions_by_room(
         self, timeslots: list[BookingWithTeacherAndGroup]
     ) -> list[tuple[BookingWithTeacherAndGroup, BookingWithTeacherAndGroup]]:
@@ -37,9 +40,13 @@ class CollisionsChecker(ICollisionsChecker):
             for room in weekday_to_room_to_slots[weekday]:
                 n = len(weekday_to_room_to_slots[weekday][room])
                 for i in range(n):
+                    slot1 = weekday_to_room_to_slots[weekday][room][i]
+                    if self.is_online_slot(slot1):
+                        continue
                     for j in range(i + 1, n):
-                        slot1 = weekday_to_room_to_slots[weekday][room][i]
                         slot2 = weekday_to_room_to_slots[weekday][room][j]
+                        if self.is_online_slot(slot2):
+                            continue
                         if self.check_two_timeslots_collisions_by_time(
                             slot1, slot2
                         ):
