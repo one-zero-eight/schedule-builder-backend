@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from src.domain.dtos.booking import BookingWithTeacherAndGroup
 
+
 class CollisionsDTO(BaseModel):
     rooms: list[
         tuple[BookingWithTeacherAndGroup, BookingWithTeacherAndGroup]

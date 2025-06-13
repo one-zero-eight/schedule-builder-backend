@@ -4,7 +4,7 @@ from src.domain.interfaces.parser import ICoursesParser
 from src.parsers.core_courses.parser import CoreCoursesParser
 
 
-class CoreCoursesParsesProvider(Provider):
+class CoursesParsersProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
