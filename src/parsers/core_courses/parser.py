@@ -285,6 +285,13 @@ class CoreCoursesParser(ICoursesParser):
             split_dfs.append(split_df)
         return split_dfs
 
+    def identify_room(self, location: str) -> str:
+        location = location.strip().rstrip()
+        guess = location.split()[0]
+        if not guess.isnumeric():
+            return location
+        return guess
+
     def get_all_timeslots(
         self, spreadsheet_id: str
     ) -> list[BookingWithTeacherAndGroup]:
@@ -319,6 +326,7 @@ class CoreCoursesParser(ICoursesParser):
                     continue
                 else:
                     subject, teacher, location = cell_values_series.values
+                    location = self.identify_room(location)
                 timeslots_objects.append(
                     BookingWithTeacherAndGroup(
                         weekday=weekday,
