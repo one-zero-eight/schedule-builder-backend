@@ -19,6 +19,7 @@ from src.parsers.utils import (
     get_sheets,
     split_range_to_xy,
 )
+import aiohttp
 
 
 # noinspection InsecureHash
@@ -57,9 +58,6 @@ class CoreCoursesParser(ICoursesParser):
     #
     # credentials: Credentials
     # """ Google API credentials object """
-
-    def __init__(self):
-        self.session = requests.Session()
 
     def get_clear_dataframes_from_xlsx(
         self, xlsx_file: io.BytesIO, targets: list[config.Target]
@@ -102,7 +100,7 @@ class CoreCoursesParser(ICoursesParser):
 
         return dfs
 
-    def get_xlsx_file(self, spreadsheet_id: str) -> io.BytesIO:
+    async def get_xlsx_file(self, spreadsheet_id: str) -> io.BytesIO:
         """
         Export xlsx file from Google Sheets and return it as BytesIO object.
 
@@ -116,10 +114,9 @@ class CoreCoursesParser(ICoursesParser):
         )
         export_url = spreadsheet_url + "/export?format=xlsx"
         # ------- Export xlsx file -------
-        response = self.session.get(export_url)
-        response.raise_for_status()
-        # ------- Return xlsx file as BytesIO object -------
-        return io.BytesIO(response.content)
+        async with aiohttp.ClientSession() as client:
+            async with client.get(export_url) as response:
+                return io.BytesIO(response.content)
 
     def merge_cells(
         self, df: pd.DataFrame, xlsx: io.BytesIO, target_sheet_name: str
@@ -294,10 +291,10 @@ class CoreCoursesParser(ICoursesParser):
             return location
         return guess
 
-    def get_all_timeslots(
+    async def get_all_timeslots(
         self, spreadsheet_id: str
     ) -> list[LessonWithTeacherAndGroup]:
-        xlsx = self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
+        xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs = get_dataframes_pipeline(self, xlsx)
 
         events = []

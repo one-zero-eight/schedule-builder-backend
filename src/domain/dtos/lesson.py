@@ -22,3 +22,11 @@ class LessonWithTeacherAndGroup(BaseLessonDTO):
     group_name: str = Field(
         ..., max_length=10, description="Name of the group"
     )
+
+
+class LessonWithCollisionsDTO(LessonWithTeacherAndGroup):
+    collisions: list[LessonWithTeacherAndGroup] = Field(
+        ...,
+        default_factory=lambda: list(),
+        description="Lessons which current lesson intersects with",
+    )

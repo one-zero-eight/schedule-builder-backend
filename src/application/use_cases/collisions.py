@@ -1,13 +1,21 @@
 from collections import defaultdict
 
-from src.domain.dtos.lesson import LessonWithTeacherAndGroup
+from src.domain.dtos.collisions import CollisionsDTO
+from src.domain.dtos.lesson import (
+    LessonWithCollisionsDTO,
+    LessonWithTeacherAndGroup,
+)
+from src.domain.dtos.teacher import TeacherDTO
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
 
 class CollisionsChecker(ICollisionsChecker):
-    def __init__(self, parser: ICoursesParser) -> None:
+    def __init__(
+        self, parser: ICoursesParser, teachers: list[TeacherDTO]
+    ) -> None:
         self.parser = parser
+        self.teachers = teachers
 
     def check_two_timeslots_collisions_by_time(
         self,
@@ -31,7 +39,7 @@ class CollisionsChecker(ICollisionsChecker):
 
     def get_collsisions_by_room(
         self, timeslots: list[LessonWithTeacherAndGroup]
-    ) -> list[tuple[LessonWithTeacherAndGroup, LessonWithTeacherAndGroup]]:
+    ) -> list[LessonWithCollisionsDTO]:
         weekday_to_room_to_slots = defaultdict(lambda: defaultdict(list))
         for slot in timeslots:
             weekday_to_room_to_slots[slot.weekday][slot.room].append(slot)
@@ -41,6 +49,11 @@ class CollisionsChecker(ICollisionsChecker):
                 n = len(weekday_to_room_to_slots[weekday][room])
                 for i in range(n):
                     slot1 = weekday_to_room_to_slots[weekday][room][i]
+                    slot_with_collisions = (
+                        LessonWithCollisionsDTO.model_validate(
+                            slot1, from_attributes=True
+                        )
+                    )
                     if self.is_online_slot(slot1):
                         continue
                     for j in range(i + 1, n):
@@ -50,17 +63,25 @@ class CollisionsChecker(ICollisionsChecker):
                         if self.check_two_timeslots_collisions_by_time(
                             slot1, slot2
                         ):
-                            collisions.append((slot1, slot2))
-                            break
+                            slot_with_collisions.collisions.append(slot2)
+                    if slot_with_collisions.collisions:
+                        collisions.append(slot_with_collisions)
         return collisions
 
-    def check_collisions(self, spreadsheet_id: str) -> dict[
+    def get_collisions_by_teacher(
+        self, timeslots: list[LessonWithTeacherAndGroup]
+    ) -> list[LessonWithCollisionsDTO]:
+        pass
+
+    def get_collisions(self, spreadsheet_id: str) -> dict[
         str,
-        list[tuple[LessonWithTeacherAndGroup, LessonWithTeacherAndGroup]],
+        list[LessonWithCollisionsDTO],
     ]:
         timeslots: list[LessonWithTeacherAndGroup] = (
             self.parser.get_all_timeslots(spreadsheet_id)
         )
-        collisions = dict()
-        collisions["room"] = self.get_collsisions_by_room(timeslots)
+        collisions = CollisionsDTO(
+            rooms=self.get_collsisions_by_room(timeslots),
+            teachers=self.get_collisions_by_teacher(timeslots),
+        )
         return collisions

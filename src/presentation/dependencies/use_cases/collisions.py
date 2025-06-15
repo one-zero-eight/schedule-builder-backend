@@ -5,7 +5,7 @@ from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
 
-class CollisionsChecker(Provider):
+class CollisionsCheckerProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
