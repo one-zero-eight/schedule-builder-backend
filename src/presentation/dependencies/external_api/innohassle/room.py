@@ -1,4 +1,3 @@
-import aiohttp
 from dishka import Provider, Scope, provide
 
 from src.application.external_api.innohassle.interfaces.room import (
@@ -11,7 +10,5 @@ class RoomServiceProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    async def get_room_service(
-        self, session: aiohttp.ClientSession
-    ) -> IRoomService:
-        return RoomService(session)
+    async def get_room_service(self) -> IRoomService:
+        return RoomService()

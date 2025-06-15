@@ -4,13 +4,13 @@ version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiohttp>=3.12.13",
     "asyncpg>=0.30.0",
     "authlib>=1.6.0",
     "colorlog>=6.9.0",
     "dishka>=1.6.0",
     "fastapi>=0.115.12",
     "fastapi-swagger>=0.2.19",
-    "httpx>=0.28.1",
     "pydantic-settings>=2.9.1",
     "pydantic[email]>=2.11.5",
     "pytz>=2025.2",
