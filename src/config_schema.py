@@ -1,6 +1,4 @@
-from enum import StrEnum
 from pathlib import Path
-from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
@@ -40,5 +38,8 @@ class Settings(SettingBaseModel):
     @classmethod
     def save_schema(cls, path: Path) -> None:
         with open(path, "w", encoding="utf-8") as f:
-            schema = {"$schema": "https://json-schema.org/draft-07/schema", **cls.model_json_schema()}
+            schema = {
+                "$schema": "https://json-schema.org/draft-07/schema",
+                **cls.model_json_schema(),
+            }
             yaml.dump(schema, f, sort_keys=False)

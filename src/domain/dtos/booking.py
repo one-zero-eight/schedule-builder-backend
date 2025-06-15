@@ -1,23 +1,18 @@
-from datetime import datetime
+import datetime
 
-from pydantic import BaseModel, Field, model_validator
-from typing_extensions import Self
-
-
-class BaseBookingDTO(BaseModel):
-    start: datetime = Field(..., description="Start time of room reservation")
-    end: datetime = Field(..., description="End time of room reservation")
-    room: str = Field(..., max_length=10, description="Room for reservation")
-
-    @model_validator(mode="after")
-    def validate_date(self) -> Self:
-        if not self.start < self.end:
-            raise ValueError("Start time has to be less than end time")
-        return self
+from pydantic import BaseModel
 
 
-class BookingWithTeacherAndGroup(BaseBookingDTO):
-    teacher: str = Field(..., max_length=50, description="Teacher on lesson")
-    group_name: str = Field(
-        ..., max_length=10, description="Name of the group"
-    )
+class BookingDTO(BaseModel):
+    """Booking description"""
+
+    room_id: str
+    "ID of the room"
+    event_id: str | None = None
+    "ID of the event"
+    title: str
+    "Title of the booking"
+    start: datetime.datetime
+    "Start time of booking"
+    end: datetime.datetime
+    "End time of booking"
