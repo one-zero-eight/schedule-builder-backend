@@ -16,6 +16,11 @@ from src.presentation.dependencies.external_api.innohassle.token import (
 from src.presentation.dependencies.external_api.innohassle.token_manager import (
     TokenManagerProvider,
 )
+from src.presentation.dependencies.parsers import CoursesParsersProvider
+from src.presentation.dependencies.teacher import TeachersProvider
+from src.presentation.dependencies.use_cases.collisions import (
+    CollisionsCheckerProvider,
+)
 
 
 def create_async_container() -> AsyncContainer:
@@ -26,5 +31,8 @@ def create_async_container() -> AsyncContainer:
         InNoHassleAccountsProvider(),
         TokenManagerProvider(),
         UserTokenDataProvider(),
+        TeachersProvider(),
+        CoursesParsersProvider(),
+        CollisionsCheckerProvider(),
     )
     return container

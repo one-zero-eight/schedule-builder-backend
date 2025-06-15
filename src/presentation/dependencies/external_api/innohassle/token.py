@@ -29,7 +29,9 @@ class UserTokenDataProvider(Provider):
 
     @provide
     async def verify_user(
-        self, bearer: HTTPAuthorizationCredentials, token_manager: ITokenManager
+        self,
+        bearer: HTTPAuthorizationCredentials,
+        token_manager: ITokenManager,
     ) -> UserTokenDataDTO:
         token = bearer and bearer.credentials
         if not token:

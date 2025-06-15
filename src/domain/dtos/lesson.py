@@ -1,13 +1,14 @@
-from datetime import datetime
+from datetime import time
 
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 
 
 class BaseLessonDTO(BaseModel):
-    start: datetime = Field(..., description="Start time of room reservation")
-    end: datetime = Field(..., description="End time of room reservation")
-    room: str = Field(..., max_length=10, description="Room for reservation")
+    weekday: str = Field(..., description="Weekday of a lesson")
+    start: time = Field(..., description="Start time of lesson")
+    end: time = Field(..., description="End time of lesson")
+    room: str = Field(..., max_length=10, description="Room for lesson")
 
     @model_validator(mode="after")
     def validate_date(self) -> Self:
@@ -20,4 +21,12 @@ class LessonWithTeacherAndGroup(BaseLessonDTO):
     teacher: str = Field(..., max_length=50, description="Teacher on lesson")
     group_name: str = Field(
         ..., max_length=10, description="Name of the group"
+    )
+
+
+class LessonWithCollisionsDTO(LessonWithTeacherAndGroup):
+    collisions: list[LessonWithTeacherAndGroup] = Field(
+        ...,
+        default_factory=lambda: list(),
+        description="Lessons which current lesson intersects with",
     )
