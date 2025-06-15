@@ -16,8 +16,5 @@ router = APIRouter(prefix="/collisions", route_class=DishkaRoute)
 async def check_timetable_collisions(
     google_spreadsheet_id: str,
     collisions_checker: FromDishka[ICollisionsChecker],
-    parser: FromDishka[ICoursesParser],
 ) -> CollisionsDTO:
-    return collisions_checker.get_collisions(
-        await parser.get_all_timeslots(google_spreadsheet_id)
-    )
+    return await collisions_checker.get_collisions(google_spreadsheet_id)

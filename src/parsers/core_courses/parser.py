@@ -7,7 +7,6 @@ from zipfile import ZipFile
 import aiohttp
 import numpy as np
 import pandas as pd
-import requests
 from openpyxl.utils import column_index_from_string
 
 from src.domain.dtos.lesson import LessonWithTeacherAndGroup
@@ -116,7 +115,7 @@ class CoreCoursesParser(ICoursesParser):
         # ------- Export xlsx file -------
         async with aiohttp.ClientSession() as client:
             async with client.get(export_url) as response:
-                return io.BytesIO(response.content)
+                return io.BytesIO(await response.read())
 
     def merge_cells(
         self, df: pd.DataFrame, xlsx: io.BytesIO, target_sheet_name: str
@@ -325,13 +324,13 @@ class CoreCoursesParser(ICoursesParser):
                     continue
                 else:
                     subject, teacher, location = cell_values_series.values
-                    location = self.identify_room(location)
+                    location = self.identify_room(str(location))
                 timeslots_objects.append(
                     LessonWithTeacherAndGroup(
                         weekday=weekday,
                         start=start_time,
                         end=end_time,
-                        group=group,
+                        group_name=group,
                         teacher=teacher,
                         room=location,
                     )

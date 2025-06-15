@@ -5,10 +5,10 @@ from typing_extensions import Self
 
 
 class BaseLessonDTO(BaseModel):
-    weekday: str = Field(..., description="Weekday of a lesson")
+    weekday: str = Field(..., description="Weekday of a lesson", max_length=20)
     start: time = Field(..., description="Start time of lesson")
     end: time = Field(..., description="End time of lesson")
-    room: str = Field(..., max_length=10, description="Room for lesson")
+    room: str = Field(..., max_length=100, description="Room for lesson")
 
     @model_validator(mode="after")
     def validate_date(self) -> Self:
@@ -18,9 +18,9 @@ class BaseLessonDTO(BaseModel):
 
 
 class LessonWithTeacherAndGroup(BaseLessonDTO):
-    teacher: str = Field(..., max_length=50, description="Teacher on lesson")
-    group_name: str = Field(
-        ..., max_length=10, description="Name of the group"
+    teacher: str = Field(..., max_length=100, description="Teacher on lesson")
+    group_name: str | None = Field(
+        ..., max_length=100, description="Name of the group",
     )
 
 

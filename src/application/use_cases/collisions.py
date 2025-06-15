@@ -73,12 +73,12 @@ class CollisionsChecker(ICollisionsChecker):
     ) -> list[LessonWithCollisionsDTO]:
         pass
 
-    def get_collisions(self, spreadsheet_id: str) -> dict[
+    async def get_collisions(self, spreadsheet_id: str) -> dict[
         str,
         list[LessonWithCollisionsDTO],
     ]:
         timeslots: list[LessonWithTeacherAndGroup] = (
-            self.parser.get_all_timeslots(spreadsheet_id)
+            await self.parser.get_all_timeslots(spreadsheet_id)
         )
         collisions = CollisionsDTO(
             rooms=self.get_collsisions_by_room(timeslots),
