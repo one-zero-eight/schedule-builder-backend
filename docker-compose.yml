@@ -3,6 +3,6 @@ services:
     build: 
       dockerfile: ./Dockerfile
     container_name: fastapi_app
-    command: sh -c "uvicorn src.presentation.main:app --reload --port=8000 --host=0.0.0.0"
+    command: sh -c "uvicorn src.presentation.app:app --port=8000 --host=0.0.0.0"
     ports:
       - '8000:8000'
