@@ -4,6 +4,7 @@ from pathlib import Path
 
 import uvicorn
 
+
 # Change dir to project root (three levels up from this file)
 os.chdir(Path(__file__).parents[2])
 # Get arguments from command

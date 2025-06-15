@@ -26,6 +26,15 @@ def get_openapi_schema(app: FastAPI) -> Dict[str, Any]:
             tags=app.openapi_tags,
             servers=app.servers,
         )
+        app.openapi_schema["components"]["securitySchemes"] = {
+            "Bearer": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "Enter your bearer token in the format **Bearer <token>**",
+            }
+        }
+        app.openapi_schema["security"] = [{"Bearer": []}]
         for _, method_item in app.openapi_schema.get("paths").items():
             for _, param in method_item.items():
                 responses = param.get("responses")
