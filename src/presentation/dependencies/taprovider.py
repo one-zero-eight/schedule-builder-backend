@@ -1,8 +1,7 @@
 from dishka import Provider, Scope, provide
+from yaml import safe_load
 
 from src.domain.dtos.teacher import TeacherDTO
-
-from yaml import safe_load
 
 
 class TeacherAssistantManagerProvider(Provider):

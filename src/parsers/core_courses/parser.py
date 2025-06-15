@@ -1,7 +1,7 @@
 import io
 from datetime import datetime
 from hashlib import sha1
-from itertools import chain, pairwise
+from itertools import pairwise
 from zipfile import ZipFile
 
 import numpy as np
@@ -9,8 +9,8 @@ import pandas as pd
 import requests
 from openpyxl.utils import column_index_from_string
 
+from src.domain.dtos.lesson import LessonWithTeacherAndGroup
 from src.domain.interfaces.parser import ICoursesParser
-from src.domain.dtos.booking import BookingWithTeacherAndGroup
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
 from src.parsers.utils import (
@@ -296,7 +296,7 @@ class CoreCoursesParser(ICoursesParser):
 
     def get_all_timeslots(
         self, spreadsheet_id: str
-    ) -> list[BookingWithTeacherAndGroup]:
+    ) -> list[LessonWithTeacherAndGroup]:
         xlsx = self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs = get_dataframes_pipeline(self, xlsx)
 
@@ -330,7 +330,7 @@ class CoreCoursesParser(ICoursesParser):
                     subject, teacher, location = cell_values_series.values
                     location = self.identify_room(location)
                 timeslots_objects.append(
-                    BookingWithTeacherAndGroup(
+                    LessonWithTeacherAndGroup(
                         weekday=weekday,
                         start=start_time,
                         end=end_time,

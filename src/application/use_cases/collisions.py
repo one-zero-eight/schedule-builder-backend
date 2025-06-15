@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from src.domain.dtos.booking import BookingWithTeacherAndGroup
+from src.domain.dtos.lesson import LessonWithTeacherAndGroup
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
@@ -11,8 +11,8 @@ class CollisionsChecker(ICollisionsChecker):
 
     def check_two_timeslots_collisions_by_time(
         self,
-        slot1: BookingWithTeacherAndGroup,
-        slot2: BookingWithTeacherAndGroup,
+        slot1: LessonWithTeacherAndGroup,
+        slot2: LessonWithTeacherAndGroup,
     ) -> bool:
         if (
             slot2.start < slot1.start < slot2.end
@@ -26,12 +26,12 @@ class CollisionsChecker(ICollisionsChecker):
             return True
         return False
 
-    def is_online_slot(slot: BookingWithTeacherAndGroup) -> bool:
-        return "ONLINE" == slot.location
+    def is_online_slot(slot: LessonWithTeacherAndGroup) -> bool:
+        return "ONLINE" == slot.room
 
     def get_collsisions_by_room(
-        self, timeslots: list[BookingWithTeacherAndGroup]
-    ) -> list[tuple[BookingWithTeacherAndGroup, BookingWithTeacherAndGroup]]:
+        self, timeslots: list[LessonWithTeacherAndGroup]
+    ) -> list[tuple[LessonWithTeacherAndGroup, LessonWithTeacherAndGroup]]:
         weekday_to_room_to_slots = defaultdict(lambda: defaultdict(list))
         for slot in timeslots:
             weekday_to_room_to_slots[slot.weekday][slot.room].append(slot)
@@ -56,9 +56,9 @@ class CollisionsChecker(ICollisionsChecker):
 
     def check_collisions(self, spreadsheet_id: str) -> dict[
         str,
-        list[tuple[BookingWithTeacherAndGroup, BookingWithTeacherAndGroup]],
+        list[tuple[LessonWithTeacherAndGroup, LessonWithTeacherAndGroup]],
     ]:
-        timeslots: list[BookingWithTeacherAndGroup] = (
+        timeslots: list[LessonWithTeacherAndGroup] = (
             self.parser.get_all_timeslots(spreadsheet_id)
         )
         collisions = dict()

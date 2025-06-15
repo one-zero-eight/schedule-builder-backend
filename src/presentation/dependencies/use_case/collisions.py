@@ -1,8 +1,8 @@
 from dishka import Provider, Scope, provide
 
 from src.application.use_cases.collisions import CollisionsChecker
-from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 from src.domain.interfaces.parser import ICoursesParser
+from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
 
 class CollisionsChecker(Provider):
