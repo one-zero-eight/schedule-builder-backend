@@ -15,7 +15,10 @@ class CollisionsChecker(ICollisionsChecker):
         self, parser: ICoursesParser, teachers: list[TeacherDTO]
     ) -> None:
         self.parser = parser
-        self.teachers = teachers
+        self.teachers
+        self.group_to_studying_teachers = defaultdict(list)
+        for teacher in teachers:
+            self.group_to_studying_teachers[teacher.group].append(teacher)
 
     def check_two_timeslots_collisions_by_time(
         self,
@@ -71,7 +74,28 @@ class CollisionsChecker(ICollisionsChecker):
     def get_collisions_by_teacher(
         self, timeslots: list[LessonWithTeacherAndGroup]
     ) -> list[LessonWithCollisionsDTO]:
-        pass
+        collisions: list[LessonWithCollisionsDTO] = list()
+        teachers_to_timeslots: dict[str, list[LessonWithTeacherAndGroup]] = defaultdict(
+            list
+        )
+        for obj in timeslots:
+            teachers_to_timeslots[obj.teacher].append(obj)
+            if teacher in self.group_to_studying_teachers[obj.group_name]:
+                teachers_to_timeslots[obj.teacher].append(obj)
+        for teacher in teachers_to_timeslots:
+            n = len(teachers_to_timeslots[teacher])
+            for i in range(n):
+                slot1 = teachers_to_timeslots[teacher][i]
+                slot_with_collisions = LessonWithCollisionsDTO.model_validate(slot1)
+                for j in range(i + 1, n):
+                    slot2 = teachers_to_timeslots[teacher][j]
+                    if self.check_two_timeslots_collisions_by_time(
+                        slot1, slot2
+                    ):
+                        slot_with_collisions.collisions.append(slot2)
+                if slot_with_collisions.collisions:
+                    collisions.append(slot_with_collisions)
+        return collisions
 
     async def get_collisions(self, spreadsheet_id: str) -> dict[
         str,

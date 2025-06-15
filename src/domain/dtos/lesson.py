@@ -20,7 +20,9 @@ class BaseLessonDTO(BaseModel):
 class LessonWithTeacherAndGroup(BaseLessonDTO):
     teacher: str = Field(..., max_length=100, description="Teacher on lesson")
     group_name: str | None = Field(
-        ..., max_length=100, description="Name of the group",
+        ...,
+        max_length=100,
+        description="Name of the group",
     )
 
 
