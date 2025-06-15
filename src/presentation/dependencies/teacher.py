@@ -8,9 +8,9 @@ class TeachersProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def get_teachers(self, file_path: str) -> list[TeacherDTO]:
+    def get_teachers(self) -> list[TeacherDTO]:
         teachers = list()
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open("teachers.yaml", "r", encoding="utf-8") as file:
             data = safe_load(file)
             for teacher in data["staff"]:
                 teachers.append(

@@ -6,6 +6,7 @@ from src.application.external_api.innohassle.interfaces.accounts import (
 )
 from src.domain.dtos.users import UserDTO
 from src.domain.exceptions.base import AppException
+from typing import AsyncIterable
 
 
 class InNoHassleAccounts(IInNoHassleAccounts):
@@ -31,30 +32,30 @@ class InNoHassleAccounts(IInNoHassleAccounts):
             ) as response:
                 if response.status != 200:
                     raise AppException(status_code=response.status)
-                jwks_json = response.json()
+                jwks_json = await response.json()
                 return JsonWebKey.import_key_set(jwks_json)
 
-    async def get_authorized_client(self) -> aiohttp.ClientSession:
+    async def get_authorized_client(self) -> AsyncIterable[aiohttp.ClientSession]:
         async with aiohttp.ClientSession(
             headers={"Authorization": f"Bearer {self.api_jwt_token}"},
             base_url=self.api_url,
         ) as client:
-            return client
+            yield client
 
     async def get_user_by_id(self, innohassle_id: str) -> UserDTO | None:
-        client = await self.get_authorized_client()
-        async with client.get(f"/users/by-id/{innohassle_id}") as response:
-            if response.status != 200:
-                if response.status == 404:
-                    return None
-                raise AppException(status_code=response.status)
-            return UserDTO.model_validate(response.json())
+        async for client in self.get_authorized_client():
+            async with client.get(f"users/by-id/{innohassle_id}") as response:
+                if response.status != 200:
+                    if response.status == 404:
+                        return None
+                    raise AppException(status_code=response.status, detail=response.reason)
+                return UserDTO.model_validate(await response.json())
 
     async def get_user_by_email(self, email: str) -> UserDTO | None:
-        client = await self.get_authorized_client()
-        async with client.get(f"/users/by-innomail/{email}") as response:
-            if response.status != 200:
-                if response.status == 404:
-                    return None
-                raise AppException(status_code=response.status)
-            return UserDTO.model_validate(response.json())
+        async for client in self.get_authorized_client():
+            async with client.get(f"users/by-innomail/{email}") as response:
+                if response.status != 200:
+                    if response.status == 404:
+                        return None
+                    raise AppException(status_code=response.status, detail=response.reason)
+                return UserDTO.model_validate(await response.json())

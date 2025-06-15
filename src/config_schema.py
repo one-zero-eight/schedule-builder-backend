@@ -11,7 +11,7 @@ class SettingBaseModel(BaseModel):
 class Accounts(SettingBaseModel):
     """InNoHassle Accounts integration settings"""
 
-    api_url: str = "https://api.innohassle.ru/accounts/v0"
+    api_url: str = "https://api.innohassle.ru/accounts/v0/"
     "URL of the Accounts API"
     api_jwt_token: SecretStr
     "JWT token for accessing the Accounts API as a service"

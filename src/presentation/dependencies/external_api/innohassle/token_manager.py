@@ -15,7 +15,7 @@ class TokenManagerProvider(Provider):
     scope = Scope.APP
 
     @provide
-    def get_token_manager(
+    async def get_token_manager(
         self, accounts: IInNoHassleAccounts
     ) -> ITokenManager:
         return TokenManager(accounts)

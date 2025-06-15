@@ -1,6 +1,0 @@
-$schema: "./settings.schema.yaml"
-# ---------- Application settings ----- #
-
-accounts:
-  # Get from https://api.innohassle.ru/accounts/v0/tokens/generate-service-token?sub=room-booking-local-dev&scopes=users&only_for_me=true
-  api_jwt_token: svo
