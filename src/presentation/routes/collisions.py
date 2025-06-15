@@ -5,11 +5,12 @@ from dishka.integrations.fastapi import DishkaRoute
 from fastapi import APIRouter
 
 from src.domain.dtos.collisions import CollisionsDTO
-from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
 
-router = APIRouter(prefix="/collisions", route_class=DishkaRoute)
+router = APIRouter(
+    prefix="/collisions", route_class=DishkaRoute, tags=["Collisions"]
+)
 
 
 @router.get("/check")

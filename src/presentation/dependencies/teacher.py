@@ -12,8 +12,10 @@ class TeachersProvider(Provider):
         teachers = list()
         with open("teachers.yaml", "r", encoding="utf-8") as file:
             data = safe_load(file)
-            for teacher in data["staff"]:
+            for teacher in data["teachers"]:
                 teachers.append(
-                    TeacherDTO(name=teacher["name"], group=teacher["group"])
+                    TeacherDTO(
+                        name=teacher["name"], group=teacher["study_group"]
+                    )
                 )
         return teachers

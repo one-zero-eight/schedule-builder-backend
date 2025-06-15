@@ -13,7 +13,7 @@ from src.application.external_api.innohassle.interfaces.room import (
 from src.domain.dtos.users import UserTokenDataDTO
 
 
-router = APIRouter(tags=["bookings"], route_class=DishkaRoute)
+router = APIRouter(tags=["Bookings"], route_class=DishkaRoute)
 
 
 @router.get("/dev/bookings/{room_id}")

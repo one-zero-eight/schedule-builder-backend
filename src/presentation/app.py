@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from src.domain.exceptions.base import AppException
 from src.presentation.dependencies import create_async_container
 from src.presentation.routes.bookings import router as booking_router
+from src.presentation.routes.collisions import router as collisions_router
 
 
 def get_openapi_schema(app: FastAPI) -> Dict[str, Any]:
@@ -31,7 +32,7 @@ def get_openapi_schema(app: FastAPI) -> Dict[str, Any]:
                 "type": "http",
                 "scheme": "bearer",
                 "bearerFormat": "JWT",
-                "description": "Enter your bearer token in the format **Bearer <token>**",
+                "description": "Token from [InNoHassle Accounts](https://api.innohassle.ru/accounts/v0/tokens/generate-my-token)",
             }
         }
         app.openapi_schema["security"] = [{"Bearer": []}]
@@ -73,6 +74,7 @@ def create_app() -> FastAPI:
     """
     app = FastAPI(root_path="/api/v1")
     app.include_router(booking_router)
+    app.include_router(collisions_router)
     app.openapi_schema = get_openapi_schema(app)
     container = create_async_container()
     setup_dishka(container, app)
