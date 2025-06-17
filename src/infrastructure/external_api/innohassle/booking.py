@@ -5,14 +5,14 @@ import aiohttp
 from src.application.external_api.innohassle.interfaces.booking import (
     IBookingService,
 )
-from src.config import settings
 from src.domain.dtos.booking import BookingDTO
 from src.domain.exceptions.base import AppException
+from src.domain.exceptions.tokens import InvalidTokenException
 
 
 class BookingService(IBookingService):
-    def __init__(self) -> None:
-        self.token = settings.accounts.api_jwt_token.get_secret_value()
+    def __init__(self, token: str) -> None:
+        self.token = token
 
     async def get_bookings(
         self, room_id: str, start: datetime.datetime, end: datetime.datetime
@@ -27,10 +27,10 @@ class BookingService(IBookingService):
                     "end": end.isoformat(),
                 },
             ) as response:
+                if response.status == 401:
+                    raise InvalidTokenException()
                 if response.status != 200:
-                    raise AppException(
-                        status_code=response.status, detail=response.reason
-                    )
+                    raise AppException()
                 return [
                     BookingDTO.model_validate(entry, from_attributes=True)
                     for entry in await response.json()

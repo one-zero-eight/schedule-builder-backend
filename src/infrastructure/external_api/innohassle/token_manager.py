@@ -33,6 +33,7 @@ class TokenManager(ITokenManager):
                 raise credentials_exception
             user_data = UserTokenDataDTO(
                 innohassle_id=innohassle_id,
+                token=token,
             )
             return user_data
         except JoseError:

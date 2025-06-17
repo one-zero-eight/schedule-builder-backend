@@ -8,11 +8,11 @@ class RoomDTO(BaseModel):
 
     id: str
     "Room slug"
-    title: str
+    title: str | None = None
     "Room title"
-    short_name: str
+    short_name: str | None
     "Shorter version of room title"
-    my_uni_id: int
+    my_uni_id: int | None = None
     "ID of room on My University portal"
     capacity: int | None = None
     "Room capacity, amount of people"

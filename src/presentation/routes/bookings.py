@@ -19,7 +19,6 @@ router = APIRouter(tags=["Bookings"], route_class=DishkaRoute)
 @router.get("/dev/bookings/{room_id}")
 async def get_bookings(
     room_id: str,
-    _: FromDishka[UserTokenDataDTO],
     booking_service: FromDishka[IBookingService],
 ):
     return await booking_service.get_bookings(
@@ -31,6 +30,6 @@ async def get_bookings(
 
 @router.get("/dev/rooms")
 async def get_rooms(
-    _: FromDishka[UserTokenDataDTO], room_service: FromDishka[IRoomService]
+    room_service: FromDishka[IRoomService]
 ):
     return await room_service.get_rooms()

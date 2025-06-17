@@ -6,11 +6,12 @@ from src.application.external_api.innohassle.interfaces.room import (
 from src.config import settings
 from src.domain.dtos.room import RoomDTO
 from src.domain.exceptions.base import AppException
+from src.domain.exceptions.tokens import InvalidTokenException
 
 
 class RoomService(IRoomService):
-    def __init__(self) -> None:
-        self.token = settings.accounts.api_jwt_token.get_secret_value()
+    def __init__(self, token: str) -> None:
+        self.token = token
 
     async def get_rooms(self) -> list[RoomDTO]:
         async with aiohttp.ClientSession(
@@ -19,10 +20,10 @@ class RoomService(IRoomService):
             async with client.get(
                 "https://api.innohassle.ru/room-booking/staging-v0/rooms/"
             ) as response:
+                if response.status == 401:
+                    raise InvalidTokenException()
                 if response.status != 200:
-                    raise AppException(
-                        status_code=response.status, detail=response.reason
-                    )
+                    raise AppException()
                 return [
                     RoomDTO.model_validate(entry, from_attributes=True)
                     for entry in await response.json()

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class UserTokenDataDTO(BaseModel):
     innohassle_id: str
     email: str | None = None
+    token: str
 
 
 class UserInfoFromSSODTO(BaseModel):

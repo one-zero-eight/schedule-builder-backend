@@ -1,0 +1,19 @@
+rooms:
+- name: 301
+  capacity: 24
+- name: 303
+  capacity: 30
+- name: 304
+  capacity: 25
+- name: 305
+  capacity: 25
+- name: 312
+  capacity: 30
+- name: 313
+  capacity: 60
+- name: 314
+  capacity: 34
+- name: 318
+  capacity: 30
+- name: 320
+  capacity: 28

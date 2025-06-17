@@ -13,9 +13,8 @@ class InNoHassleAccounts(IInNoHassleAccounts):
     PUBLIC_KID = "public"
     key_set: KeySet
 
-    def __init__(self, api_url: str, api_jwt_token: str):
+    def __init__(self, api_url: str):
         self.api_url = api_url
-        self.api_jwt_token = api_jwt_token
 
     async def update_key_set(self):
         self.key_set = await self.get_key_set()
