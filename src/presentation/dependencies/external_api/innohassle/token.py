@@ -18,7 +18,10 @@ class UserTokenDataProvider(Provider):
         request: Request,
         token_manager: ITokenManager,
     ) -> UserTokenDataDTO:
-        token = request.headers.get("Authorization").split()[1]
+        token = request.headers.get("Authorization")
         if not token:
             raise InvalidTokenException()
-        return await token_manager.verify_user_token(token)
+        token = token.split()
+        if len(token) != 2:
+            raise InvalidTokenException()
+        return await token_manager.verify_user_token(token[1])
