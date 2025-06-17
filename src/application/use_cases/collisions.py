@@ -103,9 +103,10 @@ class CollisionsChecker(ICollisionsChecker):
         str,
         list[LessonWithCollisionsDTO],
     ]:
-        timeslots: list[LessonWithTeacherAndGroup] = (
+        timeslots= (
             await self.parser.get_all_timeslots(spreadsheet_id)
         )
+        print(timeslots)
         collisions = CollisionsDTO(
             rooms=self.get_collsisions_by_room(timeslots),
             teachers=self.get_collisions_by_teacher(timeslots),
