@@ -325,6 +325,7 @@ class CoreCoursesParser(ICoursesParser):
                 else:
                     subject, teacher, location = cell_values_series.values
                     location = self.identify_room(str(location))
+                print(weekday, start_time, end_time, group, teacher, location)
                 timeslots_objects.append(
                     LessonWithTeacherAndGroup(
                         weekday=weekday,
