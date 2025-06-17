@@ -8,6 +8,7 @@ from src.application.external_api.innohassle.interfaces.booking import (
 from src.domain.dtos.booking import BookingDTO
 from src.domain.exceptions.base import AppException
 from src.domain.exceptions.tokens import InvalidTokenException
+from src.domain.exceptions.room import RoomNotFoundException
 
 
 class BookingService(IBookingService):
@@ -29,6 +30,8 @@ class BookingService(IBookingService):
             ) as response:
                 if response.status == 401:
                     raise InvalidTokenException()
+                if response.status == 404:
+                    raise RoomNotFoundException()
                 if response.status != 200:
                     raise AppException()
                 return [
