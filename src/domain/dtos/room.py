@@ -10,7 +10,7 @@ class RoomDTO(BaseModel):
     "Room slug"
     title: str | None = None
     "Room title"
-    short_name: str | None
+    short_name: str | None = None
     "Shorter version of room title"
     my_uni_id: int | None = None
     "ID of room on My University portal"

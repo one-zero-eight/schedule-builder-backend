@@ -5,6 +5,9 @@ from typing_extensions import Self
 
 
 class BaseLessonDTO(BaseModel):
+    lesson_name: str = Field(
+        ..., description="Name of the lesson", max_length=200
+    )
     weekday: str = Field(..., description="Weekday of a lesson", max_length=20)
     start: time = Field(..., description="Start time of lesson")
     end: time = Field(..., description="End time of lesson")
@@ -23,6 +26,9 @@ class LessonWithTeacherAndGroup(BaseLessonDTO):
         ...,
         max_length=100,
         description="Name of the group",
+    )
+    students_number: int = Field(
+        ..., description="Number of students in the group"
     )
 
 

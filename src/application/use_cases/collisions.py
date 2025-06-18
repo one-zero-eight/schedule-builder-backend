@@ -8,17 +8,22 @@ from src.domain.dtos.lesson import (
 from src.domain.dtos.teacher import TeacherDTO
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
+from src.domain.dtos.room import RoomDTO
 
 
 class CollisionsChecker(ICollisionsChecker):
     def __init__(
-        self, parser: ICoursesParser, teachers: list[TeacherDTO]
+        self, parser: ICoursesParser, teachers: list[TeacherDTO], rooms: list[RoomDTO]
     ) -> None:
         self.parser = parser
         self.teachers = teachers
+        self.rooms = rooms
         self.group_to_studying_teachers = defaultdict(list)
         for teacher in teachers:
             self.group_to_studying_teachers[teacher.group].append(teacher)
+        self.room_to_capacity = dict()
+        for room in rooms:
+            self.room_to_capacity[room.id] = room.capacity
 
     def check_two_timeslots_collisions_by_time(
         self,
@@ -99,6 +104,19 @@ class CollisionsChecker(ICollisionsChecker):
                     collisions.append(slot_with_collisions)
         return collisions
 
+    def get_lessons_where_not_enough_place_for_students(self, timeslots: list[LessonWithTeacherAndGroup]) -> list[LessonWithTeacherAndGroup]:
+        result = []
+        for timeslot in timeslots:
+            if self.is_online_slot(timeslot):
+                continue
+            room = timeslot.room
+            capacity = self.room_to_capacity.get(room)
+            if not capacity:
+                continue
+            if capacity < timeslot.students_number:
+                result.append(timeslot)
+        return result
+
     async def get_collisions(self, spreadsheet_id: str) -> dict[
         str,
         list[LessonWithCollisionsDTO],
@@ -109,5 +127,6 @@ class CollisionsChecker(ICollisionsChecker):
         collisions = CollisionsDTO(
             rooms=self.get_collsisions_by_room(timeslots),
             teachers=self.get_collisions_by_teacher(timeslots),
+            capacity=self.get_lessons_where_not_enough_place_for_students(timeslots),
         )
         return collisions

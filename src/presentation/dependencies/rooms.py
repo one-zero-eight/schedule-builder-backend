@@ -14,7 +14,7 @@ class RoomsWithCapacityProvider(Provider):
             for room in data["rooms"]:
                 rooms.append(
                     RoomDTO(
-                        id=room["name"], capacity=int(room["capacity"])
+                        id=str(room["name"]), capacity=int(room["capacity"])
                     )
                 )
         return rooms

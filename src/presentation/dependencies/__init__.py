@@ -21,6 +21,7 @@ from src.presentation.dependencies.teacher import TeachersProvider
 from src.presentation.dependencies.use_cases.collisions import (
     CollisionsCheckerProvider,
 )
+from src.presentation.dependencies.rooms import RoomsWithCapacityProvider
 
 
 def create_async_container() -> AsyncContainer:
@@ -34,5 +35,6 @@ def create_async_container() -> AsyncContainer:
         TeachersProvider(),
         CoursesParsersProvider(),
         CollisionsCheckerProvider(),
+        RoomsWithCapacityProvider(),
     )
     return container
