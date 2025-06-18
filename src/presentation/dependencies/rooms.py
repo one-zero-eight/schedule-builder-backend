@@ -1,6 +1,7 @@
-from dishka import Provider, provide, Scope
-from src.domain.dtos.room import RoomDTO
+from dishka import Provider, Scope, provide
 from yaml import safe_load
+
+from src.domain.dtos.room import RoomDTO
 
 
 class RoomsWithCapacityProvider(Provider):

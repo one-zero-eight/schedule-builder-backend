@@ -1,6 +1,9 @@
 from pydantic import BaseModel, Field
 
-from src.domain.dtos.lesson import LessonWithCollisionsDTO, LessonWithTeacherAndGroup
+from src.domain.dtos.lesson import (
+    LessonWithCollisionsDTO,
+    LessonWithExcelCells,
+)
 
 
 class CollisionsDTO(BaseModel):
@@ -10,7 +13,7 @@ class CollisionsDTO(BaseModel):
     teachers: list[LessonWithCollisionsDTO] = Field(
         ..., description="List of pairs of collisions by teacher"
     )
-    capacity: list[LessonWithTeacherAndGroup] = Field(
+    capacity: list[LessonWithExcelCells] = Field(
         ...,
         description="Lessons where number of students is more than capacity of the room",
     )

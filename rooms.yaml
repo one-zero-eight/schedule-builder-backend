@@ -17,3 +17,11 @@ rooms:
   capacity: 30
 - name: 320
   capacity: 28
+- name: 108
+  capacity: 500
+- name: 107
+  capacity: 500
+- name: 106
+  capacity: 500
+- name: 105
+  capacity: 500

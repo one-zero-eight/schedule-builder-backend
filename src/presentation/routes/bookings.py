@@ -29,7 +29,5 @@ async def get_bookings(
 
 
 @router.get("/dev/rooms")
-async def get_rooms(
-    room_service: FromDishka[IRoomService]
-):
+async def get_rooms(room_service: FromDishka[IRoomService]):
     return await room_service.get_rooms()

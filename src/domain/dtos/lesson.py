@@ -32,8 +32,17 @@ class LessonWithTeacherAndGroup(BaseLessonDTO):
     )
 
 
-class LessonWithCollisionsDTO(LessonWithTeacherAndGroup):
-    collisions: list[LessonWithTeacherAndGroup] = Field(
+class LessonWithExcelCells(LessonWithTeacherAndGroup):
+    left: str = Field(
+        ..., max_length=10, description="Topleft corner of the cell"
+    )
+    right: str = Field(
+        ..., max_length=10, description="Bottom right corner of the cell"
+    )
+
+
+class LessonWithCollisionsDTO(LessonWithExcelCells):
+    collisions: list[LessonWithExcelCells] = Field(
         ...,
         default_factory=lambda: list(),
         description="Lessons which current lesson intersects with",
