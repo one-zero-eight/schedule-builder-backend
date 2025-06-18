@@ -2,6 +2,7 @@ import io
 from datetime import datetime
 from hashlib import sha1
 from itertools import pairwise
+from string import ascii_uppercase
 from zipfile import ZipFile
 
 import aiohttp
@@ -9,7 +10,7 @@ import numpy as np
 import pandas as pd
 from openpyxl.utils import column_index_from_string
 
-from src.domain.dtos.lesson import LessonWithTeacherAndGroup
+from src.domain.dtos.lesson import LessonWithExcelCells
 from src.domain.interfaces.parser import ICoursesParser
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
@@ -54,10 +55,6 @@ class CoreCoursesParser(ICoursesParser):
     Elective parser class
     """
 
-    #
-    # credentials: Credentials
-    # """ Google API credentials object """
-
     def get_clear_dataframes_from_xlsx(
         self, xlsx_file: io.BytesIO, targets: list[config.Target]
     ) -> dict[str, pd.DataFrame]:
@@ -88,6 +85,8 @@ class CoreCoursesParser(ICoursesParser):
                     break
             # -------- Fill merged cells with values --------
             self.merge_cells(df, xlsx_file, target.sheet_name)
+            # -------- Assign excel cell to subject --------
+            self.assign_excel_row_and_column_to_subjects(df)
             # -------- Select range --------
             df = self.select_range(df, target.range)
             # -------- Fill empty cells --------
@@ -116,6 +115,62 @@ class CoreCoursesParser(ICoursesParser):
         async with aiohttp.ClientSession() as client:
             async with client.get(export_url) as response:
                 return io.BytesIO(await response.read())
+
+    def check_value_is_time(self, value: str) -> bool:
+        value = value.split("-")
+        if len(value) != 2:
+            return False
+        for part in value:
+            part = part.strip().split(":")
+            if len(part) != 2:
+                return False
+            if not part[0].isnumeric() or not part[1].isnumeric():
+                return False
+        return True
+
+    def check_is_weekday(self, value: str) -> bool:
+        return value in [
+            "MONDAY",
+            "TUESDAY",
+            "WEDNESDAY",
+            "THURSDAY",
+            "FRIDAY",
+            "SATURDAY",
+            "SUNDAY",
+        ]
+
+    def coords_to_excel_coords(self, i: int, j: int) -> str:
+        excel_row = i + 1
+        excel_col = []
+        tmp = j
+        while tmp > 25:
+            excel_col.append(ascii_uppercase[tmp // 26 - 1])
+            tmp //= 26
+        excel_col.append(ascii_uppercase[j % 26])
+        excel_col = "".join(excel_col)
+        return f"{excel_col}:{excel_row}"
+
+    def assign_excel_row_and_column_to_subjects(
+        self, df: pd.DataFrame
+    ) -> None:
+        used_cells: set[tuple[int, int]] = set()
+        for i in range(3, len(df.values)):
+            for j in range(1, len(df.values[i])):
+                value = str(df.iloc[i, j]).strip()
+                if (
+                    not value
+                    or value == "nan"
+                    or self.check_is_weekday(value)
+                    or self.check_value_is_time(value)
+                ):
+                    continue
+                if (i, j) in used_cells:
+                    continue
+                df.iloc[i, j] = (
+                    f"{df.iloc[i, j]}${self.coords_to_excel_coords(i, j)}"
+                )
+                for x in range(i, i + 3):
+                    used_cells.add((x, j))
 
     def merge_cells(
         self, df: pd.DataFrame, xlsx: io.BytesIO, target_sheet_name: str
@@ -292,7 +347,7 @@ class CoreCoursesParser(ICoursesParser):
 
     async def get_all_timeslots(
         self, spreadsheet_id: str
-    ) -> list[LessonWithTeacherAndGroup]:
+    ) -> list[LessonWithExcelCells]:
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs = get_dataframes_pipeline(self, xlsx)
 
@@ -324,16 +379,24 @@ class CoreCoursesParser(ICoursesParser):
                     continue
                 else:
                     subject, teacher, location = cell_values_series.values
+                    subject = subject.rsplit("$", maxsplit=1)
+                    subject_name, cell = subject
                     location = self.identify_room(str(location))
+                    group = group.split()
+                    group_name = group[0]
+                    students_number = int(group[1][1:-1])
                 timeslots_objects.append(
-                    LessonWithTeacherAndGroup(
+                    LessonWithExcelCells(
                         weekday=weekday,
                         start=start_time,
                         end=end_time,
-                        group_name=group,
+                        group_name=group_name,
                         teacher=teacher,
                         room=location,
+                        lesson_name=subject_name,
+                        students_number=students_number,
+                        left=cell,
+                        right=cell,
                     )
                 )
-
         return timeslots_objects

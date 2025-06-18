@@ -3,8 +3,9 @@ from collections import defaultdict
 from src.domain.dtos.collisions import CollisionsDTO
 from src.domain.dtos.lesson import (
     LessonWithCollisionsDTO,
-    LessonWithTeacherAndGroup,
+    LessonWithExcelCells,
 )
+from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
@@ -12,18 +13,25 @@ from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
 class CollisionsChecker(ICollisionsChecker):
     def __init__(
-        self, parser: ICoursesParser, teachers: list[TeacherDTO]
+        self,
+        parser: ICoursesParser,
+        teachers: list[TeacherDTO],
+        rooms: list[RoomDTO],
     ) -> None:
         self.parser = parser
         self.teachers = teachers
+        self.rooms = rooms
         self.group_to_studying_teachers = defaultdict(list)
         for teacher in teachers:
             self.group_to_studying_teachers[teacher.group].append(teacher)
+        self.room_to_capacity = dict()
+        for room in rooms:
+            self.room_to_capacity[room.id] = room.capacity
 
     def check_two_timeslots_collisions_by_time(
         self,
-        slot1: LessonWithTeacherAndGroup,
-        slot2: LessonWithTeacherAndGroup,
+        slot1: LessonWithExcelCells,
+        slot2: LessonWithExcelCells,
     ) -> bool:
         if (
             slot2.start < slot1.start < slot2.end
@@ -37,11 +45,11 @@ class CollisionsChecker(ICollisionsChecker):
             return True
         return False
 
-    def is_online_slot(self, slot: LessonWithTeacherAndGroup) -> bool:
+    def is_online_slot(self, slot: LessonWithExcelCells) -> bool:
         return "ONLINE" == slot.room
 
     def get_collsisions_by_room(
-        self, timeslots: list[LessonWithTeacherAndGroup]
+        self, timeslots: list[LessonWithExcelCells]
     ) -> list[LessonWithCollisionsDTO]:
         weekday_to_room_to_slots = defaultdict(lambda: defaultdict(list))
         for slot in timeslots:
@@ -72,10 +80,10 @@ class CollisionsChecker(ICollisionsChecker):
         return collisions
 
     def get_collisions_by_teacher(
-        self, timeslots: list[LessonWithTeacherAndGroup]
+        self, timeslots: list[LessonWithExcelCells]
     ) -> list[LessonWithCollisionsDTO]:
         collisions: list[LessonWithCollisionsDTO] = list()
-        teachers_to_timeslots: dict[str, list[LessonWithTeacherAndGroup]] = (
+        teachers_to_timeslots: dict[str, list[LessonWithExcelCells]] = (
             defaultdict(list)
         )
         for obj in timeslots:
@@ -99,15 +107,33 @@ class CollisionsChecker(ICollisionsChecker):
                     collisions.append(slot_with_collisions)
         return collisions
 
+    def get_lessons_where_not_enough_place_for_students(
+        self, timeslots: list[LessonWithExcelCells]
+    ) -> list[LessonWithExcelCells]:
+        result = []
+        for timeslot in timeslots:
+            if self.is_online_slot(timeslot):
+                continue
+            room = timeslot.room
+            capacity = self.room_to_capacity.get(room)
+            if not capacity:
+                continue
+            if capacity < timeslot.students_number:
+                result.append(timeslot)
+        return result
+
     async def get_collisions(self, spreadsheet_id: str) -> dict[
         str,
         list[LessonWithCollisionsDTO],
     ]:
-        timeslots: list[LessonWithTeacherAndGroup] = (
+        timeslots: list[LessonWithExcelCells] = (
             await self.parser.get_all_timeslots(spreadsheet_id)
         )
         collisions = CollisionsDTO(
             rooms=self.get_collsisions_by_room(timeslots),
             teachers=self.get_collisions_by_teacher(timeslots),
+            capacity=self.get_lessons_where_not_enough_place_for_students(
+                timeslots
+            ),
         )
         return collisions

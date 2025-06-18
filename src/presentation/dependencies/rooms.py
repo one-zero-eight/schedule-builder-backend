@@ -1,6 +1,7 @@
-from dishka import Provider, provide, Scope
-from src.domain.dtos.room import RoomDTO
+from dishka import Provider, Scope, provide
 from yaml import safe_load
+
+from src.domain.dtos.room import RoomDTO
 
 
 class RoomsWithCapacityProvider(Provider):
@@ -14,7 +15,7 @@ class RoomsWithCapacityProvider(Provider):
             for room in data["rooms"]:
                 rooms.append(
                     RoomDTO(
-                        id=room["name"], capacity=int(room["capacity"])
+                        id=str(room["name"]), capacity=int(room["capacity"])
                     )
                 )
         return rooms
