@@ -23,10 +23,8 @@ Schedule Builder is created as a tool for Innopolis University Department of Edu
    > Follow provided instructions if needed
 4. Open in the browser: http://localhost:8000
    > The api will be reloaded when you edit the code
-
 > [!IMPORTANT]
 > For endpoints requiring authorization click "Authorize" button in Swagger UI
-
 > [!TIP]
 > Edit `settings.yaml` according to your needs, you can view schema in
 > [config_schema.py](src/config_schema.py) and in [settings.schema.yaml](settings.schema.yaml)
@@ -38,13 +36,4 @@ We use Docker with Docker Compose plugin to run the service on servers.
 2. Change settings in the `settings.yaml` file according to your needs
    (check [settings.schema.yaml](settings.schema.yaml) for more info)
 3. Install Docker with Docker Compose
-4. Build a Docker image: `docker compose build --pull`
-5. Run the container: `docker compose up --detach`
-6. Check the logs: `docker compose logs -f`
-
-# How to update dependencies
-
-## Project dependencies
-
-1. Run `uv show --outdated --all` to check for outdated dependencies
-2. Run `uv add <package>@latest` to add a new dependency if needed
+4. Build && run docker container `docker compose up --build`
