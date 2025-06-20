@@ -11,7 +11,7 @@ from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
 
 class CollisionsCheckerProvider(Provider):
-    scope = Scope.APP
+    scope = Scope.REQUEST
 
     @provide
     def get_collisions_checker(

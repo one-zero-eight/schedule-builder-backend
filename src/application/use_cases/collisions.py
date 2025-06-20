@@ -6,7 +6,6 @@ import pytz
 from src.application.external_api.innohassle.interfaces.booking import (
     IBookingService,
 )
-from src.domain.dtos.collisions import CollisionsDTO
 from src.domain.dtos.lesson import (
     BaseLessonDTO,
     LessonWithCollisionsDTO,
@@ -154,7 +153,7 @@ class CollisionsChecker(ICollisionsChecker):
                 )
         return result
 
-    def get_outlook_collisions(
+    async def get_outlook_collisions(
         self, timeslots: list[LessonWithExcelCellsDTO]
     ) -> list[LessonWithOutlookCollisionsDTO]:
         collisions = []
@@ -193,14 +192,14 @@ class CollisionsChecker(ICollisionsChecker):
 
             for lesson_date in lesson_dates:
                 lesson_start = datetime.combine(
-                    lesson_date, lesson.start
+                    lesson_date, lesson.start_time
                 ).replace(tzinfo=pytz.utc)
-                lesson_end = datetime.combine(lesson_date, lesson.end).replace(
-                    tzinfo=pytz.utc
-                )
+                lesson_end = datetime.combine(
+                    lesson_date, lesson.end_time
+                ).replace(tzinfo=pytz.utc)
 
                 try:
-                    bookings = self.booking_service.get_bookings(
+                    bookings = await self.booking_service.get_bookings(
                         room_id=lesson.room, start=lesson_start, end=lesson_end
                     )
                 except Exception:
@@ -215,14 +214,14 @@ class CollisionsChecker(ICollisionsChecker):
                         continue
 
                     if (
-                        booking.start < lesson_end
-                        and booking.end > lesson_start
+                        booking.start_time < lesson_end
+                        and booking.end_time > lesson_start
                     ):
                         booking_as_lesson = LessonWithTeacherAndGroupDTO(
                             lesson_name=booking.title,
                             weekday=lesson.weekday,
-                            start=booking.start.time(),
-                            end=booking.end.time(),
+                            start_time=booking.start_time.time(),
+                            end_time=booking.end_time.time(),
                             room=lesson.room,
                             teacher="External Booking",  # Placeholder
                             group_name=None,
@@ -236,8 +235,8 @@ class CollisionsChecker(ICollisionsChecker):
                 outlook_collision = LessonWithOutlookCollisionsDTO(
                     lesson_name=lesson.lesson_name,
                     weekday=lesson.weekday,
-                    start=lesson.start,
-                    end=lesson.end,
+                    start=lesson.start_time,
+                    end=lesson.end_time,
                     room=lesson.room,
                     teacher=lesson.teacher,
                     group_name=lesson.group_name,
@@ -248,16 +247,16 @@ class CollisionsChecker(ICollisionsChecker):
 
         return collisions
 
-    async def get_collisions(self, spreadsheet_id: str) -> CollisionsDTO:
+    async def get_collisions(
+        self, spreadsheet_id: str
+    ) -> list[LessonWithCollisionsDTO | LessonWithCollisionTypeDTO]:
         timeslots: list[LessonWithExcelCellsDTO] = (
             await self.parser.get_all_timeslots(spreadsheet_id)
         )
-        collisions = CollisionsDTO(
-            rooms=self.get_collsisions_by_room(timeslots),
-            teachers=self.get_collisions_by_teacher(timeslots),
-            capacity=self.get_lessons_where_not_enough_place_for_students(
-                timeslots
-            ),
-            outlook=self.get_outlook_collisions(timeslots),
-        )
+        collisions = [
+            *self.get_collsisions_by_room(timeslots),
+            *self.get_collisions_by_teacher(timeslots),
+            *self.get_lessons_where_not_enough_place_for_students(timeslots),
+            *await self.get_outlook_collisions(timeslots),
+        ]
         return collisions

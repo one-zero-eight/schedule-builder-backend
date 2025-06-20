@@ -12,7 +12,7 @@ class BookingDTO(BaseModel):
     "ID of the event"
     title: str
     "Title of the booking"
-    start: datetime.datetime
+    start_time: datetime.datetime
     "Start time of booking"
-    end: datetime.datetime
+    end_time: datetime.datetime
     "End time of booking"

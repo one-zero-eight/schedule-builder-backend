@@ -34,7 +34,13 @@ class BookingService(IBookingService):
                     raise RoomNotFoundException()
                 if response.status != 200:
                     raise AppException()
+                data = await response.json()
+                for entry in data:
+                    entry["start_time"] = entry["start"]
+                    del entry["start"]
+                    entry["end_time"] = entry["end"]
+                    del entry["end"]
                 return [
                     BookingDTO.model_validate(entry, from_attributes=True)
-                    for entry in await response.json()
+                    for entry in data
                 ]
