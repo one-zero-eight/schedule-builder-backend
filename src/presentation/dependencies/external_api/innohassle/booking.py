@@ -1,4 +1,3 @@
-import aiohttp
 from dishka import Provider, Scope, provide
 
 from src.application.external_api.innohassle.interfaces.booking import (

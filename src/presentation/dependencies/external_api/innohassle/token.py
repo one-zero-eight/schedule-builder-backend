@@ -1,6 +1,5 @@
 from dishka import Provider, Scope, provide
 from fastapi import Request
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.application.external_api.innohassle.interfaces.token_manager import (
     ITokenManager,

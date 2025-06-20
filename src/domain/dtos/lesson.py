@@ -48,5 +48,15 @@ class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
 
 class LessonWithCollisionsDTO(LessonWithExcelCellsDTO):
     collisions: list[LessonWithCollisionTypeDTO] = Field(
-        ..., description="List of colliding lessons", default_factory=lambda: list()
+        ...,
+        description="List of colliding lessons",
+        default_factory=lambda: list(),
+    )
+
+
+class LessonWithOutlookCollisionsDTO(LessonWithTeacherAndGroupDTO):
+    collisions: list[LessonWithTeacherAndGroupDTO] = Field(
+        ...,
+        default_factory=lambda: list(),
+        description="Outlook events which current lesson intersects with",
     )

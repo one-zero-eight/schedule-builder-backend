@@ -1,10 +1,19 @@
 from collections import defaultdict
+from datetime import datetime, timedelta
 
+import pytz
+
+from src.application.external_api.innohassle.interfaces.booking import (
+    IBookingService,
+)
+from src.domain.dtos.collisions import CollisionsDTO
 from src.domain.dtos.lesson import (
     BaseLessonDTO,
     LessonWithCollisionsDTO,
     LessonWithCollisionTypeDTO,
     LessonWithExcelCellsDTO,
+    LessonWithOutlookCollisionsDTO,
+    LessonWithTeacherAndGroupDTO,
 )
 from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
@@ -19,10 +28,12 @@ class CollisionsChecker(ICollisionsChecker):
         parser: ICoursesParser,
         teachers: list[TeacherDTO],
         rooms: list[RoomDTO],
+        booking_service: IBookingService,
     ) -> None:
         self.parser = parser
         self.teachers = teachers
         self.rooms = rooms
+        self.booking_service = booking_service
         self.group_to_studying_teachers = defaultdict(list)
         for teacher in teachers:
             self.group_to_studying_teachers[teacher.group].append(teacher)
@@ -143,16 +154,110 @@ class CollisionsChecker(ICollisionsChecker):
                 )
         return result
 
-    async def get_collisions(self, spreadsheet_id: str) -> dict[
-        str,
-        list[LessonWithCollisionTypeDTO | LessonWithCollisionsDTO],
-    ]:
+    def get_outlook_collisions(
+        self, timeslots: list[LessonWithExcelCellsDTO]
+    ) -> list[LessonWithOutlookCollisionsDTO]:
+        collisions = []
+
+        weekday_map = {
+            "monday": 0,
+            "tuesday": 1,
+            "wednesday": 2,
+            "thursday": 3,
+            "friday": 4,
+            "saturday": 5,
+            "sunday": 6,
+        }
+
+        valid_rooms = {room.id for room in self.rooms}
+
+        for lesson in timeslots:
+            if self.is_online_slot(lesson) or lesson.room not in valid_rooms:
+                continue
+
+            lesson_weekday = weekday_map.get(lesson.weekday.lower())
+            if lesson_weekday is None:
+                continue
+
+            today = datetime.now(pytz.utc).date()
+            lesson_dates = []
+
+            for day_offset in range(
+                30
+            ):  # TODO: Change fixed 30-day window to semester based window
+                check_date = today + timedelta(days=day_offset)
+                if check_date.weekday() == lesson_weekday:
+                    lesson_dates.append(check_date)
+
+            lesson_collisions = []
+
+            for lesson_date in lesson_dates:
+                lesson_start = datetime.combine(
+                    lesson_date, lesson.start
+                ).replace(tzinfo=pytz.utc)
+                lesson_end = datetime.combine(lesson_date, lesson.end).replace(
+                    tzinfo=pytz.utc
+                )
+
+                try:
+                    bookings = self.booking_service.get_bookings(
+                        room_id=lesson.room, start=lesson_start, end=lesson_end
+                    )
+                except Exception:
+                    # TODO: add logging once logger is added
+                    continue
+
+                for booking in bookings:
+                    if (
+                        booking.title.lower().strip()
+                        == lesson.lesson_name.lower().strip()
+                    ):
+                        continue
+
+                    if (
+                        booking.start < lesson_end
+                        and booking.end > lesson_start
+                    ):
+                        booking_as_lesson = LessonWithTeacherAndGroupDTO(
+                            lesson_name=booking.title,
+                            weekday=lesson.weekday,
+                            start=booking.start.time(),
+                            end=booking.end.time(),
+                            room=lesson.room,
+                            teacher="External Booking",  # Placeholder
+                            group_name=None,
+                            students_number=0,
+                        )
+
+                        if booking_as_lesson not in lesson_collisions:
+                            lesson_collisions.append(booking_as_lesson)
+
+            if lesson_collisions:
+                outlook_collision = LessonWithOutlookCollisionsDTO(
+                    lesson_name=lesson.lesson_name,
+                    weekday=lesson.weekday,
+                    start=lesson.start,
+                    end=lesson.end,
+                    room=lesson.room,
+                    teacher=lesson.teacher,
+                    group_name=lesson.group_name,
+                    students_number=lesson.students_number,
+                    collisions=lesson_collisions,
+                )
+                collisions.append(outlook_collision)
+
+        return collisions
+
+    async def get_collisions(self, spreadsheet_id: str) -> CollisionsDTO:
         timeslots: list[LessonWithExcelCellsDTO] = (
             await self.parser.get_all_timeslots(spreadsheet_id)
         )
-        collisions = self.get_collsisions_by_room(timeslots)
-        collisions.extend(self.get_collisions_by_teacher(timeslots))
-        collisions.extend(
-            self.get_lessons_where_not_enough_place_for_students(timeslots)
+        collisions = CollisionsDTO(
+            rooms=self.get_collsisions_by_room(timeslots),
+            teachers=self.get_collisions_by_teacher(timeslots),
+            capacity=self.get_lessons_where_not_enough_place_for_students(
+                timeslots
+            ),
+            outlook=self.get_outlook_collisions(timeslots),
         )
         return collisions
