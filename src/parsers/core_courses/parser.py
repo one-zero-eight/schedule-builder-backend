@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from openpyxl.utils import column_index_from_string
 
-from src.domain.dtos.lesson import LessonWithExcelCells
+from src.domain.dtos.lesson import LessonWithExcelCellsDTO
 from src.domain.interfaces.parser import ICoursesParser
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
@@ -347,7 +347,7 @@ class CoreCoursesParser(ICoursesParser):
 
     async def get_all_timeslots(
         self, spreadsheet_id: str
-    ) -> list[LessonWithExcelCells]:
+    ) -> list[LessonWithExcelCellsDTO]:
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs = get_dataframes_pipeline(self, xlsx)
 
@@ -386,17 +386,16 @@ class CoreCoursesParser(ICoursesParser):
                     group_name = group[0]
                     students_number = int(group[1][1:-1])
                 timeslots_objects.append(
-                    LessonWithExcelCells(
+                    LessonWithExcelCellsDTO(
                         weekday=weekday,
-                        start=start_time,
-                        end=end_time,
+                        start_time=start_time,
+                        end_time=end_time,
                         group_name=group_name,
                         teacher=teacher,
                         room=location,
                         lesson_name=subject_name,
                         students_number=students_number,
-                        left=cell,
-                        right=cell,
+                        excel_range=f"{cell}:{cell}",
                     )
                 )
         return timeslots_objects

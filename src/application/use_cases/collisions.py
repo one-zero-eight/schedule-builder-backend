@@ -10,9 +10,10 @@ from src.domain.dtos.collisions import CollisionsDTO
 from src.domain.dtos.lesson import (
     BaseLessonDTO,
     LessonWithCollisionsDTO,
-    LessonWithExcelCells,
+    LessonWithCollisionTypeDTO,
+    LessonWithExcelCellsDTO,
     LessonWithOutlookCollisionsDTO,
-    LessonWithTeacherAndGroup,
+    LessonWithTeacherAndGroupDTO,
 )
 from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
@@ -154,7 +155,7 @@ class CollisionsChecker(ICollisionsChecker):
         return result
 
     def get_outlook_collisions(
-        self, timeslots: list[LessonWithExcelCells]
+        self, timeslots: list[LessonWithExcelCellsDTO]
     ) -> list[LessonWithOutlookCollisionsDTO]:
         collisions = []
 
@@ -217,7 +218,7 @@ class CollisionsChecker(ICollisionsChecker):
                         booking.start < lesson_end
                         and booking.end > lesson_start
                     ):
-                        booking_as_lesson = LessonWithTeacherAndGroup(
+                        booking_as_lesson = LessonWithTeacherAndGroupDTO(
                             lesson_name=booking.title,
                             weekday=lesson.weekday,
                             start=booking.start.time(),
@@ -248,7 +249,7 @@ class CollisionsChecker(ICollisionsChecker):
         return collisions
 
     async def get_collisions(self, spreadsheet_id: str) -> CollisionsDTO:
-        timeslots: list[LessonWithExcelCells] = (
+        timeslots: list[LessonWithExcelCellsDTO] = (
             await self.parser.get_all_timeslots(spreadsheet_id)
         )
         collisions = CollisionsDTO(
