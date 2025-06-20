@@ -47,3 +47,11 @@ class LessonWithCollisionsDTO(LessonWithExcelCells):
         default_factory=lambda: list(),
         description="Lessons which current lesson intersects with",
     )
+
+
+class LessonWithOutlookCollisionsDTO(LessonWithTeacherAndGroup):
+    collisions: list[LessonWithTeacherAndGroup] = Field(
+        ...,
+        default_factory=lambda: list(),
+        description="Outlook events which current lesson intersects with",
+    )

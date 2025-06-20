@@ -3,7 +3,6 @@ import aiohttp
 from src.application.external_api.innohassle.interfaces.room import (
     IRoomService,
 )
-from src.config import settings
 from src.domain.dtos.room import RoomDTO
 from src.domain.exceptions.base import AppException
 from src.domain.exceptions.tokens import InvalidTokenException

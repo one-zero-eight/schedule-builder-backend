@@ -2,7 +2,7 @@ import datetime
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 
 from src.application.external_api.innohassle.interfaces.booking import (
     IBookingService,
@@ -10,7 +10,6 @@ from src.application.external_api.innohassle.interfaces.booking import (
 from src.application.external_api.innohassle.interfaces.room import (
     IRoomService,
 )
-from src.domain.dtos.users import UserTokenDataDTO
 
 
 router = APIRouter(tags=["Bookings"], route_class=DishkaRoute)

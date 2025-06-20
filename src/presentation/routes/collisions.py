@@ -1,4 +1,3 @@
-import asyncio
 
 from dishka import FromDishka
 from dishka.integrations.fastapi import DishkaRoute

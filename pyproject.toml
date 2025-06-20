@@ -45,3 +45,8 @@ multi_line_output = 3
 line_length = 79
 lines_after_imports = 2
 include_trailing_comma = true
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.0",
+]

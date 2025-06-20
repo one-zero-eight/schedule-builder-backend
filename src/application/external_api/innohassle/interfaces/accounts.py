@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 from authlib.jose import JsonWebKey
 
-from src.domain.dtos.users import UserDTO
 
 
 class IInNoHassleAccounts(ABC):

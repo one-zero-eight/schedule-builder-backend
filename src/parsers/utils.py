@@ -1,11 +1,9 @@
 import datetime
-import os
 import re
 from pathlib import Path
 # noinspection StandardLibraryXml
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
-from zlib import crc32
 
 from openpyxl.utils import coordinate_to_tuple
 

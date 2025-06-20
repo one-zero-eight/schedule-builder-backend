@@ -56,8 +56,9 @@ def parse_location_string(x: str, from_parent: bool = False) -> Item | None:
         ):
             locations = m.group(1)
             locations = locations.split("/")
-            locations = [l.strip() for l in locations]
+            locations = [loc.strip() for loc in locations]
             return "/".join(locations)
+        return None
 
     _loc = combine_patterns(
         [
