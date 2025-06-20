@@ -1,6 +1,8 @@
 from dishka import Provider, Scope, provide
 
-from src.application.external_api.innohassle.interfaces.booking import IBookingService
+from src.application.external_api.innohassle.interfaces.booking import (
+    IBookingService,
+)
 from src.application.use_cases.collisions import CollisionsChecker
 from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
