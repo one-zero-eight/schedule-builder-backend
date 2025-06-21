@@ -1,5 +1,7 @@
+import datetime
+import pprint
 from collections import defaultdict
-from datetime import datetime, timedelta
+from typing import Literal
 
 import pytz
 
@@ -19,6 +21,7 @@ from src.domain.dtos.teacher import TeacherDTO
 from src.domain.enums import CollisionTypeEnum
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
+from src.logging_ import logger
 
 
 class CollisionsChecker(ICollisionsChecker):
@@ -45,20 +48,16 @@ class CollisionsChecker(ICollisionsChecker):
         slot1: BaseLessonDTO,
         slot2: BaseLessonDTO,
     ) -> bool:
-        if (
-            slot2.start_time < slot1.start_time < slot2.end_time
-            or slot2.start_time < slot1.end_time < slot2.end_time
+        if (slot1.end_time < slot2.start_time) or (
+            slot1.start_time > slot2.end_time
         ):
-            return True
-        if (
-            slot1.start_time < slot2.start_time < slot1.end_time
-            or slot1.start_time < slot2.end_time < slot1.end_time
-        ):
-            return True
-        return False
+            return False
+        return True
 
-    def is_online_slot(self, slot: BaseLessonDTO) -> bool:
-        return "ONLINE" == slot.room
+    def is_online_slot(self, slot_or_room: BaseLessonDTO | str) -> bool:
+        if isinstance(slot_or_room, str):
+            return "ONLINE" == slot_or_room
+        return "ONLINE" == slot_or_room.room
 
     def get_collsisions_by_room(
         self, timeslots: list[LessonWithExcelCellsDTO]
@@ -68,34 +67,59 @@ class CollisionsChecker(ICollisionsChecker):
             weekday_to_room_to_slots[slot.weekday][slot.room].append(slot)
         collisions = []
         for weekday in weekday_to_room_to_slots:
-            for room in weekday_to_room_to_slots[weekday]:
-                n = len(weekday_to_room_to_slots[weekday][room])
-                for i in range(n):
-                    slot1 = weekday_to_room_to_slots[weekday][room][i]
+            for room, lessons in weekday_to_room_to_slots[weekday].items():
+                lessons: list[LessonWithExcelCellsDTO]
+                if self.is_online_slot(room):
+                    logger.info("No need to check room collision for online")
+                    continue
+
+                if len(lessons) == 1:
+                    logger.info(
+                        f"Room {room} has only one lesson on {weekday}"
+                    )
+                    continue
+
+                for i, lesson1 in enumerate(lessons):
+                    if (
+                        lesson1.lesson_name
+                        == "Elective course on Physical Education"
+                    ):
+                        logger.info("Skip Physical Education")
+                        continue
                     slot_with_collisions = (
                         LessonWithCollisionsDTO.model_validate(
-                            slot1, from_attributes=True
+                            lesson1, from_attributes=True
                         )
                     )
-                    if self.is_online_slot(slot1):
-                        continue
-                    for j in range(i + 1, n):
-                        slot2: LessonWithExcelCellsDTO = (
-                            weekday_to_room_to_slots[weekday][room][j]
-                        )
-                        if self.is_online_slot(slot2):
-                            continue
-                        if self.check_two_timeslots_collisions_by_time(
-                            slot1, slot2
+                    for lesson2 in lessons[i + 1 :]:
+                        if (
+                            lesson2.lesson_name
+                            == "Elective course on Physical Education"
                         ):
+                            logger.info("Skip Physical Education")
+                            continue
+
+                        if self.check_two_timeslots_collisions_by_time(
+                            lesson1, lesson2
+                        ):
+                            # double check if they are exact
+                            if (
+                                lesson1.lesson_name == lesson2.lesson_name
+                                and lesson1.teacher == lesson2.teacher
+                                and lesson1.room == lesson2.room
+                            ):
+                                pass
                             slot_with_collisions.collisions.append(
                                 LessonWithCollisionTypeDTO(
-                                    **slot2.model_dump(),
+                                    **lesson2.model_dump(),
                                     collision_type=CollisionTypeEnum.ROOM,
                                 )
                             )
                     if slot_with_collisions.collisions:
                         collisions.append(slot_with_collisions)
+        logger.info(
+            f"Total collisions: {len(collisions)}: {pprint.pformat(collisions)}"
+        )
         return collisions
 
     def get_collisions_by_teacher(
@@ -178,23 +202,23 @@ class CollisionsChecker(ICollisionsChecker):
             if lesson_weekday is None:
                 continue
 
-            today = datetime.now(pytz.utc).date()
+            today = datetime.datetime.now(pytz.utc).date()
             lesson_dates = []
 
             for day_offset in range(
                 30
             ):  # TODO: Change fixed 30-day window to semester based window
-                check_date = today + timedelta(days=day_offset)
+                check_date = today + datetime.timedelta(days=day_offset)
                 if check_date.weekday() == lesson_weekday:
                     lesson_dates.append(check_date)
 
             lesson_collisions = []
 
             for lesson_date in lesson_dates:
-                lesson_start = datetime.combine(
+                lesson_start = datetime.datetime.combine(
                     lesson_date, lesson.start_time
                 ).replace(tzinfo=pytz.utc)
-                lesson_end = datetime.combine(
+                lesson_end = datetime.datetime.combine(
                     lesson_date, lesson.end_time
                 ).replace(tzinfo=pytz.utc)
 
@@ -235,8 +259,8 @@ class CollisionsChecker(ICollisionsChecker):
                 outlook_collision = LessonWithOutlookCollisionsDTO(
                     lesson_name=lesson.lesson_name,
                     weekday=lesson.weekday,
-                    start=lesson.start_time,
-                    end=lesson.end_time,
+                    start_time=lesson.start_time,
+                    end_time=lesson.end_time,
                     room=lesson.room,
                     teacher=lesson.teacher,
                     group_name=lesson.group_name,
@@ -248,15 +272,29 @@ class CollisionsChecker(ICollisionsChecker):
         return collisions
 
     async def get_collisions(
-        self, spreadsheet_id: str
+        self,
+        spreadsheet_id: str,
+        check_room_collisions: bool = True,
+        check_teacher_collisions: bool = True,
+        check_space_collisions: bool = True,
+        check_outlook_collisions: bool = True,
     ) -> list[LessonWithCollisionsDTO | LessonWithCollisionTypeDTO]:
         timeslots: list[LessonWithExcelCellsDTO] = (
             await self.parser.get_all_timeslots(spreadsheet_id)
         )
-        collisions = [
-            *self.get_collsisions_by_room(timeslots),
-            *self.get_collisions_by_teacher(timeslots),
-            *self.get_lessons_where_not_enough_place_for_students(timeslots),
-            *await self.get_outlook_collisions(timeslots),
-        ]
+        logger.info(f"{len(timeslots)} Timeslots")
+        collisions = []
+
+        if check_room_collisions:
+            _ = self.get_collsisions_by_room(timeslots)
+            logger.info(f"Room collisions ({len(_)}): {pprint.pformat(_)}")
+            collisions.extend(_)
+        if check_teacher_collisions:
+            collisions.extend(self.get_collisions_by_teacher(timeslots))
+        if check_space_collisions:
+            collisions.extend(
+                self.get_lessons_where_not_enough_place_for_students(timeslots)
+            )
+        if check_outlook_collisions:
+            collisions.extend(await self.get_outlook_collisions(timeslots))
         return collisions
