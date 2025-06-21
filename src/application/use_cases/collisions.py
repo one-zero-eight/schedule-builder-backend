@@ -1,7 +1,6 @@
 import datetime
 import pprint
 from collections import defaultdict
-from typing import Literal
 
 import pytz
 
@@ -22,6 +21,15 @@ from src.domain.enums import CollisionTypeEnum
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 from src.logging_ import logger
+
+
+def do_intersect(
+    start_a: datetime.datetime,
+    end_a: datetime.datetime,
+    start_b: datetime.datetime,
+    end_b: datetime.datetime,
+) -> bool:
+    return not (end_a < start_b or end_b < start_a)
 
 
 class CollisionsChecker(ICollisionsChecker):
@@ -59,7 +67,7 @@ class CollisionsChecker(ICollisionsChecker):
             return "ONLINE" == slot_or_room
         return "ONLINE" == slot_or_room.room
 
-    def get_collsisions_by_room(
+    def get_collisions_by_room(
         self, timeslots: list[LessonWithExcelCellsDTO]
     ) -> list[LessonWithCollisionsDTO]:
         weekday_to_room_to_slots = defaultdict(lambda: defaultdict(list))
@@ -188,6 +196,26 @@ class CollisionsChecker(ICollisionsChecker):
     async def get_outlook_collisions(
         self, timeslots: list[LessonWithExcelCellsDTO]
     ) -> list[LessonWithOutlookCollisionsDTO]:
+        min_needed_time: datetime.datetime = datetime.datetime.max
+        max_needed_time: datetime.datetime = datetime.datetime.min
+        today = datetime.datetime.now(pytz.utc).date()
+
+        for lesson in timeslots:
+            start_datetime = datetime.datetime.combine(
+                today, lesson.start_time
+            )
+            end_datetime = datetime.datetime.combine(
+                today + datetime.timedelta(days=30), lesson.end_time
+            )
+            min_needed_time = min(start_datetime, min_needed_time)
+            max_needed_time = max(end_datetime, max_needed_time)
+
+        try:
+            all_bookings = await self.booking_service.get_all_bookings(start=min_needed_time, end=max_needed_time)
+        except Exception as e:
+            logger.warning(f"Error while fetching bookings: {e}")
+            return []
+
         collisions = []
 
         weekday_map = {
@@ -210,12 +238,9 @@ class CollisionsChecker(ICollisionsChecker):
             if lesson_weekday is None:
                 continue
 
-            today = datetime.datetime.now(pytz.utc).date()
             lesson_dates = []
 
-            for day_offset in range(
-                30
-            ):  # TODO: Change fixed 30-day window to semester based window
+            for day_offset in range(30):  # TODO: Change fixed 30-day window to semester based window
                 check_date = today + datetime.timedelta(days=day_offset)
                 if check_date.weekday() == lesson_weekday:
                     lesson_dates.append(check_date)
@@ -231,37 +256,32 @@ class CollisionsChecker(ICollisionsChecker):
                 ).replace(tzinfo=pytz.utc)
 
                 try:
-                    bookings = await self.booking_service.get_bookings(
-                        room_id=lesson.room, start=lesson_start, end=lesson_end
-                    )
+                    intersected_bookings = list(filter(
+                        lambda booking: booking.room_id == lesson.room
+                                        and do_intersect(booking.start_time, booking.end_time, lesson_start, lesson_end),
+                        all_bookings))
+
                 except Exception:
                     # TODO: add logging once logger is added
                     continue
 
-                for booking in bookings:
-                    if (
-                        booking.title.lower().strip()
-                        == lesson.lesson_name.lower().strip()
-                    ):
+                for booking in intersected_bookings:
+                    if booking.title.lower().strip() == lesson.lesson_name.lower().strip():
                         continue
 
-                    if (
-                        booking.start_time < lesson_end
-                        and booking.end_time > lesson_start
-                    ):
-                        booking_as_lesson = LessonWithTeacherAndGroupDTO(
-                            lesson_name=booking.title,
-                            weekday=lesson.weekday,
-                            start_time=booking.start_time.time(),
-                            end_time=booking.end_time.time(),
-                            room=lesson.room,
-                            teacher="External Booking",  # Placeholder
-                            group_name=None,
-                            students_number=0,
-                        )
+                    booking_as_lesson = LessonWithTeacherAndGroupDTO(
+                        lesson_name=booking.title,
+                        weekday=lesson.weekday,
+                        start_time=booking.start_time.time(),
+                        end_time=booking.end_time.time(),
+                        room=lesson.room,
+                        teacher="External Booking",
+                        group_name=None,
+                        students_number=0,
+                    )
 
-                        if booking_as_lesson not in lesson_collisions:
-                            lesson_collisions.append(booking_as_lesson)
+                    if booking_as_lesson not in lesson_collisions:
+                        lesson_collisions.append(booking_as_lesson)
 
             if lesson_collisions:
                 outlook_collision = LessonWithOutlookCollisionsDTO(
@@ -294,7 +314,7 @@ class CollisionsChecker(ICollisionsChecker):
         collisions = []
 
         if check_room_collisions:
-            _ = self.get_collsisions_by_room(timeslots)
+            _ = self.get_collisions_by_room(timeslots)
             logger.info(f"Room collisions ({len(_)}): {pprint.pformat(_)}")
             collisions.extend(_)
         if check_teacher_collisions:

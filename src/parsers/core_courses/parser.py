@@ -2,7 +2,6 @@ import io
 import pprint
 from collections import defaultdict
 from datetime import datetime
-from email.policy import default
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
