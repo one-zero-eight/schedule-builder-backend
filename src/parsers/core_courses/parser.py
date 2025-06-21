@@ -1,6 +1,8 @@
 import io
+import pprint
+from collections import defaultdict
 from datetime import datetime
-from hashlib import sha1
+from email.policy import default
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
@@ -8,10 +10,15 @@ from zipfile import ZipFile
 import aiohttp
 import numpy as np
 import pandas as pd
-from openpyxl.utils import column_index_from_string
+from openpyxl.utils import (
+    column_index_from_string,
+    coordinate_to_tuple,
+    get_column_letter,
+)
 
 from src.domain.dtos.lesson import LessonWithExcelCellsDTO
 from src.domain.interfaces.parser import ICoursesParser
+from src.logging_ import logger
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
 from src.parsers.utils import (
@@ -22,34 +29,6 @@ from src.parsers.utils import (
 )
 
 
-# noinspection InsecureHash
-def hashsum_dfs(dfs: dict[str, pd.DataFrame]) -> str:
-    to_hash = (
-        sha1(
-            pd.util.hash_pandas_object(dfs[target.sheet_name]).values
-        ).hexdigest()
-        for target in config.TARGETS
-    )
-    hashsum = sha1("\n".join(to_hash).encode("utf-8")).hexdigest()
-    return hashsum
-
-
-def get_dataframes_pipeline(parser, xlsx) -> dict[str, pd.DataFrame]:
-    dfs = parser.get_clear_dataframes_from_xlsx(
-        xlsx_file=xlsx, targets=config.TARGETS
-    )
-    hashsum = hashsum_dfs(dfs)
-
-    xlsx_path = config.TEMP_DIR / f"{hashsum}.xlsx"
-    xlsx_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(xlsx_path, "wb") as f:
-        xlsx.seek(0)
-        content = xlsx.read()
-        f.write(content)
-
-    return dfs
-
-
 class CoreCoursesParser(ICoursesParser):
     """
     Elective parser class
@@ -57,7 +36,7 @@ class CoreCoursesParser(ICoursesParser):
 
     def get_clear_dataframes_from_xlsx(
         self, xlsx_file: io.BytesIO, targets: list[config.Target]
-    ) -> dict[str, pd.DataFrame]:
+    ) -> tuple[dict[str, pd.DataFrame], dict]:
         """
         Get data from xlsx file and return it as a DataFrame with merged
         cells and empty cells in the course row filled by left value.
@@ -76,7 +55,7 @@ class CoreCoursesParser(ICoursesParser):
         )
         # ------- Clean up dataframes -------
         dfs = {key.strip(): value for key, value in dfs.items()}
-
+        merged_ranges: dict = {key.strip(): None for key in dfs}
         for target in targets:
             df = None
             for key, value in dfs.items():
@@ -84,7 +63,9 @@ class CoreCoursesParser(ICoursesParser):
                     df = value
                     break
             # -------- Fill merged cells with values --------
-            self.merge_cells(df, xlsx_file, target.sheet_name)
+            merged_ranges[target.sheet_name] = self.merge_cells(
+                df, xlsx_file, target.sheet_name
+            )
             # -------- Assign excel cell to subject --------
             self.assign_excel_row_and_column_to_subjects(df)
             # -------- Select range --------
@@ -96,7 +77,7 @@ class CoreCoursesParser(ICoursesParser):
             # -------- Update dataframe --------
             dfs[target.sheet_name] = df
 
-        return dfs
+        return dfs, merged_ranges
 
     async def get_xlsx_file(self, spreadsheet_id: str) -> io.BytesIO:
         """
@@ -148,7 +129,7 @@ class CoreCoursesParser(ICoursesParser):
             tmp //= 26
         excel_col.append(ascii_uppercase[j % 26])
         excel_col = "".join(excel_col)
-        return f"{excel_col}:{excel_row}"
+        return f"{excel_col}{excel_row}"
 
     def assign_excel_row_and_column_to_subjects(
         self, df: pd.DataFrame
@@ -202,6 +183,7 @@ class CoreCoursesParser(ICoursesParser):
             value = df.iloc[start_row, start_col]
             # fill merged cells with value
             df.iloc[start_row : end_row + 1, start_col : end_col + 1] = value
+        return merged_ranges
 
     def select_range(
         self, df: pd.DataFrame, target_range: str
@@ -349,53 +331,130 @@ class CoreCoursesParser(ICoursesParser):
         self, spreadsheet_id: str
     ) -> list[LessonWithExcelCellsDTO]:
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
-        dfs = get_dataframes_pipeline(self, xlsx)
-
-        events = []
+        dfs, dfs_merged_ranges = self.get_clear_dataframes_from_xlsx(
+            xlsx_file=xlsx, targets=config.TARGETS
+        )
+        lessons = []
 
         for target in config.TARGETS:
             # find dataframe from dfs
             sheet_df = dfs[target.sheet_name]
-
+            merged_ranges = [
+                split_range_to_xy(merged_range)
+                for merged_range in dfs_merged_ranges[target.sheet_name]
+            ]
+            # [(start_row, start_col), (end_row, end_col)]
             time_columns_index = [
                 column_index_from_string(col) - 1
                 for col in target.time_columns
             ]
             by_courses = self.split_df_by_courses(sheet_df, time_columns_index)
             for course_df in by_courses:
+                course_lessons = []
                 # -------- Set course and group as header; weekday and timeslot as index --------
                 self.set_course_and_group_as_header(course_df)
                 self.set_weekday_and_time_as_index(course_df)
-                event_generators = course_df.groupby(level=[0, 1], sort=False)
-                events.extend(event_generators)
 
-        timeslots_objects = []
-        for timeslot, timeslot_df in events:
-            weekday, (start_time, end_time) = timeslot
-            for column, cell_values_series in timeslot_df.items():
-                cell_values_series: pd.Series
-                year, group = column
-                if pd.isna(cell_values_series).all():
-                    continue
-                else:
-                    subject, teacher, location = cell_values_series.values
-                    subject = subject.rsplit("$", maxsplit=1)
-                    subject_name, cell = subject
-                    location = self.identify_room(str(location))
-                    group = group.split()
-                    group_name = group[0]
-                    students_number = int(group[1][1:-1])
-                timeslots_objects.append(
-                    LessonWithExcelCellsDTO(
-                        weekday=weekday,
-                        start_time=start_time,
-                        end_time=end_time,
-                        group_name=group_name,
-                        teacher=teacher,
-                        room=location,
-                        lesson_name=subject_name,
-                        students_number=students_number,
-                        excel_range=f"{cell}:{cell}",
+                for timeslot, timeslot_df in course_df.groupby(
+                    level=[0, 1], sort=False
+                ):
+                    weekday, (start_time, end_time) = timeslot
+                    for column, cell_values_series in timeslot_df.items():
+                        cell_values_series: pd.Series
+                        year, group = column
+                        if pd.isna(cell_values_series).all():
+                            continue
+                        else:
+                            subject, teacher, location = (
+                                cell_values_series.values
+                            )
+                            subject = subject.rsplit("$", maxsplit=1)
+                            subject_name, cell = subject
+                            location = self.identify_room(str(location))
+                            group = group.split()
+                            group_name = group[0]
+                            if len(group) > 1:
+                                students_number = int(group[1][1:-1])
+                            else:
+                                students_number = 1
+                        course_lessons.append(
+                            LessonWithExcelCellsDTO(
+                                weekday=weekday,
+                                start_time=start_time,
+                                end_time=end_time,
+                                group_name=group_name,
+                                teacher=teacher,
+                                room=location,
+                                lesson_name=subject_name,
+                                students_number=students_number,
+                                excel_range=cell,
+                            )
+                        )
+                merged_registry = defaultdict(
+                    list
+                )  # merged range index X list of lessons
+                non_merged = []
+                for lesson in course_lessons:
+                    cell_row, cell_col = coordinate_to_tuple(
+                        lesson.excel_range
                     )
+                    cell_row -= 1
+                    cell_col -= 1
+                    for i, (
+                        (start_row, start_col),
+                        (end_row, end_col),
+                    ) in enumerate(merged_ranges):
+                        if (start_row <= cell_row <= end_row) and (
+                            start_col <= cell_col <= end_col
+                        ):
+                            merged_registry[i].append(lesson)
+                            break
+                    else:  # non_merged
+                        non_merged.append(lesson)
+
+                merged = []
+                for _lessons in merged_registry.values():
+                    _lessons: list[LessonWithExcelCellsDTO]
+                    groups = []
+                    students_number = []
+                    excel_ranges = []
+                    lesson1 = _lessons[0]
+                    for lesson in _lessons:
+                        if isinstance(lesson.group_name, list):
+                            groups.extend(lesson.group_name)
+                        elif lesson.group_name:
+                            groups.append(lesson.group_name)
+                        if lesson.students_number:
+                            students_number.append(lesson.students_number)
+                        if lesson.excel_range:
+                            excel_ranges.append(lesson.excel_range)
+                    lesson1.group_name = groups
+                    lesson1.students_number = (
+                        sum(students_number)
+                        if students_number
+                        else lesson1.students_number
+                    )
+                    rows = {
+                        "".join(filter(str.isdigit, c)) for c in excel_ranges
+                    }
+                    if len(rows) != 1:
+                        raise ValueError("Cells are not on the same row")
+                    row = rows.pop()
+                    col_numbers = sorted(
+                        column_index_from_string(
+                            "".join(filter(str.isalpha, c))
+                        )
+                        for c in excel_ranges
+                    )
+                    first = get_column_letter(col_numbers[0]) + row
+                    last = get_column_letter(col_numbers[-1]) + row
+                    lesson1.excel_range = f"{first}:{last}"
+                    merged.append(lesson1)
+
+                logger.info(f"Merged lessons: {pprint.pformat(merged)}")
+                lessons.extend(merged)
+                logger.info(
+                    f"Non-merged lessons: {pprint.pformat(non_merged)}"
                 )
-        return timeslots_objects
+                lessons.extend(non_merged)
+        return lessons

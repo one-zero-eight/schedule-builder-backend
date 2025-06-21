@@ -24,10 +24,9 @@ class BaseLessonDTO(BaseModel):
 
 class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
     teacher: str = Field(..., max_length=100, description="Teacher on lesson")
-    group_name: str | None = Field(
+    group_name: str | list[str] | None = Field(
         ...,
-        max_length=100,
-        description="Name of the group",
+        description="Name of the group or list of groups",
     )
     students_number: int = Field(
         ..., description="Number of students in the group"
@@ -35,9 +34,7 @@ class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
 
 
 class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
-    excel_range: str = Field(
-        ..., max_length=15, description="Topleft corner of the cell"
-    )
+    excel_range: str = Field(..., description="Topleft corner of the cell")
 
 
 class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
@@ -48,7 +45,6 @@ class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
 
 class LessonWithCollisionsDTO(LessonWithExcelCellsDTO):
     collisions: list[LessonWithCollisionTypeDTO] = Field(
-        ...,
         description="List of colliding lessons",
         default_factory=lambda: list(),
     )
@@ -56,7 +52,6 @@ class LessonWithCollisionsDTO(LessonWithExcelCellsDTO):
 
 class LessonWithOutlookCollisionsDTO(LessonWithTeacherAndGroupDTO):
     collisions: list[LessonWithTeacherAndGroupDTO] = Field(
-        ...,
         default_factory=lambda: list(),
         description="Outlook events which current lesson intersects with",
     )

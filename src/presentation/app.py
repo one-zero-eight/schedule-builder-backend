@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
+import src.logging_  # noqa: F401
 from src.domain.exceptions.base import AppException
 from src.presentation.dependencies import create_async_container
 from src.presentation.routes.bookings import router as booking_router
