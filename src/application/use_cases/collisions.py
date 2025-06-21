@@ -131,8 +131,16 @@ class CollisionsChecker(ICollisionsChecker):
         )
         for obj in timeslots:
             teachers_to_timeslots[obj.teacher].append(obj)
-            if obj.teacher in self.group_to_studying_teachers[obj.group_name]:
-                teachers_to_timeslots[obj.teacher].append(obj)
+            if isinstance(obj.group_name, str):
+                if (
+                    obj.teacher
+                    in self.group_to_studying_teachers[obj.group_name]
+                ):
+                    teachers_to_timeslots[obj.teacher].append(obj)
+                continue
+            for group_name in obj.group_name:
+                if obj.teacher in self.group_to_studying_teachers[group_name]:
+                    teachers_to_timeslots[obj.teacher].append(obj)
         for teacher in teachers_to_timeslots:
             n = len(teachers_to_timeslots[teacher])
             for i in range(n):
