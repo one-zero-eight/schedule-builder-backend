@@ -384,7 +384,10 @@ class CoreCoursesParser(ICoursesParser):
                     location = self.identify_room(str(location))
                     group = group.split()
                     group_name = group[0]
-                    students_number = int(group[1][1:-1])
+                    if len(group) > 1:
+                        students_number = int(group[1][1:-1])
+                    else:
+                        students_number = 1
                 timeslots_objects.append(
                     LessonWithExcelCellsDTO(
                         weekday=weekday,
