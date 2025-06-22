@@ -26,7 +26,7 @@ jobs:
         run: echo "TAG_NAME=${{ github.event.inputs.tag_name || 'latest' }}" >> $GITHUB_ENV
 
       - name: Build image
-        run: docker build -t <your-dockerhub-username>/<your-dockerhub-repo>:${{ env.TAG_NAME }} .
+        run: docker build -t wannebetheshy1/swp2025:${{ env.TAG_NAME }} .
 
       - name: Push image to Docker Hub
         run: |
