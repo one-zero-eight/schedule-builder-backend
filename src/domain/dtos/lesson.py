@@ -14,6 +14,7 @@ class BaseLessonDTO(BaseModel):
     start_time: time = Field(..., description="Start time of lesson")
     end_time: time = Field(..., description="End time of lesson")
     room: str = Field(..., max_length=100, description="Room for lesson")
+    room_capacity: int | None = Field(..., description="Capacity of the room")
 
     @model_validator(mode="after")
     def validate_date(self) -> Self:
@@ -34,24 +35,12 @@ class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
 
 
 class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
-    excel_range: str = Field(..., description="Topleft corner of the cell")
+    excel_range: str | None = Field(
+        ..., description="Topleft corner of the cell"
+    )
 
 
 class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
     collision_type: CollisionTypeEnum = Field(
         ..., description="Type of collision"
-    )
-
-
-class LessonWithCollisionsDTO(LessonWithExcelCellsDTO):
-    collisions: list[LessonWithCollisionTypeDTO] = Field(
-        description="List of colliding lessons",
-        default_factory=lambda: list(),
-    )
-
-
-class LessonWithOutlookCollisionsDTO(LessonWithTeacherAndGroupDTO):
-    collisions: list[LessonWithTeacherAndGroupDTO] = Field(
-        default_factory=lambda: list(),
-        description="Outlook events which current lesson intersects with",
     )
