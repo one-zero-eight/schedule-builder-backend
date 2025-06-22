@@ -1,0 +1,26 @@
+services:
+  fastapi_app:
+    image: wannebetheshy1/swp2025:latest
+    command: uvicorn src.presentation.app:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./settings.yaml:/code/settings.yaml:ro
+
+  nginx:
+    image: "nginx:1.27"
+    restart: always
+    ports: [ "443:443" ]
+    depends_on:
+      - fastapi_app
+    volumes:
+      - "./nginx.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "/etc/letsencrypt:/etc/letsencrypt:ro"
+
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    environment:
+      - WATCHTOWER_CLEANUP=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 fastapi_app
+
