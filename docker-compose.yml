@@ -6,3 +6,5 @@ services:
     command: sh -c "uvicorn src.presentation.app:app --port=8000 --host=0.0.0.0"
     volumes:
       - ./settings.yaml:/settings.yaml:ro
+    ports:
+      - "8000:8000"
