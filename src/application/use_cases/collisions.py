@@ -23,15 +23,6 @@ from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 from src.logging_ import logger
 
 
-def do_intersect(
-    start_a: datetime.datetime,
-    end_a: datetime.datetime,
-    start_b: datetime.datetime,
-    end_b: datetime.datetime,
-) -> bool:
-    return not (end_a < start_b or end_b < start_a)
-
-
 class CollisionsChecker(ICollisionsChecker):
     def __init__(
         self,
@@ -51,8 +42,17 @@ class CollisionsChecker(ICollisionsChecker):
         for room in rooms:
             self.room_to_capacity[room.id] = room.capacity
 
+    @staticmethod
+    def check_datetimes_intersect(
+        start_a: datetime.datetime,
+        end_a: datetime.datetime,
+        start_b: datetime.datetime,
+        end_b: datetime.datetime,
+    ) -> bool:
+        return not (end_a < start_b or end_b < start_a)
+
+    @staticmethod
     def check_two_timeslots_collisions_by_time(
-        self,
         slot1: BaseLessonDTO,
         slot2: BaseLessonDTO,
     ) -> bool:
@@ -62,7 +62,8 @@ class CollisionsChecker(ICollisionsChecker):
             return False
         return True
 
-    def is_online_slot(self, slot_or_room: BaseLessonDTO | str) -> bool:
+    @staticmethod
+    def is_online_slot(slot_or_room: BaseLessonDTO | str) -> bool:
         if isinstance(slot_or_room, str):
             return "ONLINE" == slot_or_room
         return "ONLINE" == slot_or_room.room
@@ -255,16 +256,11 @@ class CollisionsChecker(ICollisionsChecker):
                     lesson_date, lesson.end_time
                 ).replace(tzinfo=pytz.utc)
 
-                try:
-                    intersected_bookings = list(filter(
-                        lambda booking: booking.room_id == lesson.room
-                                        and do_intersect(booking.start_time, booking.end_time, lesson_start, lesson_end),
-                        all_bookings))
-
-                except Exception:
-                    # TODO: add logging once logger is added
-                    continue
-
+                intersected_bookings = list(
+                    filter(lambda booking: booking.room_id == lesson.room
+                                           and self.check_datetimes_intersect(booking.start_time, booking.end_time, lesson_start, lesson_end),
+                           all_bookings))
+ 
                 for booking in intersected_bookings:
                     if booking.title.lower().strip() == lesson.lesson_name.lower().strip():
                         continue
