@@ -1,5 +1,6 @@
 services:
   fastapi_app:
+    container_name: fastapi_app
     image: wannebetheshy1/swp2025:latest
     command: uvicorn src.presentation.app:app --host 0.0.0.0 --port 8000
     volumes:
