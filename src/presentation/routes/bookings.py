@@ -22,7 +22,7 @@ async def get_bookings(
     room_id: str,
     booking_service: FromDishka[IBookingService],
 ) -> list[BookingDTO]:
-    return await booking_service.get_bookings(
+    return await booking_service.get_room_bookings(
         room_id,
         datetime.datetime.now(),
         datetime.datetime.now() + datetime.timedelta(days=1),
