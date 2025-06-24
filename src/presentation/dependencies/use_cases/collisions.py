@@ -6,6 +6,7 @@ from src.application.external_api.innohassle.interfaces.booking import (
 from src.application.use_cases.collisions import CollisionsChecker
 from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
+from src.domain.interfaces.graph import IGraph
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
 
@@ -20,5 +21,8 @@ class CollisionsCheckerProvider(Provider):
         teachers: list[TeacherDTO],
         rooms: list[RoomDTO],
         booking_service: IBookingService,
+        graph: IGraph,
     ) -> ICollisionsChecker:
-        return CollisionsChecker(parser, teachers, rooms, booking_service)
+        return CollisionsChecker(
+            parser, teachers, rooms, booking_service, graph
+        )

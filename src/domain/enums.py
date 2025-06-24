@@ -5,3 +5,4 @@ class CollisionTypeEnum(Enum):
     ROOM = "room"
     TEACHER = "teacher"
     CAPACITY = "capacity"
+    OUTLOOK = "outlook"
