@@ -13,6 +13,6 @@ class IBookingService(ABC):
 
     @abstractmethod
     async def get_all_bookings(
-            self, start: datetime, end: datetime
+        self, start: datetime, end: datetime
     ) -> list[BookingDTO]:
         pass
