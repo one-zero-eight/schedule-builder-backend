@@ -3,6 +3,7 @@ from datetime import time
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 
+from src.domain.dtos.booking import BookingDTO
 from src.domain.enums import CollisionTypeEnum
 
 
@@ -44,3 +45,4 @@ class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
     collision_type: CollisionTypeEnum = Field(
         ..., description="Type of collision"
     )
+    outlook_info: BookingDTO | None = Field(None, description="Outlook info")
