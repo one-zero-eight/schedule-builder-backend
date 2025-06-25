@@ -52,7 +52,7 @@ class BookingService(IBookingService):
                 headers={"Authorization": f"Bearer {self.token}"}
         ) as client:
             async with client.get(
-                    "https://api.innohassle.ru/room-booking/staging-v0/bookings",
+                    "https://api.innohassle.ru/room-booking/staging-v0/bookings/",
                     params={
                         "start": start.isoformat(),
                         "end": end.isoformat(),
