@@ -1,7 +1,7 @@
 from dishka import Provider, Scope, provide
 
-from src.application.graph import UndirectedGraph
 from src.domain.interfaces.graph import IGraph
+from src.domain.interfaces.services.graph import UndirectedGraph
 
 
 class GraphProvider(Provider):

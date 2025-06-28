@@ -16,7 +16,7 @@ from openpyxl.utils import (
 )
 
 from src.domain.dtos.lesson import LessonWithExcelCellsDTO
-from src.domain.interfaces.parser import ICoursesParser
+from src.domain.interfaces.services.parser import ICoursesParser
 from src.logging_ import logger
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
