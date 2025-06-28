@@ -17,7 +17,9 @@ class BookingService(IBookingService):
 
     async def get_room_bookings(
         self, room_id: str, start: datetime.datetime, end: datetime.datetime
-    ) -> list[BookingDTO]:  # TODO: Rewrite functions to use same endpoint once updated booking is in production
+    ) -> list[
+        BookingDTO
+    ]:  # TODO: Rewrite functions to use same endpoint once updated booking is in production
         async with aiohttp.ClientSession(
             headers={"Authorization": f"Bearer {self.token}"}
         ) as client:
@@ -49,7 +51,7 @@ class BookingService(IBookingService):
         self, start: datetime, end: datetime
     ) -> list[BookingDTO]:
         async with aiohttp.ClientSession(
-                headers={"Authorization": f"Bearer {self.token}"}
+            headers={"Authorization": f"Bearer {self.token}"}
         ) as client:
             async with client.get(
                     "https://api.innohassle.ru/room-booking/staging-v0/bookings/",

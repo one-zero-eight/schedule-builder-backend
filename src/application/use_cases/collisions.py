@@ -14,7 +14,7 @@ from src.domain.dtos.lesson import (
 )
 from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
-from src.domain.enums import CollisionTypeEnum
+from src.domain.enums import CollisionTypeEnum, Weekdays
 from src.domain.interfaces.graph import IGraph
 from src.domain.interfaces.parser import ICoursesParser
 from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
@@ -216,7 +216,9 @@ class CollisionsChecker(ICollisionsChecker):
             max_needed_time = max(end_datetime, max_needed_time)
 
         try:
-            all_bookings = await self.booking_service.get_all_bookings(start=min_needed_time, end=max_needed_time)
+            all_bookings = await self.booking_service.get_all_bookings(
+                start=min_needed_time, end=max_needed_time
+            )
         except Exception as e:
             logger.warning(f"Error while fetching bookings: {e}")
             return []
@@ -245,7 +247,9 @@ class CollisionsChecker(ICollisionsChecker):
 
             lesson_dates = []
 
-            for day_offset in range(30):  # TODO: Change fixed 30-day window to semester based window
+            for day_offset in range(
+                30
+            ):  # TODO: Change fixed 30-day window to semester based window
                 check_date = today + datetime.timedelta(days=day_offset)
                 if check_date.weekday() == lesson_weekday:
                     lesson_dates.append(check_date)
@@ -266,12 +270,23 @@ class CollisionsChecker(ICollisionsChecker):
                 ).replace(tzinfo=pytz.utc)
 
                 intersected_bookings = list(
-                    filter(lambda booking: booking.room_id == lesson.room
-                                           and self.check_datetimes_intersect(booking.start_time, booking.end_time, lesson_start, lesson_end),
-                           all_bookings))
- 
+                    filter(
+                        lambda booking: booking.room_id == lesson.room
+                        and self.check_datetimes_intersect(
+                            booking.start_time,
+                            booking.end_time,
+                            lesson_start,
+                            lesson_end,
+                        ),
+                        all_bookings,
+                    )
+                )
+
                 for booking in intersected_bookings:
-                    if booking.title.lower().strip() == lesson.lesson_name.lower().strip():
+                    if (
+                        booking.title.lower().strip()
+                        == lesson.lesson_name.lower().strip()
+                    ):
                         continue
 
                     if (
@@ -299,6 +314,22 @@ class CollisionsChecker(ICollisionsChecker):
 
         return collisions
 
+    def _sort_by_weekday_and_end_time(
+        self, collisions: list[LessonWithExcelCellsDTO]
+    ) -> tuple:
+        first_attr = collisions[0].weekday
+        second_attr = collisions[0].end_time
+        return (
+            Weekdays.__members__.get(first_attr, Weekdays.SUNDAY).value,
+            second_attr,
+        )
+
+    def sort_collisions(
+        self, collisions: list[LessonWithExcelCellsDTO]
+    ) -> None:
+        collisions.sort(key=self._sort_by_weekday_and_end_time)
+        return
+
     async def get_collisions(
         self,
         spreadsheet_id: str,
@@ -306,7 +337,7 @@ class CollisionsChecker(ICollisionsChecker):
         check_teacher_collisions: bool = True,
         check_space_collisions: bool = True,
         check_outlook_collisions: bool = True,
-    ) -> list[LessonWithCollisionTypeDTO]:
+    ) -> list[list[LessonWithCollisionTypeDTO]]:
         timeslots: list[LessonWithExcelCellsDTO] = (
             await self.parser.get_all_timeslots(spreadsheet_id)
         )
@@ -325,4 +356,5 @@ class CollisionsChecker(ICollisionsChecker):
             )
         if check_outlook_collisions:
             collisions.extend(await self.get_outlook_collisions(timeslots))
+        self.sort_collisions(collisions)
         return collisions
