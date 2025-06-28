@@ -1,28 +1,20 @@
 from dishka import Provider, Scope, provide
 
-from src.application.external_api.innohassle.interfaces.booking import (
-    IBookingService,
+from src.application.use_cases.collisions import CollisionsUseCase
+from src.domain.interfaces.services.collisions_checker import (
+    ICollisionsChecker,
 )
-from src.application.use_cases.collisions import CollisionsChecker
-from src.domain.dtos.room import RoomDTO
-from src.domain.dtos.teacher import TeacherDTO
-from src.domain.interfaces.graph import IGraph
-from src.domain.interfaces.parser import ICoursesParser
-from src.domain.interfaces.use_cases.collisions import ICollisionsChecker
+from src.domain.interfaces.services.parser import ICoursesParser
+from src.domain.interfaces.use_cases.collisions import ICollisionsUseCase
 
 
-class CollisionsCheckerProvider(Provider):
+class CollisionsUseCaseProvider(Provider):
     scope = Scope.REQUEST
 
     @provide
-    def get_collisions_checker(
+    def get_collisions_use_case(
         self,
         parser: ICoursesParser,
-        teachers: list[TeacherDTO],
-        rooms: list[RoomDTO],
-        booking_service: IBookingService,
-        graph: IGraph,
-    ) -> ICollisionsChecker:
-        return CollisionsChecker(
-            parser, teachers, rooms, booking_service, graph
-        )
+        collisions_checker: ICollisionsChecker,
+    ) -> ICollisionsUseCase:
+        return CollisionsUseCase(parser, collisions_checker)

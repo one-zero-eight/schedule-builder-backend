@@ -16,12 +16,17 @@ from src.presentation.dependencies.external_api.innohassle.token import (
 from src.presentation.dependencies.external_api.innohassle.token_manager import (
     TokenManagerProvider,
 )
-from src.presentation.dependencies.graph import GraphProvider
-from src.presentation.dependencies.parsers import CoursesParsersProvider
 from src.presentation.dependencies.rooms import RoomsWithCapacityProvider
+from src.presentation.dependencies.services.collisions_checker import (
+    CollisionsCheckerProvider,
+)
+from src.presentation.dependencies.services.graph import GraphProvider
+from src.presentation.dependencies.services.parsers import (
+    CoursesParserProvider,
+)
 from src.presentation.dependencies.teacher import TeachersProvider
 from src.presentation.dependencies.use_cases.collisions import (
-    CollisionsCheckerProvider,
+    CollisionsUseCaseProvider,
 )
 
 
@@ -34,9 +39,10 @@ def create_async_container() -> AsyncContainer:
         TokenManagerProvider(),
         UserTokenDataProvider(),
         TeachersProvider(),
-        CoursesParsersProvider(),
+        CoursesParserProvider(),
         CollisionsCheckerProvider(),
         RoomsWithCapacityProvider(),
         GraphProvider(),
+        CollisionsUseCaseProvider(),
     )
     return container
