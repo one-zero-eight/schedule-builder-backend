@@ -4,6 +4,7 @@ from fastapi import Request
 from src.application.external_api.innohassle.interfaces.token_manager import (
     ITokenManager,
 )
+from src.config import DEBUG
 from src.domain.dtos.users import UserTokenDataDTO
 from src.domain.exceptions.tokens import InvalidTokenException
 
@@ -17,6 +18,8 @@ class UserTokenDataProvider(Provider):
         request: Request,
         token_manager: ITokenManager,
     ) -> UserTokenDataDTO:
+        if DEBUG:
+            return UserTokenDataDTO(innohassle_id="1", token="token")
         token = request.headers.get("Authorization")
         if not token:
             raise InvalidTokenException()
