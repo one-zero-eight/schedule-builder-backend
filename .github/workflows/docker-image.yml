@@ -21,7 +21,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Run tests
-      run: pytest . --cov=src
+      run: uv run pytest . --cov=src
 
   build-and-push-image:
     if: github.event_name == 'push'
