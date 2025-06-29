@@ -292,7 +292,12 @@ def test_teacher_collisions(
 )
 def test_space_collisions(
     collisions_checker: ICollisionsChecker,
-    data: list[LessonWithExcelCellsDTO], valid_answer: list[LessonWithCollisionTypeDTO]
+    data: list[LessonWithExcelCellsDTO],
+    valid_answer: list[LessonWithCollisionTypeDTO],
 ) -> None:
-    collisions = collisions_checker.get_lessons_where_not_enough_place_for_students(data)
+    collisions = (
+        collisions_checker.get_lessons_where_not_enough_place_for_students(
+            data
+        )
+    )
     assert collisions == valid_answer
