@@ -1,7 +1,7 @@
 from typing import AsyncIterable
 
 import pytest_asyncio
-from dishka import AsyncContainer, make_async_container
+from dishka import AsyncContainer, make_async_container, Scope
 
 from tests.mocks.booking import MockBookingServiceProvider
 
@@ -31,4 +31,5 @@ async def container() -> AsyncIterable[AsyncContainer]:
 
 @pytest_asyncio.fixture
 async def collisions_checker(container: AsyncContainer) -> ICollisionsChecker:
-    return await container.get(ICollisionsChecker)
+    async with container() as request_container:
+        return await request_container.get(ICollisionsChecker)

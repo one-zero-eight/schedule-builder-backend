@@ -15,7 +15,6 @@ class BaseLessonDTO(BaseModel):
     start_time: time = Field(..., description="Start time of lesson")
     end_time: time = Field(..., description="End time of lesson")
     room: str = Field(..., max_length=100, description="Room for lesson")
-    room_capacity: int | None = Field(None, description="Capacity of the room")
 
     @model_validator(mode="after")
     def validate_date(self) -> Self:
@@ -46,3 +45,4 @@ class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
         ..., description="Type of collision"
     )
     outlook_info: BookingDTO | None = Field(None, description="Outlook info")
+    room_capacity: int | None = Field(None, description="Capacity of the room")

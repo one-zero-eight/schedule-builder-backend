@@ -165,6 +165,8 @@ class CollisionsChecker(ICollisionsChecker):
                 ind1, slot1 = teachers_to_timeslots[teacher][i]
                 for j in range(i + 1, n):
                     ind2, slot2 = teachers_to_timeslots[teacher][j]
+                    if slot1.weekday != slot2.weekday:
+                        continue
                     if self.check_two_timeslots_collisions_by_time(
                         slot1, slot2
                     ):
