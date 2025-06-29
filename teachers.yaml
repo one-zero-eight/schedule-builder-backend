@@ -2,93 +2,93 @@ teachers:
 - name: Ahmad Helaly
   study_group: MS1 SE
 - name: Ahmad Taha
-  study_group: phd1
+  study_group: PhD
 - name: Ahmadsho Akdodshoev
   study_group: MS1 DS
 - name: Ahmed Nouralla
   study_group: MS1 SNE
 - name: Al Badr Amer
-  study_group: phd3
+  study_group: PhD
 - name: Alaa Aldin Hajjar
-  study_group: phd2
+  study_group: PhD
 - name: Albert Demian
-  study_group: phd4
+  study_group: PhD
 - name: Albert Nasybullin
-  study_group: phd4
+  study_group: PhD
 - name: Alexey Potyomkin
-  study_group: phd2
+  study_group: PhD
 - name: Alexey Stepanov
-  study_group: phd4
+  study_group: PhD
 - name: Ali Belal Jnadi
-  study_group: phd2
+  study_group: PhD
 - name: Alik Valiullin
   study_group: MS1 RO
 - name: Ammar Meslmani
   study_group: BS3
 - name: Anastasiya Andronova
-  study_group: phd3
+  study_group: PhD
 - name: Anatoliy Baskakov
   study_group: MS2 SE
 - name: Arsen Mutalapov
   study_group: BS4
 - name: Awwal Ishiaku
-  study_group: phd3
+  study_group: PhD
 - name: Cham An Fam
-  study_group: phd3
+  study_group: PhD
 - name: Damir Nurtdinov
   study_group: MS1 R
 - name: Danil Leontev
-  study_group: phd1
+  study_group: PhD
 - name: Dmitrii Alekhin
   study_group: BS4
 - name: Evgeny Gerasimov
   study_group: BS4
 - name: Firas Jolha
-  study_group: phd2
+  study_group: PhD
 - name: Georgy Andryushchenko
   study_group: MS2 DS
 - name: Ghadeer Issa
-  study_group: phd1
+  study_group: PhD
 - name: Gleb Stoyko
   study_group: MS1 RO
 - name: Hamidullah Muslih
-  study_group: phd3
+  study_group: PhD
 - name: Ikechi Kalu Ndukwe
-  study_group: phd3
+  study_group: PhD
 - name: Imam Muwaffaq
-  study_group: phd3
+  study_group: PhD
 - name: Imbugwa Gerald
-  study_group: phd4
+  study_group: PhD
 - name: Kamil Sabbagh
   study_group: MS2 DS
 - name: Karim ElDakroury
   study_group: MS2 SE
 - name: Kirill Saltanov
-  study_group: phd1
+  study_group: PhD
 - name: Mahmoud Mousatat
   study_group: MS1 DS
 - name: Mahmoud Naderi
-  study_group: phd1
+  study_group: PhD
 - name: Marina Ivanova
   study_group: MS1 SE
 - name: Marko Pezer
-  study_group: phd1
+  study_group: PhD
 - name: Markov Andrei
   study_group: BS4
 - name: Mikhail Kuskov
-  study_group: phd1
+  study_group: PhD
 - name: Mikhail Moshchanetskii
-  study_group: phd2
+  study_group: PhD
 - name: Naveed Zafar
-  study_group: phd1
+  study_group: PhD
 - name: Nikita Grigorenko
   study_group: BS4
 - name: Rawan Ali
-  study_group: phd2
+  study_group: PhD
 - name: Roman Garaev
-  study_group: phd3
+  study_group: PhD
 - name: Ruslan Damindarov
-  study_group: phd3
+  study_group: PhD
 - name: Sherif Nafee
   study_group: MS2 SE
 - name: Timur Kharin
@@ -96,7 +96,7 @@ teachers:
 - name: Vladimir Bazilevich
   study_group: MS2 DS
 - name: Vladislav Katkov
-  study_group: phd2
+  study_group: PhD
 - name: Vyacheslav Koshman
   study_group: MS1 R
 - name: Vyacheslav Sergeev
@@ -104,4 +104,4 @@ teachers:
 - name: Yaroslav Kim
   study_group: MS1 SE
 - name: Yusuf Mesbah
-  study_group: phd1
+  study_group: PhD
