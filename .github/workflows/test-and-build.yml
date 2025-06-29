@@ -32,7 +32,9 @@ jobs:
         run: uv run black . --check
       
       - name: Run tests
-        run: uv run pytest . --cov=src
+        run: |
+          cp settings.example.yaml settings.yaml
+          uv run pytest . --cov=src
 
   build-and-push-image:
     if: github.event_name == 'push'
