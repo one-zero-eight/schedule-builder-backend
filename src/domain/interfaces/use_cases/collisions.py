@@ -1,20 +1,16 @@
 from abc import ABC, abstractmethod
 
+from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
 
-class ICollisionsChecker(ABC):
+
+class ICollisionsUseCase(ABC):
     @abstractmethod
-    def get_collisions(
+    async def get_collisions(
         self,
-        google_sheet: str,
+        spreadsheet_id: str,
         check_room_collisions: bool = True,
         check_teacher_collisions: bool = True,
         check_space_collisions: bool = True,
         check_outlook_collisions: bool = True,
-    ):
-        pass
-
-
-class IOutlookCollisionsChecker(ABC):
-    @abstractmethod
-    def get_outlook_collisions(self):
+    ) -> list[list[LessonWithCollisionTypeDTO]]:
         pass

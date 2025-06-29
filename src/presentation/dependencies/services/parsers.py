@@ -1,10 +1,10 @@
 from dishka import Provider, Scope, provide
 
-from src.domain.interfaces.parser import ICoursesParser
+from src.domain.interfaces.services.parser import ICoursesParser
 from src.parsers.core_courses.parser import CoreCoursesParser
 
 
-class CoursesParsersProvider(Provider):
+class CoursesParserProvider(Provider):
     scope = Scope.APP
 
     @provide

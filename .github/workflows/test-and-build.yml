@@ -3,13 +3,42 @@ name: Build and publish a docker image for the API
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-jobs:
+jobs:    
+  lint-and-test:
+    runs-on: ubuntu-latest
+    env:
+      DEBUG: "1"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        run: pipx install uv
+
+      - name: Install dependencies
+        run: uv sync --extra dev --extra test
+
+      - name: Check imports with isort
+        run: uv run isort . --check
+      
+      - name: Check code style with black
+        run: uv run black . --check
+      
+      - name: Run tests
+        run: |
+          cp settings.example.yaml settings.yaml
+          uv run pytest . --cov=src
+
   build-and-push-image:
+    if: github.event_name == 'push'
+    needs: [lint-and-test]
     runs-on: ubuntu-latest
     permissions:
       contents: read

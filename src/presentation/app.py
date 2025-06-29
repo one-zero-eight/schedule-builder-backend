@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 from dishka.integrations.fastapi import setup_dishka
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -82,6 +83,7 @@ def create_app() -> FastAPI:
     setup_dishka(container, app)
     app.exception_handler(RequestValidationError)(validation_exception_handler)
     app.exception_handler(AppException)(app_exception_handler)
+    load_dotenv()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],  # Allows all origins

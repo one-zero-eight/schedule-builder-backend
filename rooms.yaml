@@ -7,6 +7,8 @@ rooms:
   capacity: 25
 - name: 305
   capacity: 25
+- name: 306
+  capacity: 25
 - name: 312
   capacity: 30
 - name: 313
