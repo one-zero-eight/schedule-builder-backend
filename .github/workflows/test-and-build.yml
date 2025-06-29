@@ -10,22 +10,33 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-jobs:
-  build:
+jobs:    
+  lint-and-test:
     runs-on: ubuntu-latest
     env:
       DEBUG: "1"
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Run tests
-      run: uv run pytest . --cov=src
+      - name: Install uv
+        run: pipx install uv
+
+      - name: Install dependencies
+        run: uv sync --extra dev --extra test
+
+      - name: Check imports with isort
+        run: uv run isort . --check
+      
+      - name: Check code style with black
+        run: uv run black . --check
+      
+      - name: Run tests
+        run: uv run pytest . --cov=src
 
   build-and-push-image:
     if: github.event_name == 'push'
-    needs: [build]
+    needs: [lint-and-test]
     runs-on: ubuntu-latest
     permissions:
       contents: read
