@@ -106,7 +106,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     group_name=["Other 2"],
                     students_number=20,
                     excel_range="B13:E13",
-                )
+                ),
             ],
             [
                 [
@@ -148,7 +148,7 @@ from src.domain.interfaces.services.collisions_checker import (
                         excel_range="B13:E13",
                         collision_type="room",
                         outlook_info=None,
-                    )
+                    ),
                 ],
             ],
         ),
@@ -233,7 +233,7 @@ from src.domain.interfaces.services.collisions_checker import (
                 ),
             ],
             [],
-        )
+        ),
     ],
 )
 def test_room_collisions(
@@ -273,7 +273,7 @@ def test_room_collisions(
                     excel_range="A1:A1",
                 ),
             ],
-            1
+            1,
         ),
         (
             [
@@ -311,7 +311,7 @@ def test_room_collisions(
                     excel_range="A1:A1",
                 ),
             ],
-            1
+            1,
         ),
         (
             [
@@ -440,7 +440,7 @@ def test_teacher_collisions(
                         room_capacity=30,
                     ),
                 ],
-            ]
+            ],
         ),
         (
             [
@@ -495,7 +495,7 @@ def test_teacher_collisions(
                 ),
             ],
             [],
-        )
+        ),
     ],
 )
 def test_space_collisions(
