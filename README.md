@@ -1,4 +1,69 @@
 # Schedule Builder Backend
+## Development
+Document the development policies that you used during sprint 5.
+### Kanban Board
+For each column in the kanban board, document entry criteria for each column. Update your kanban board(s) in accordance with what you described.
+### Git Workflow
+Specify which base workflow you adapted to your context (e.g., GitHub flow, Gitflow, etc). 
+
+Explain / Define rules for: 
+- Creating issues from the defined templates (link the 
+earlier defined templates).
+- Labelling issues. 
+- Assigning issues to team members. 
+- Creating, naming, merging branches; 
+- Commit messages format; 
+- Creating a pull request for an issue (link the earlier 
+defined template). 
+- Code reviews. 
+- Merging pull requests. 
+- Resolving issues.
+
+Illustrate your git workflow using a Gitgraph diagram. 
+
+### Secrets Management
+Document your rules for secrets management (e.g. passwords or API keys). Mention where you store your secrets without revealing sensitive information.
+
+### Automated Testing
+Document: 
+- Which tools you used for testing. 
+- Which types of tests you implemented. 
+- Where tests of each type are in the repository.
+
+### Continuous Integration
+For each CI workflow file: 
+- Provide a link to that file. 
+- Provide a list of static analysis tools and testing tools that you use in the CI part. For each tool in the list, briefly explain what you use it for. 
+- Provide a link to where all CI workflow runs can be seen.
+
+### Continuous Deployment
+For each CD workflow file: 
+- Provide a link to that file. 
+- Provide a list of static analysis tools and testing tools that you use in the CD part. For each tool in the list, briefly explain what you use it for. 
+- Provide a link to where all CD workflow runs can be seen.
+
+## Quality
+### Characteristic name
+#### Sub-characteristic name
+- Explain why that sub-characteristic is important. 
+- Provide (a link to) one or more tests for that sub-characteristic in Quality Attribute Scenario format.
+
+### Characteristic name
+#### Sub-characteristic name
+- Explain why that sub-characteristic is important. 
+- Provide (a link to) one or more tests for that sub-characteristic in Quality Attribute Scenario format.
+
+### Characteristic name
+#### Sub-characteristic name
+- Explain why that sub-characteristic is important. 
+- Provide (a link to) one or more tests for that sub-characteristic in Quality Attribute Scenario format.
+
+## Architecture
+
+## Usage
+Explain how to use your MVP v2. Provide information for access if needed, for example authentication credentials and so on. Make sure the customer and TA can launch/access and inspect your product after following the instructions in that section.
+
+# OLD MATERIAL (TO BE REVAMPED)
 ## About
 
 Schedule Builder is created as a tool for Innopolis University Department of Education (DoE) to assist the department in efficient creation of high-quality curriculums for bachelors, masters, and PhD students without any conflicts.
