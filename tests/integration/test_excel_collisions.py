@@ -198,6 +198,580 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                 ],
             ],
         ),
+        (
+            "1i9AyJDHTJY10GIlsQlCJ893-5HLvY9MJJO_zkjfyg1Q",
+            [
+                [
+                    {
+                    "lesson_name": "Физическая культура и спорт (Теоретическая) - Модуль 1 Психология",
+                    "weekday": "TUESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "Элеонора Ильина",
+                    "group_name": [
+                        "B24-CSE-01",
+                        "B24-CSE-02",
+                        "B24-CSE-03",
+                        "B24-CSE-04",
+                        "B24-CSE-05"
+                    ],
+                    "students_number": 145,
+                    "excel_range": "H29:L29",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "TUESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "Mahmoud Naderi",
+                    "group_name": "B24-CSE-06",
+                    "students_number": 29,
+                    "excel_range": "M29",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "TUESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "Alexey Potyomkin",
+                    "group_name": "B24-CSE-07",
+                    "students_number": 29,
+                    "excel_range": "N29",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ]
+            ]
+        ),
+        (
+            "1eFrY331GunFJIEF5U2Zd1OGMSrnYZX2L2FevZXtSEnQ",
+            [
+                [
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "Marko Pezer",
+                    "group_name": "B24-CSE-01",
+                    "students_number": 29,
+                    "excel_range": "H48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "Mahmoud Naderi",
+                    "group_name": "B24-CSE-02",
+                    "students_number": 29,
+                    "excel_range": "I48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "A",
+                    "group_name": "B24-CSE-03",
+                    "students_number": 29,
+                    "excel_range": "J48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "B",
+                    "group_name": "B24-CSE-04",
+                    "students_number": 29,
+                    "excel_range": "K48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "C",
+                    "group_name": "B24-CSE-05",
+                    "students_number": 29,
+                    "excel_range": "L48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "D",
+                    "group_name": "B24-CSE-06",
+                    "students_number": 29,
+                    "excel_range": "M48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "E",
+                    "group_name": "B24-CSE-07",
+                    "students_number": 29,
+                    "excel_range": "N48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "F",
+                    "group_name": "B24-DSAI-01",
+                    "students_number": 29,
+                    "excel_range": "O48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ],
+                [
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "14:20:00",
+                    "end_time": "15:50:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B24-CSE-01",
+                        "B24-CSE-02",
+                        "B24-CSE-03",
+                        "B24-CSE-04",
+                        "B24-CSE-05",
+                        "B24-CSE-06",
+                        "B24-CSE-07",
+                        "B24-DSAI-01",
+                        "B24-DSAI-02",
+                        "B24-DSAI-03",
+                        "B24-DSAI-04",
+                        "B24-DSAI-05"
+                    ],
+                    "students_number": 345,
+                    "excel_range": "H54:S54",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "14:20:00",
+                    "end_time": "15:50:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B23-SD-01",
+                        "B23-SD-02",
+                        "B23-SD-03",
+                        "B23-CBS-01",
+                        "B23-CBS-02",
+                        "B23-DS-01",
+                        "B23-DS-02",
+                        "B23-AI-01",
+                        "B23-AI-02",
+                        "B23-GD-01",
+                        "B23-RO-01"
+                    ],
+                    "students_number": 290,
+                    "excel_range": "U54:AE54",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ],
+                [
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "16:00:00",
+                    "end_time": "17:30:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B24-CSE-01",
+                        "B24-CSE-02",
+                        "B24-CSE-03",
+                        "B24-CSE-04",
+                        "B24-CSE-05",
+                        "B24-CSE-06",
+                        "B24-CSE-07",
+                        "B24-DSAI-01",
+                        "B24-DSAI-02",
+                        "B24-DSAI-03",
+                        "B24-DSAI-04",
+                        "B24-DSAI-05"
+                    ],
+                    "students_number": 345,
+                    "excel_range": "H57:S57",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "16:00:00",
+                    "end_time": "17:30:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B23-SD-01",
+                        "B23-SD-02",
+                        "B23-SD-03",
+                        "B23-CBS-01",
+                        "B23-CBS-02",
+                        "B23-DS-01",
+                        "B23-DS-02",
+                        "B23-AI-01",
+                        "B23-AI-02",
+                        "B23-GD-01",
+                        "B23-RO-01"
+                    ],
+                    "students_number": 290,
+                    "excel_range": "U57:AE57",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ]
+            ]
+        ),
+        (
+            "1CcfhjKOCPDHqAbo0jB3Tg_Nt68WKE_BsNSDv57WMqhA",
+            [
+                [
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "14:20:00",
+                    "end_time": "15:50:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B24-CSE-01",
+                        "B24-CSE-02",
+                        "B24-CSE-03",
+                        "B24-CSE-04",
+                        "B24-CSE-05",
+                        "B24-CSE-06",
+                        "B24-CSE-07",
+                        "B24-DSAI-01",
+                        "B24-DSAI-02",
+                        "B24-DSAI-03",
+                        "B24-DSAI-04",
+                        "B24-DSAI-05"
+                    ],
+                    "students_number": 345,
+                    "excel_range": "H54:S54",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "14:20:00",
+                    "end_time": "15:50:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B23-SD-01",
+                        "B23-SD-02",
+                        "B23-SD-03",
+                        "B23-CBS-01",
+                        "B23-CBS-02",
+                        "B23-DS-01",
+                        "B23-DS-02",
+                        "B23-AI-01",
+                        "B23-AI-02",
+                        "B23-GD-01",
+                        "B23-RO-01"
+                    ],
+                    "students_number": 290,
+                    "excel_range": "U54:AE54",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ],
+                [
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "16:00:00",
+                    "end_time": "17:30:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B24-CSE-01",
+                        "B24-CSE-02",
+                        "B24-CSE-03",
+                        "B24-CSE-04",
+                        "B24-CSE-05",
+                        "B24-CSE-06",
+                        "B24-CSE-07",
+                        "B24-DSAI-01",
+                        "B24-DSAI-02",
+                        "B24-DSAI-03",
+                        "B24-DSAI-04",
+                        "B24-DSAI-05"
+                    ],
+                    "students_number": 345,
+                    "excel_range": "H57:S57",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "16:00:00",
+                    "end_time": "17:30:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B23-SD-01",
+                        "B23-SD-02",
+                        "B23-SD-03",
+                        "B23-CBS-01",
+                        "B23-CBS-02",
+                        "B23-DS-01",
+                        "B23-DS-02",
+                        "B23-AI-01",
+                        "B23-AI-02",
+                        "B23-GD-01",
+                        "B23-RO-01"
+                    ],
+                    "students_number": 290,
+                    "excel_range": "U57:AE57",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ]
+            ]
+        ),
+        (
+            "1-G9AI532WoMt9S8P-tDvFnrNVLtcLrdr9ZMEbrS-FRM",
+            [
+                [
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "Marko Pezer",
+                    "group_name": "B24-CSE-02",
+                    "students_number": 29,
+                    "excel_range": "I48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "10:40:00",
+                    "end_time": "12:10:00",
+                    "room": "460",
+                    "teacher": "Mahmoud Naderi",
+                    "group_name": "B24-CSE-05",
+                    "students_number": 29,
+                    "excel_range": "L48",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ],
+                [
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "12:40:00",
+                    "end_time": "14:10:00",
+                    "room": "460",
+                    "teacher": "Marko Pezer",
+                    "group_name": "B24-CSE-01",
+                    "students_number": 29,
+                    "excel_range": "H51",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Software Project (lab)",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "12:40:00",
+                    "end_time": "14:10:00",
+                    "room": "460",
+                    "teacher": "Mahmoud Naderi",
+                    "group_name": "B24-CSE-04",
+                    "students_number": 29,
+                    "excel_range": "K51",
+                    "collision_type": "room",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ],
+                [
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "14:20:00",
+                    "end_time": "15:50:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B24-CSE-01",
+                        "B24-CSE-02",
+                        "B24-CSE-03",
+                        "B24-CSE-04",
+                        "B24-CSE-05",
+                        "B24-CSE-06",
+                        "B24-CSE-07",
+                        "B24-DSAI-01",
+                        "B24-DSAI-02",
+                        "B24-DSAI-03",
+                        "B24-DSAI-04",
+                        "B24-DSAI-05"
+                    ],
+                    "students_number": 345,
+                    "excel_range": "H54:S54",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "14:20:00",
+                    "end_time": "15:50:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B23-SD-01",
+                        "B23-SD-02",
+                        "B23-SD-03",
+                        "B23-CBS-01",
+                        "B23-CBS-02",
+                        "B23-DS-01",
+                        "B23-DS-02",
+                        "B23-AI-01",
+                        "B23-AI-02",
+                        "B23-GD-01",
+                        "B23-RO-01"
+                    ],
+                    "students_number": 290,
+                    "excel_range": "U54:AE54",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ],
+                [
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "16:00:00",
+                    "end_time": "17:30:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B24-CSE-01",
+                        "B24-CSE-02",
+                        "B24-CSE-03",
+                        "B24-CSE-04",
+                        "B24-CSE-05",
+                        "B24-CSE-06",
+                        "B24-CSE-07",
+                        "B24-DSAI-01",
+                        "B24-DSAI-02",
+                        "B24-DSAI-03",
+                        "B24-DSAI-04",
+                        "B24-DSAI-05"
+                    ],
+                    "students_number": 345,
+                    "excel_range": "H57:S57",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    },
+                    {
+                    "lesson_name": "Elective course on Physical Education",
+                    "weekday": "WEDNESDAY",
+                    "start_time": "16:00:00",
+                    "end_time": "17:30:00",
+                    "room": "Elective course on Physical Education",
+                    "teacher": "Elective course on Physical Education",
+                    "group_name": [
+                        "B23-SD-01",
+                        "B23-SD-02",
+                        "B23-SD-03",
+                        "B23-CBS-01",
+                        "B23-CBS-02",
+                        "B23-DS-01",
+                        "B23-DS-02",
+                        "B23-AI-01",
+                        "B23-AI-02",
+                        "B23-GD-01",
+                        "B23-RO-01"
+                    ],
+                    "students_number": 290,
+                    "excel_range": "U57:AE57",
+                    "collision_type": "teacher",
+                    "outlook_info": None,
+                    "room_capacity": None
+                    }
+                ]
+            ]
+        )
     ],
 )
 @pytest.mark.asyncio
@@ -208,7 +782,7 @@ async def test_check_excel_collisions(
 ) -> None:
     response = await fastapi_test_client.get(
         url="/collisions/check",
-        params={"google_spreadsheet_id": spreadsheet_id},
+        params={"google_spreadsheet_id": spreadsheet_id}
     )
     assert response.status_code == 200
     response_json = response.json()
