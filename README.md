@@ -1,6 +1,5 @@
 # Schedule Builder
 ## Development
-Document the development policies that you used during sprint 5.
 ### Kanban Board
 The project's Kanban board is organized in the following way:
 
@@ -46,11 +45,19 @@ for according fields may be found below.
 | DockerHub Token    | GitHub Secrets                                                                                                                                                                                                              |
 
 ### Automated Testing
-Q1: Which tools were used for testing?
+**Q1:** Which tools were used for testing?
 
-Q2: Which types of tests have been implemented? 
+We used the following tools:
+- `pytest` (because of the tool's widespreadness),
+- `pytest_asyncio` (in order to set up testing fixtures).
 
-Q3: Where are the tests of each type stored in the repository?
+**Q2:** Which types of tests have been implemented? 
+
+We implemented **unit** and **integration** tests.
+
+**Q3:** Where are the tests of each type stored in the repository?
+
+Unit tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/tests/unit), whereas integration tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/tests/integration).
 
 ### Continuous Integration
 For each CI workflow file: 
