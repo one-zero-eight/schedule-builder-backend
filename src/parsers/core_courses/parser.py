@@ -26,6 +26,7 @@ from src.parsers.utils import (
     get_sheets,
     split_range_to_xy,
 )
+from src.domain.enums import CourseTypeEnum
 
 
 class CoreCoursesParser(ICoursesParser):
@@ -387,6 +388,7 @@ class CoreCoursesParser(ICoursesParser):
                                 lesson_name=subject_name,
                                 students_number=students_number,
                                 excel_range=cell,
+                                course_type=CourseTypeEnum.CORE,
                             )
                         )
                 merged_registry = defaultdict(

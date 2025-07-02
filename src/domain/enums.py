@@ -16,3 +16,8 @@ class Weekdays(Enum):
     FRIDAY = 5
     SATURDAY = 6
     SUNDAY = 7
+
+
+class CourseTypeEnum(Enum):
+    CORE = "core"
+    ELECTIVE = "elective"

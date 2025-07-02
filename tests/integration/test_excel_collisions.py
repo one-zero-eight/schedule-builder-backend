@@ -1,6 +1,3 @@
-import datetime
-import os
-
 import pytest
 from httpx import AsyncClient
 
@@ -40,6 +37,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "capacity",
                         "outlook_info": None,
                         "room_capacity": 25,
+                        "course_type": "core",
                     }
                 ]
             ],
@@ -65,6 +63,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -79,6 +78,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ]
             ],
@@ -113,6 +113,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -139,6 +140,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
                 [
@@ -168,6 +170,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -194,6 +197,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
             ],
@@ -221,6 +225,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -235,6 +240,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -249,6 +255,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ]
             ],
@@ -270,6 +277,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -284,6 +292,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -298,6 +307,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -312,6 +322,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -326,6 +337,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -340,6 +352,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -354,6 +367,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -368,6 +382,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
                 [
@@ -397,6 +412,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -423,6 +439,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
                 [
@@ -452,6 +469,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -478,6 +496,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
             ],
@@ -512,6 +531,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -538,6 +558,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
                 [
@@ -567,6 +588,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -593,6 +615,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
             ],
@@ -614,6 +637,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -628,6 +652,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
                 [
@@ -644,6 +669,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Software Project (lab)",
@@ -658,6 +684,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "room",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
                 [
@@ -687,6 +714,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -713,6 +741,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
                 [
@@ -742,6 +771,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                     {
                         "lesson_name": "Elective course on Physical Education",
@@ -768,6 +798,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "collision_type": "teacher",
                         "outlook_info": None,
                         "room_capacity": None,
+                        "course_type": "core",
                     },
                 ],
             ],

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 
 from src.domain.dtos.booking import BookingDTO
-from src.domain.enums import CollisionTypeEnum
+from src.domain.enums import CollisionTypeEnum, CourseTypeEnum
 
 
 class BaseLessonDTO(BaseModel):
@@ -15,6 +15,7 @@ class BaseLessonDTO(BaseModel):
     start_time: time = Field(..., description="Start time of lesson")
     end_time: time = Field(..., description="End time of lesson")
     room: str = Field(..., max_length=100, description="Room for lesson")
+    course_type: CourseTypeEnum | None = Field(None, description="Type of the course")
 
     @model_validator(mode="after")
     def validate_date(self) -> Self:
