@@ -18,17 +18,17 @@ hotfixes, and features implementation).
 
 The workflow rules can be found below.
 
-| Aspect                                     | Rules                                |
-|--------------------------------------------|--------------------------------------|
-| Creating issues from the defined templates | (link the earlier defined templates) |
-| Labelling issues                           | ...                                  |
-| Assigning issues to team members           | ...                                  | 
-| Creating, naming, merging branches         | ...                                  |
-| Commit messages format                     | ...                                  |
-| Creating a pull request for an issue       | (link the earlier defined template)  |
-| Code reviews                               | ...                                  |
-| Merging pull requests                      | ...                                  |
-| Resolving issues                           | ...                                  |
+| Aspect                                     | Rules                                                                                                                                                                                                                                                                                                                                  |
+|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Creating issues from the defined templates | Templates created within this week (bug report, technical task, user story templates are accessible [here](https://github.com/SWP2025/schedule-builder-backend/issues)) alongside with average issue creation procedures are used in the project.                                                                                      |
+| Labelling issues                           | TO BE WRITTEN                                                                                                                                                                                                                                                                                                                          |
+| Assigning issues to team members           | Back-end tasks are assigned to the Back-end development team, and front-end tasks are assigned to the Front-end development team. Any tasks regarding the Product Backlog maintenance, documentation, and other administrative assignments are put on the Team Lead of the project.                                                    | 
+| Creating, naming, merging branches         | TO BE WRITTEN                                                                                                                                                                                                                                                                                                                          |
+| Commit messages format                     | A conventional commit tags [system](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional) is employed alongside with average commit names for commits made through GitHub (e.g., verified). The commit messages should be laconic, concise, and explain the essence of the code changes. |
+| Creating a pull request for an issue       | A template created within this week (accessible [here](https://github.com/SWP2025/schedule-builder-backend/issues)) alongside with average pull request creation is used in the project.                                                                                                                                               |
+| Code reviews                               | TO BE WRITTEN                                                                                                                                                                                                                                                                                                                          |
+| Merging pull requests                      | TO BE WRITTEN                                                                                                                                                                                                                                                                                                                          |
+| Resolving issues                           | TO BE WRITTEN                                                                                                                                                                                                                                                                                                                          |
 
 Illustrate your git workflow using a Gitgraph diagram. 
 
