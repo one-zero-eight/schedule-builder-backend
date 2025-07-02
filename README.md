@@ -29,8 +29,188 @@ The workflow rules can be found below.
 | Merging pull requests                      | A pull request is merged (only to `main`) if an only if the code review for that pull request is passed, and CI/CD does not break under the composed changes.                                                                                                                                                                          |
 | Resolving issues                           | An issue is marked done if and only if the branch assigned to the issue is merged by the pull request upon passing the code review. Issues are resolved within the timeline of the milestone they are assigned to. If the issue is not resolved within the time limit, then it is transferred to the next milestone.                   |
 
-The GitGraph diagram of the workflow may be found below. 
-![alt text](docs/development/mermaid_chart.png)
+The GitGraph diagram of the workflow may be found below.
+```mermaid
+gitGraph
+    commit id:"2f5b5df"
+    commit id:"cd91de2"
+    commit id:"883e369"
+    branch excel_parsing
+    checkout main
+    commit id:"aa0e661"
+    commit id:"ab9f7c7"
+    commit id:"ce28123"
+    commit id:"adbbf51"
+    commit id:"1197f2b"
+    commit id:"8e6ba24"
+    commit id:"aead224"
+    checkout excel_parsing
+    commit id:"39b05f5"
+    commit id:"75fe106"
+    commit id:"b0770d1"
+    commit id:"a071d4d"
+    commit id:"2553acb"
+    commit id:"e6fe229"
+    commit id:"6d2550b"
+    commit id:"b267401"
+    commit id:"830bea6"
+    commit id:"40cb0d7"
+    commit id:"c93cd10"
+    checkout main
+    merge excel_parsing id:"9f95c30"
+    commit id:"9fc61e7"
+    branch BRANCH_2
+    checkout main
+    commit id:"b307efc"
+    checkout excel_parsing
+    commit id:"3a65e5f"
+    checkout main
+    merge excel_parsing id:"ce925c2"
+    commit id:"f37b37d"
+    commit id:"68296eb"
+    checkout BRANCH_2
+    commit id:"45fd35a"
+    commit id:"b4e62d4"
+    checkout main
+    merge BRANCH_2 id:"adebbca"
+    commit id:"72687c1"
+    commit id:"eee06a5"
+    commit id:"c7f7a39"
+    commit id:"3f3a999"
+    branch pydantic_issue
+    commit id:"3de5d65"
+    commit id:"91c7b61"
+    checkout main
+    branch check_room_capacity
+    commit id:"4ee7efe"
+    commit id:"1c36221"
+    branch readme
+    checkout main
+    merge check_room_capacity id:"c40d316"
+    branch check_outlook_conflicts
+    commit id:"db3e323"
+    commit id:"6a7b4ed"
+    checkout main
+    commit id:"da01c40"
+    checkout readme
+    commit id:"6a30ee1"
+    commit id:"e7d04c0"
+    commit id:"4f8fe8a"
+    checkout main
+    merge readme id:"b96be55"
+    checkout check_outlook_conflicts
+    commit id:"77424c2"
+    checkout main
+    merge check_outlook_conflicts id:"c8104da"
+    commit id:"86c43d0"
+    branch BRANCH_NAME
+    checkout main
+    commit id:"e7afad5"
+    checkout BRANCH_NAME
+    commit id:"b5679bb"
+    commit id:"07c7987"
+    commit id:"ec7c185"
+    checkout main
+    merge BRANCH_NAME id:"c52fb5c"
+    commit id:"f3cbb95"
+    commit id:"ba50e13"
+    commit id:"a5aa8b5"
+    commit id:"8cebd9d"
+    commit id:"9771560"
+    commit id:"b55e385"
+    commit id:"e1c588d"
+    branch optimize-http-request-to-outlook
+    checkout main
+    commit id:"31b1cc7"
+    commit id:"3224eeb"
+    commit id:"adfa936"
+    commit id:"4e434fa"
+    commit id:"6d148fc"
+    commit id:"8fffd33"
+    commit id:"9c65992"
+    commit id:"70338f5"
+    commit id:"0fb2e93"
+    branch change_response_format
+    commit id:"153c641"
+    commit id:"c435155"
+    checkout main
+    commit id:"8923543"
+    checkout optimize-http-request-to-outlook
+    commit id:"11164c3"
+    commit id:"fe6abab"
+    checkout main
+    merge optimize-http-request-to-outlook id:"2a42c56"
+    checkout change_response_format
+    merge main id:"1df38d6"
+    checkout main
+    merge change_response_format id:"297af62"
+    branch warnings_sorted_by_time
+    checkout main
+    branch add-outlook-info
+    commit id:"14987da"
+    commit id:"d2a8358"
+    branch BRANCH_NAME_2
+    commit id:"3c73731"
+    commit id:"db44b34"
+    checkout warnings_sorted_by_time
+    commit id:"0ea73b4"
+    checkout main
+    merge add-outlook-info id:"67b4864"
+    checkout warnings_sorted_by_time
+    merge main id:"ce153b1"
+    checkout main
+    merge warnings_sorted_by_time id:"2ab5e0c"
+    branch tests
+    commit id:"e079d19"
+    commit id:"3755010"
+    commit id:"8059176"
+    checkout tests
+    commit id:"7612af5"
+    merge main id:"3847c51"
+    merge warnings_sorted_by_time id:"beb0394"
+    commit id:"38a7948"
+    commit id:"df3e4fb"
+    commit id:"eeb0c96"
+    commit id:"6f6e978"
+    commit id:"b862e8f"
+    commit id:"caada8d"
+    commit id:"01e2f96"
+    commit id:"0abbe60"
+    commit id:"2af3758"
+    checkout main
+    merge tests id:"5090e9e"
+    branch create-new-technical-task-template
+    commit id:"1a50079"
+    checkout main
+    merge create-new-technical-task-template id:"6b7c4e1"
+    branch create-bug-report-template
+    commit id:"c527fd8"
+    checkout main
+    merge create-bug-report-template id:"63be9d1"
+    branch create-user-story-template
+    commit id:"70dfcc8"
+    checkout main
+    merge create-user-story-template id:"7427b0d"
+    branch create-pull-request-template
+    commit id:"bae3aa0"
+    checkout main
+    merge create-pull-request-template id:"6246fe1"
+    branch tests_update
+    commit id:"97d3607"
+    commit id:"465effc"
+    checkout main
+    merge tests_update id:"5e00141"
+    branch BRANCH_NAME_3
+    commit id:"49d6c96"
+    checkout main
+    branch update-readme
+    commit id:"45f11b4"
+    commit id:"356b28b"
+    commit id:"0a8923f"
+    commit id:"1b18bf4"
+    commit id:"78d8c8d"
+    commit id:"67bd043"
+```
 
 ### Secrets Management
 In our project, secrets are defined as any piece of information that is critical
