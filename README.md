@@ -1,4 +1,4 @@
-# Schedule Builder Backend
+# Schedule Builder
 ## Development
 Document the development policies that you used during sprint 5.
 ### Kanban Board
@@ -30,7 +30,8 @@ The workflow rules can be found below.
 | Merging pull requests                      | A pull request is merged (only to `main`) if an only if the code review for that pull request is passed, and CI/CD does not break under the composed changes.                                                                                                                                                                          |
 | Resolving issues                           | An issue is marked done if and only if the branch assigned to the issue is merged by the pull request upon passing the code review. Issues are resolved within the timeline of the milestone they are assigned to. If the issue is not resolved within the time limit, then it is transferred to the next milestone.                   |
 
-Illustrate your git workflow using a Gitgraph diagram. 
+The GitGraph diagram of the workflow may be found below. 
+![alt text](docs/development/mermaid_chart.png)
 
 ### Secrets Management
 In our project, secrets are defined as any piece of information that is critical
@@ -45,10 +46,11 @@ for according fields may be found below.
 | DockerHub Token    | GitHub Secrets                                                                                                                                                                                                              |
 
 ### Automated Testing
-Document: 
-- Which tools you used for testing. 
-- Which types of tests you implemented. 
-- Where tests of each type are in the repository.
+Q1: Which tools were used for testing?
+
+Q2: Which types of tests have been implemented? 
+
+Q3: Where are the tests of each type stored in the repository?
 
 ### Continuous Integration
 For each CI workflow file: 
