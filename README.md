@@ -1,4 +1,22 @@
 # Schedule Builder
+## Usage
+Explain how to use your MVP v2. Provide information for access if needed, for example authentication credentials and so on. Make sure the customer and TA can launch/access and inspect your product after following the instructions in that section.
+
+## Architecture
+### Static view
+Document the static view on your architecture using UML Component diagram, comment on the coupling and cohesion of your codebase, and discuss how 
+your design decisions affect the maintainability of your product. 
+
+### Dynamic view
+Document the dynamic view of your architecture using UML Sequence diagram for a non-trivial request that showcases your system. The request 
+must involve several components and multiple transactions between the components. 
+
+Test and report how much time this scenario takes to 
+execute in your production environment.
+### Deployment view
+Document the deployment view of your architecture (can be a custom view with
+a legend), comment on the deployment choices and how it is to be deployed on the customer’s side. 
+
 ## Development
 ### Kanban Board
 The project's Kanban board is organized in the following way:
@@ -224,7 +242,12 @@ for according fields may be found below.
 | DockerHub Username | GitHub Secrets                                                                                                                                                                                                              |
 | DockerHub Token    | GitHub Secrets                                                                                                                                                                                                              |
 
-### Automated Testing
+## Quality assurance
+### Quality attribute scenarios
+Quality attribute scenarios may be found [here](https://github.com/SWP2025/schedule-builder-backend/docs/quality-assurance/quality-attribute-scenarios.md).
+### User acceptance tests
+User acceptance tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/docs/quality-assurance/user-acceptance-tests.md).
+### Automated tests
 **Q1:** Which tools were used for testing?
 
 We used the following tools:
@@ -239,6 +262,7 @@ We implemented **unit** and **integration** tests.
 
 Unit tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/tests/unit), whereas integration tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/tests/integration).
 
+## Build and deployment
 ### Continuous Integration
 Our Continuous Integration system comprises only **one** workflow file that can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/blob/main/.github/workflows/test-and-build.yml).
 Moreover, we used the following testing and static analysis tools in the system:
@@ -258,26 +282,6 @@ Moreover, we used the following testing and static analysis tools in the system:
 All CD workflow runs can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/actions).
 
 
-## Quality
-### Characteristic name
-#### Sub-characteristic name
-- Explain why that sub-characteristic is important. 
-- Provide (a link to) one or more tests for that sub-characteristic in Quality Attribute Scenario format.
-
-### Characteristic name
-#### Sub-characteristic name
-- Explain why that sub-characteristic is important. 
-- Provide (a link to) one or more tests for that sub-characteristic in Quality Attribute Scenario format.
-
-### Characteristic name
-#### Sub-characteristic name
-- Explain why that sub-characteristic is important. 
-- Provide (a link to) one or more tests for that sub-characteristic in Quality Attribute Scenario format.
-
-## Architecture
-
-## Usage
-Explain how to use your MVP v2. Provide information for access if needed, for example authentication credentials and so on. Make sure the customer and TA can launch/access and inspect your product after following the instructions in that section.
 
 # OLD MATERIAL (TO BE REVAMPED)
 ## About
