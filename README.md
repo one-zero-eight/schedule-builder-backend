@@ -12,7 +12,9 @@ The project's Kanban board is organized in the following way:
 | In Review    | A task is accepted to In Review, if the task was completed. This way, fellow team members can review the solution and provide useful feedback.                                                                              |
 | Done         | A task is accepted to Done, if it satisfies the project's Definition of Done: the issue is finished (in terms of programming), deployed to the production, and is accordingly tested, thus verified in efficient execution. |
 ### Git Workflow
-Specify which base workflow you adapted to your context (e.g., GitHub flow, Gitflow, etc). 
+In the project, we use a modified version of Gitflow for workflow management (e.g., the `main` branch is used for
+general code storage, auxiliary branches are made for all Kanban board issues, 
+hotfixes, and features implementation).
 
 Explain / Define rules for: 
 - Creating issues from the defined templates (link the 
@@ -30,7 +32,16 @@ defined template).
 Illustrate your git workflow using a Gitgraph diagram. 
 
 ### Secrets Management
-Document your rules for secrets management (e.g. passwords or API keys). Mention where you store your secrets without revealing sensitive information.
+In our project, secrets are defined as any piece of information that is critical
+for authorization in the project system. The key rule of secrets management is to
+ensure the safety of information within the desired scope of storage. Secrets storages
+for according fields may be found below.
+
+| Secret             | Storage                                                                                                                                                                                                                     |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| API Token          | Local `settings.yaml` file                                                                                                                                                                                                  |
+| DockerHub Username | GitHub Secrets                                                                                                                                                                                                              |
+| DockerHub Token    | GitHub Secrets                                                                                                                                                                                                              |
 
 ### Automated Testing
 Document: 
