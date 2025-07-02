@@ -69,10 +69,14 @@ Moreover, we used the following testing and static analysis tools in the system:
 All CI workflow runs can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/actions).
 
 ### Continuous Deployment
-For each CD workflow file: 
-- Provide a link to that file. 
-- Provide a list of static analysis tools and testing tools that you use in the CD part. For each tool in the list, briefly explain what you use it for. 
-- Provide a link to where all CD workflow runs can be seen.
+Our Continuous Deployment system comprises only **one** workflow file that can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/blob/main/.github/workflows/test-and-build.yml).
+Moreover, we used the following testing and static analysis tools in the system:
+- `black` (widespread code linter),
+- `isort` (inputs sorting),
+- `pytest` (universal Python code testing library).
+
+All CD workflow runs can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/actions).
+
 
 ## Quality
 ### Characteristic name
