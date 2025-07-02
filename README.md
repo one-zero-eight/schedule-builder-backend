@@ -16,18 +16,19 @@ In the project, we use a modified version of Gitflow for workflow management (e.
 general code storage, auxiliary branches are made for all Kanban board issues, 
 hotfixes, and features implementation).
 
-Explain / Define rules for: 
-- Creating issues from the defined templates (link the 
-earlier defined templates).
-- Labelling issues. 
-- Assigning issues to team members. 
-- Creating, naming, merging branches; 
-- Commit messages format; 
-- Creating a pull request for an issue (link the earlier 
-defined template). 
-- Code reviews. 
-- Merging pull requests. 
-- Resolving issues.
+The workflow rules can be found below.
+
+| Aspect                                     | Rules                                |
+|--------------------------------------------|--------------------------------------|
+| Creating issues from the defined templates | (link the earlier defined templates) |
+| Labelling issues                           | ...                                  |
+| Assigning issues to team members           | ...                                  | 
+| Creating, naming, merging branches         | ...                                  |
+| Commit messages format                     | ...                                  |
+| Creating a pull request for an issue       | (link the earlier defined template)  |
+| Code reviews                               | ...                                  |
+| Merging pull requests                      | ...                                  |
+| Resolving issues                           | ...                                  |
 
 Illustrate your git workflow using a Gitgraph diagram. 
 
