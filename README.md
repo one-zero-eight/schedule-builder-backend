@@ -2,7 +2,15 @@
 ## Development
 Document the development policies that you used during sprint 5.
 ### Kanban Board
-For each column in the kanban board, document entry criteria for each column. Update your kanban board(s) in accordance with what you described.
+The project's Kanban board is organized in the following way:
+
+| Board column | Entry criteria                                                                                                                                                                                                              |
+|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Backlog      | A task is accepted to Backlog if:<br/>- it has been mentioned during the Customer Review,<br/>- the significance of the task has been discovered during the sprint.                                                         |
+| Todo         | A task is accepted to Todo, if it is assigned to the current sprint and has to be completed by the deadline of the current sprint.                                                                                          |
+| In Progress  | A task is accepted to In Progress, if the task is assigned to the current sprint and the task completion has already been started.                                                                                          |
+| In Review    | A task is accepted to In Review, if the task was completed. This way, fellow team members can review the solution and provide useful feedback.                                                                              |
+| Done         | A task is accepted to Done, if it satisfies the project's Definition of Done: the issue is finished (in terms of programming), deployed to the production, and is accordingly tested, thus verified in efficient execution. |
 ### Git Workflow
 Specify which base workflow you adapted to your context (e.g., GitHub flow, Gitflow, etc). 
 
