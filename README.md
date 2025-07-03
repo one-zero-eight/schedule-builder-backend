@@ -59,8 +59,8 @@ The created codebase is coupled, as:
 - a validator is applied upon the conduction of parsing and Outlook requests,
 - a user has no possibilities to bypass the authorizer and has to be verified in order to use the product.
 
-The maintainability of the product is simplistic with our design choices, since all key components are carefully
-separated and can be accessed, modified, and changed independently.
+The maintainability of the product is simplistic with our design choices, since the system is modifiable, testable,
+and analysable (as per [ISO 25010](https://iso25000.com/index.php/en/iso-25000-standards/iso-25010) standard).
 ### Dynamic view
 ```mermaid
 sequenceDiagram
