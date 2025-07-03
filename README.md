@@ -54,10 +54,13 @@ them and take actions in the table.
 ## Architecture
 ### Static view
 ![](docs/architecture/static-view/componentDiagram.png)
-Comment on the coupling and cohesion of your codebase.
+The created codebase is coupled, as:
+- the entirety of backend is managed with a router,
+- a validator is applied upon the conduction of parsing and Outlook requests,
+- a user has no possibilities to bypass the authorizer and has to be verified in order to use the product.
 
-Discuss how your design decisions affect the maintainability of your product. 
-
+The maintainability of the product is simplistic with our design choices, since all key components are carefully
+separated and can be accessed, modified, and changed independently.
 ### Dynamic view
 ```mermaid
 sequenceDiagram
@@ -84,8 +87,7 @@ sequenceDiagram
     Frontend->>User:Showing result to the user
 ```
 
-Test and report how much time this scenario takes to 
-execute in your production environment.
+We tested the scenario and conducted that it takes up to `10 seconds` to execute in our product environment.
 ### Deployment view
 Document the deployment view of your architecture (can be a custom view with
 a legend), comment on the deployment choices and how it is to be deployed on the customer’s side. 
