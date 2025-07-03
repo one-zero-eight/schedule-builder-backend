@@ -45,9 +45,11 @@ We use Docker with Docker Compose plugin to run the service on servers.
 2. Run `uv pip list --outdated` to check for outdated dependencies.
 
 ### Public Use
-TO BE ADDED
-
-Explain how to use your MVP v2. Provide information for access if needed, for example authentication credentials and so on. Make sure the customer and TA can launch/access and inspect your product after following the instructions in that section.
+To test our product, you may follow the [link](https://docs.google.com/spreadsheets/d/1amQqvE0rfU92pfMsMnUKA-lTGjlcJ-Sv5UcPpGnxW4w/edit?gid=558406858#gid=558406858) to a sample Google Spreadsheets schedule
+with deployed plugin in it. In the plugin, you will be firstly required to visit the special page
+of InNoHassle and obtain your requests token. Paste the token in the special field
+and click the schedule checking button. After collisions fetching, you may navigate through
+them and take actions in the table.
 
 ## Architecture
 ### Static view
@@ -65,7 +67,7 @@ Document the deployment view of your architecture (can be a custom view with
 a legend), comment on the deployment choices and how it is to be deployed on the customer’s side. 
 
 ## Development
-### Kanban Board
+### Kanban board
 The project's Kanban board is organized in the following way:
 
 | Board column | Entry criteria                                                                                                                                                                                                              |
@@ -75,7 +77,7 @@ The project's Kanban board is organized in the following way:
 | In Progress  | A task is accepted to In Progress, if the task is assigned to the current sprint and the task completion has already been started.                                                                                          |
 | In Review    | A task is accepted to In Review, if the task was completed. This way, fellow team members can review the solution and provide useful feedback.                                                                              |
 | Done         | A task is accepted to Done, if it satisfies the project's Definition of Done: the issue is finished (in terms of programming), deployed to the production, and is accordingly tested, thus verified in efficient execution. |
-### Git Workflow
+### Git workflow
 In the project, we use a modified version of Gitflow for workflow management (e.g., the `main` branch is used for
 general code storage, auxiliary branches are made for all Kanban board issues, 
 hotfixes, and features implementation).
@@ -277,7 +279,7 @@ gitGraph
     commit id:"67bd043"
 ```
 
-### Secrets Management
+### Secrets management
 In our project, secrets are defined as any piece of information that is critical
 for authorization in the project system. The key rule of secrets management is to
 ensure the safety of information within the desired scope of storage. Secrets storages
