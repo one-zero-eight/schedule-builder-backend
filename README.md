@@ -54,6 +54,7 @@ them and take actions in the table.
 ## Architecture
 ### Static view
 ![](docs/architecture/static-view/componentDiagram.png)
+
 The created codebase is coupled, as:
 - the entirety of backend is managed with a router,
 - a validator is applied upon the conduction of parsing and Outlook requests,
@@ -89,8 +90,20 @@ sequenceDiagram
 
 We tested the scenario and conducted that it takes up to `10 seconds` to execute in our product environment.
 ### Deployment view
-Document the deployment view of your architecture (can be a custom view with
-a legend), comment on the deployment choices and how it is to be deployed on the customer’s side. 
+![](docs/architecture/deployment-view/deploymentDiagram.png)
+
+We chose the following deployment structure, specifically `Docker` tool,
+because of the availability of swift servers change without `Docker Hub` deploy
+structure alterations. Moreover, such setup is simplistic to deploy on the
+customer's side:
+- if the customer is **not** interested in project privacy, then a server
+has to be bought for the customer, and `Docker` has to be set up with one
+script on the server; after that, the product is ready for deployment on
+the customer's server,
+- if the customer is **indeed** interested in project privacy, then a separate
+account is registered for the customer, a private `GitHub` repository is created
+for the customer, and deployment is conducted in a private manner with steps provided
+for the previous case. 
 
 ## Development
 ### Kanban board
