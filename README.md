@@ -53,12 +53,52 @@ them and take actions in the table.
 
 ## Architecture
 ### Static view
+```plantuml
+@startuml
+component Frontend
+component Router
+component Authorizer
+component Parser
+component Outlook
+component Validator
+
+Frontend -> Router
+Router -> Authorizer
+Authorizer -> Outlook
+Authorizer -> Parser
+Parser -> Validator
+Outlook -> Validator
+Validator -> Router
+@enduml
+```
 Document the static view on your architecture using UML Component diagram, comment on the coupling and cohesion of your codebase, and discuss how 
 your design decisions affect the maintainability of your product. 
 
 ### Dynamic view
-Document the dynamic view of your architecture using UML Sequence diagram for a non-trivial request that showcases your system. The request 
-must involve several components and multiple transactions between the components. 
+```mermaid
+sequenceDiagram
+    title "/collisions/check" request
+
+    actor User
+    participant Frontend
+    participant Router
+    participant Authorizer
+    participant Parser
+    participant Outlook API
+    participant Validator
+
+    User->>Frontend:Pressing button "Check Scheduling" in the plugin
+    Frontend->>Router:Request to API from Google Spreadsheets
+
+    Router->>Authorizer:User Authorization via token
+    Authorizer->>Parser:Parsing data from Google Spreadsheets
+    Parser->>Validator:Passing data to check for scheduling collisions
+    Authorizer->>Outlook API:Getting information about events to compare from Outlook API
+    Parser->>Validator:Passing data to check collisions
+    Validator->>Router:Returning collisions in expected format
+    Router->>Frontend:Returning response to the extension
+    Frontend->>User:Showing result to the user
+```
 
 Test and report how much time this scenario takes to 
 execute in your production environment.
