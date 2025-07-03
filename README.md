@@ -53,26 +53,10 @@ them and take actions in the table.
 
 ## Architecture
 ### Static view
-```plantuml
-@startuml
-component Frontend
-component Router
-component Authorizer
-component Parser
-component Outlook
-component Validator
+![](docs/architecture/static-view/componentDiagram.png)
+Comment on the coupling and cohesion of your codebase.
 
-Frontend -> Router
-Router -> Authorizer
-Authorizer -> Outlook
-Authorizer -> Parser
-Parser -> Validator
-Outlook -> Validator
-Validator -> Router
-@enduml
-```
-Document the static view on your architecture using UML Component diagram, comment on the coupling and cohesion of your codebase, and discuss how 
-your design decisions affect the maintainability of your product. 
+Discuss how your design decisions affect the maintainability of your product. 
 
 ### Dynamic view
 ```mermaid
