@@ -5,34 +5,19 @@
 the plugin should be capable of being swiftly modified to satisfy the current
 semester needs.
 #### Test "MODIF-1"
-> **Source:** 
+> **Source:** Authorized user (Innopolis University staff)
 > 
-> **Stimulus:** 
+> **Stimulus:** Check scheduling conflicts in a new spreadsheet
 > 
-> **Artifact:** 
+> **Artifact:** Overall plugin functionality
 > 
-> **Environment:**
+> **Environment:** Normal mode
 > 
-> **Response:** 
+> **Response:** The plugin checks scheduling conflicts for a new spreadsheet
 > 
-> **Response Measure:**
+> **Response Measure:** <10 seconds collisions fetching
 
-To execute **"MODIF-1"**, we will....
-
-#### Test "MODIF-2"
-> **Source:** 
-> 
-> **Stimulus:** 
-> 
-> **Artifact:** 
-> 
-> **Environment:**
-> 
-> **Response:** 
-> 
-> **Response Measure:**
-
-To execute **"MODIF-2"**, we will....
+To execute **"MODIF-1"**, we will create a new Google Spreadsheets table and run the plugin within its scope.
 
 ## Security
 ### Confidentiality
