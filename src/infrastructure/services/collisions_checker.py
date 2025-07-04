@@ -305,6 +305,7 @@ class CollisionsChecker(ICollisionsChecker):
                             students_number=0,
                             collision_type=CollisionTypeEnum.OUTLOOK,
                             outlook_info=booking,
+                            excel_range=lesson.excel_range,
                         )
 
                     if booking_as_lesson not in lesson_collisions:
