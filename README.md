@@ -117,7 +117,7 @@ The project's Kanban board is organized in the following way:
 | In Review    | A task is accepted to In Review, if the task was completed. This way, fellow team members can review the solution and provide useful feedback.                                                                              |
 | Done         | A task is accepted to Done, if it satisfies the project's Definition of Done: the issue is finished (in terms of programming), deployed to the production, and is accordingly tested, thus verified in efficient execution. |
 ### Git workflow
-In the project, we use a modified version of Gitflow for workflow management (e.g., the `main` branch is used for
+In the project, we use a modified version of trunk-based workflow for workflow management (e.g., the `main` branch is used for
 general code storage, auxiliary branches are made for all Kanban board issues, 
 hotfixes, and features implementation).
 
