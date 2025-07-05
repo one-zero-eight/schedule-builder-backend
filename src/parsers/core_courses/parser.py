@@ -1,7 +1,8 @@
 import io
+import re
 import pprint
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, date
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
@@ -326,6 +327,84 @@ class CoreCoursesParser(ICoursesParser):
             return location
         return guess
 
+    # временный парсер, позже внедрю вариант от Руслана
+    def parse_schedule_string(
+        self, s: str
+    ) -> list[tuple[str, tuple[bool, str]]]:
+        s = re.sub(
+            r"STARTS AT \d{1,2}:\d{2}", "", s
+        )  # пока опущу точное время
+        s = s.replace("ТОЛЬКО НА", "ON")  # привод к 1 формату
+        bracket_parts = re.findall(
+            r"\((.*?)\)", s
+        )  # всё внутри круглых скобок
+        s = re.sub(r"\(.*?\)", "", s)  # обрезаем круглые скобки, спаршено
+        parts = [
+            p.strip() for p in re.split(r"\|", s) if p.strip()
+        ]  # делим по |, проверяя на пустоту
+        parts.extend(bracket_parts)
+
+        result = []
+        for part in parts:
+
+            if not part:
+                continue
+
+            if part.startswith("ONLINE"):
+                print(part)
+                dates = re.findall(
+                    r"\d{1,2}/\d{2}", part
+                )  # парсинг дат по типу 21/04
+                for d in dates:
+                    try:
+                        result.append(("ONLINE", ("ON", date(d))))
+                    except Exception:
+                        pass
+                continue
+
+            rooms_match = re.match(r"^[\d /]+", part)
+            if not rooms_match:
+                continue
+            rooms_str = rooms_match.group(0)
+            rooms = [
+                room.strip().rstrip() for room in rooms_str.split("/")
+            ]  # обрабатываем случай по типу 312 / 313/314
+            rest = part[len(rooms_str) :].strip()
+
+            on_index = rest.find("ON")
+
+            if on_index == -1:  # уточнений по дате нет
+                for room in rooms:
+                    result.append((room, ("ALL", "")))
+                continue
+
+            rest = rest[on_index + 2 :].strip()  # срезаем ON
+            except_index = rest.find("EXCEPT")
+
+            except_dates = []
+            if except_index != -1:
+                filtered_dates = re.findall(
+                    r"\d{1,2}/\d{2}", rest[:except_index].strip()
+                )
+                except_dates = re.findall(
+                    r"\d{1,2}/\d{2}", rest[except_index + 6 :].strip()
+                )
+            else:
+                filtered_dates = re.findall(r"\d{1,2}/\d{2}", rest)
+
+            for room in rooms:
+                for d in filtered_dates:
+                    try:
+                        result.append((room, ("ON", date(d))))
+                    except Exception:
+                        pass
+                for d in except_dates:
+                    try:
+                        result.append((room, ("EXCEPT", date(d))))
+                    except Exception:
+                        pass
+        return result
+
     async def get_all_timeslots(
         self, spreadsheet_id: str
     ) -> list[LessonWithExcelCellsDTO]:
@@ -369,26 +448,35 @@ class CoreCoursesParser(ICoursesParser):
                             )
                             subject = subject.rsplit("$", maxsplit=1)
                             subject_name, cell = subject
-                            location = self.identify_room(str(location))
+                            location = self.parse_schedule_string(
+                                str(location)
+                            )
                             group = group.split()
                             group_name = group[0]
                             if len(group) > 1:
                                 students_number = int(group[1][1:-1])
                             else:
                                 students_number = 1
-                        course_lessons.append(
-                            LessonWithExcelCellsDTO(
+                        for room, loc in location:
+                            l = LessonWithExcelCellsDTO(
                                 weekday=weekday,
                                 start_time=start_time,
                                 end_time=end_time,
                                 group_name=group_name,
                                 teacher=teacher,
-                                room=location,
+                                room=room,
                                 lesson_name=subject_name,
                                 students_number=students_number,
                                 excel_range=cell,
+                                date_on=None,
+                                date_except=None,
                             )
-                        )
+                            if loc[0] == "ON":
+                                l.date_on = loc[1]
+                            elif loc[0] == "EXCEPT":
+                                l.date_except = loc[1]
+                            course_lessons.append(l)
+
                 merged_registry = defaultdict(
                     list
                 )  # merged range index X list of lessons

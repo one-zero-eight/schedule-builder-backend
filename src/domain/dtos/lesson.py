@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import time, date
 
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
@@ -37,6 +37,12 @@ class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
 class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
     excel_range: str | None = Field(
         ..., description="Topleft corner of the cell"
+    )
+    date_on: date | None = Field(
+        ..., description="Specific dates with lessons"
+    )
+    date_except: date | None = Field(
+        ..., description="Specific dates when there is no lessons"
     )
 
 
