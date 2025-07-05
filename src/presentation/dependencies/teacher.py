@@ -15,7 +15,7 @@ class TeachersProvider(Provider):
             for teacher in data["teachers"]:
                 teachers.append(
                     TeacherDTO(
-                        name=teacher["name"], group=teacher["study_group"]
+                        name=teacher["name"], group=teacher["study_group"], email=teacher["email"]
                     )
                 )
         return teachers

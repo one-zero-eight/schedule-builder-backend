@@ -1,7 +1,7 @@
 from typing import AsyncIterable
 
 import pytest_asyncio
-from dishka import AsyncContainer, Scope, make_async_container
+from dishka import AsyncContainer, make_async_container
 
 from tests.mocks.booking import MockBookingServiceProvider
 
