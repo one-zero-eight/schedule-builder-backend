@@ -28,7 +28,7 @@ a user launches the plugin within the scope of table and clicks the button "Chec
 **then** for each conflict in the output it is possible to highlight it
 (so that the user's cursor gets moved to the conflicting cell).
 
-Issue link: ???
+Issue link: no issue link, successfully closed during Sprint 5.
 
 ### Acceptance Criterion 5 (Collision Ignoring)
 Formulation: **Given** a Google Spreadsheets table with scheduling conflicts, **when**
@@ -36,4 +36,4 @@ a user launches the plugin within the scope of table and clicks the button "Chec
 **then** for each conflict in the output it is possible to ignore it
 (so that the conflict is not displayed).
 
-Issue link: ???
+Issue link: no issue link, successfully closed during Sprint 5.
