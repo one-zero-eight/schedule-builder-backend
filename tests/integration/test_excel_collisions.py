@@ -1,6 +1,3 @@
-import datetime
-import os
-
 import pytest
 from httpx import AsyncClient
 
@@ -63,6 +60,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Marko Pezer",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-03",
                         "students_number": 29,
                         "excel_range": "J13",
@@ -79,6 +77,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Mahmoud Naderi",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-06",
                         "students_number": 29,
                         "excel_range": "M13",
@@ -102,6 +101,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -131,6 +131,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",
@@ -161,6 +162,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -190,6 +192,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",
@@ -225,6 +228,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Элеонора Ильина",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -247,6 +251,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Mahmoud Naderi",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-06",
                         "students_number": 29,
                         "excel_range": "M29",
@@ -261,6 +266,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "end_time": "12:10:00",
                         "room": "460",
                         "teacher": "Alexey Potyomkin",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-07",
                         "students_number": 29,
                         "excel_range": "N29",
@@ -284,6 +290,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Marko Pezer",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-01",
                         "students_number": 29,
                         "excel_range": "H48",
@@ -300,6 +307,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Mahmoud Naderi",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-02",
                         "students_number": 29,
                         "excel_range": "I48",
@@ -316,6 +324,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "A",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-03",
                         "students_number": 29,
                         "excel_range": "J48",
@@ -332,6 +341,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "B",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-04",
                         "students_number": 29,
                         "excel_range": "K48",
@@ -348,6 +358,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "C",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-05",
                         "students_number": 29,
                         "excel_range": "L48",
@@ -364,6 +375,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "D",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-06",
                         "students_number": 29,
                         "excel_range": "M48",
@@ -380,6 +392,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "E",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-07",
                         "students_number": 29,
                         "excel_range": "N48",
@@ -396,6 +409,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "F",
+                        "teacher_email": "",
                         "group_name": "B24-DSAI-01",
                         "students_number": 29,
                         "excel_range": "O48",
@@ -414,6 +428,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -443,6 +458,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",
@@ -473,6 +489,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -502,6 +519,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",
@@ -537,6 +555,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -566,6 +585,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",
@@ -596,6 +616,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -625,6 +646,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",
@@ -676,6 +698,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Mahmoud Naderi",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-05",
                         "students_number": 29,
                         "excel_range": "L48",
@@ -694,6 +717,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Marko Pezer",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-01",
                         "students_number": 29,
                         "excel_range": "H51",
@@ -710,6 +734,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Mahmoud Naderi",
+                        "teacher_email": "",
                         "group_name": "B24-CSE-04",
                         "students_number": 29,
                         "excel_range": "K51",
@@ -728,6 +753,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -757,6 +783,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",
@@ -787,6 +814,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B24-CSE-01",
                             "B24-CSE-02",
@@ -816,6 +844,7 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "date_on": None,
                         "date_except": None,
                         "teacher": "Elective course on Physical Education",
+                        "teacher_email": "",
                         "group_name": [
                             "B23-SD-01",
                             "B23-SD-02",

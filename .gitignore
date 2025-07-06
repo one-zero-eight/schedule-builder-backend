@@ -167,3 +167,6 @@ postgres_data/
 
 # Cached files
 temp/
+
+# MacOS
+.DS_Store

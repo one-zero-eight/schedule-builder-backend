@@ -31,6 +31,7 @@ class BaseLessonDTO(BaseModel):
 
 class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
     teacher: str = Field(..., max_length=100, description="Teacher on lesson")
+    teacher_email: str | None = Field(None, description="Email of teacher")
     group_name: str | list[str] | None = Field(
         ...,
         description="Name of the group or list of groups",
