@@ -332,9 +332,9 @@ for according fields may be found below.
 
 ## Quality assurance
 ### Quality attribute scenarios
-Quality attribute scenarios may be found [here](https://github.com/SWP2025/schedule-builder-backend/docs/quality-assurance/quality-attribute-scenarios.md).
+Quality attribute scenarios may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/quality-assurance/quality-attribute-scenarios.md).
 ### User acceptance tests
-User acceptance tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/docs/quality-assurance/user-acceptance-tests.md).
+User acceptance tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/quality-assurance/user-acceptance-tests.md).
 ### Automated tests
 **Q1:** Which tools were used for testing?
 
