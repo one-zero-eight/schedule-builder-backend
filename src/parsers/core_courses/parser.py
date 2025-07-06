@@ -15,6 +15,7 @@ from openpyxl.utils import (
     coordinate_to_tuple,
     get_column_letter,
 )
+from yaml import safe_load
 
 from src.domain.dtos.lesson import LessonWithExcelCellsDTO
 from src.domain.interfaces.services.parser import ICoursesParser
@@ -33,6 +34,10 @@ class CoreCoursesParser(ICoursesParser):
     """
     Elective parser class
     """
+
+    def __init__(self):
+        with open("teachers.yaml", "r", encoding="utf-8") as file:
+            self.teachers: list[dict] = safe_load(file)["teachers"]
 
     def get_clear_dataframes_from_xlsx(
         self, xlsx_file: io.BytesIO, targets: list[config.Target]
@@ -472,7 +477,6 @@ class CoreCoursesParser(ICoursesParser):
                                 students_number = int(group[1][1:-1])
                             else:
                                 students_number = 1
-
                         for loc, on_, except_ in location:
                             course_lessons.append(
                                 LessonWithExcelCellsDTO(
@@ -481,6 +485,14 @@ class CoreCoursesParser(ICoursesParser):
                                     end_time=end_time,
                                     group_name=group_name,
                                     teacher=teacher,
+                                    teacher_email=next(
+                                        (
+                                            t.get("email", "")
+                                            for t in self.teachers
+                                            if t.get("name") == teacher
+                                        ),
+                                        "",
+                                    ),
                                     room=loc,
                                     lesson_name=subject_name,
                                     students_number=students_number,

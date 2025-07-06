@@ -301,6 +301,7 @@ class CollisionsChecker(ICollisionsChecker):
                             end_time=booking.end_time.time(),
                             room=lesson.room,
                             teacher="External Booking",  # Placeholder
+                            teacher_email="External Booking",
                             group_name=None,
                             students_number=0,
                             collision_type=CollisionTypeEnum.OUTLOOK,
