@@ -12,39 +12,39 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
     [
         (
             "1UazTyY3dXiwN7JWN_6OkjDWTI1-v4W1fZ8WMZJn-CO4",
-        [
             [
-                {
-                "lesson_name": "Other",
-                "weekday": "TUESDAY",
-                "start_time": "09:00:00",
-                "end_time": "10:30:00",
-                "room": "306",
-                "date_on": None,
-                "date_except": None,
-                "teacher": "Nursultan Askarbekuly",
-                "group_name": [
-                    "B24-CSE-01",
-                    "B24-CSE-02",
-                    "B24-CSE-03",
-                    "B24-CSE-04",
-                    "B24-CSE-05",
-                    "B24-CSE-06",
-                    "B24-CSE-07",
-                    "B24-DSAI-01",
-                    "B24-DSAI-02",
-                    "B24-DSAI-03",
-                    "B24-DSAI-04",
-                    "B24-DSAI-05"
-                ],
-                "students_number": 345,
-                "excel_range": "H26:S26",
-                "collision_type": "capacity",
-                "outlook_info": None,
-                "room_capacity": 25
-                }
-            ]
-        ],
+                [
+                    {
+                        "lesson_name": "Other",
+                        "weekday": "TUESDAY",
+                        "start_time": "09:00:00",
+                        "end_time": "10:30:00",
+                        "room": "306",
+                        "date_on": None,
+                        "date_except": None,
+                        "teacher": "Nursultan Askarbekuly",
+                        "group_name": [
+                            "B24-CSE-01",
+                            "B24-CSE-02",
+                            "B24-CSE-03",
+                            "B24-CSE-04",
+                            "B24-CSE-05",
+                            "B24-CSE-06",
+                            "B24-CSE-07",
+                            "B24-DSAI-01",
+                            "B24-DSAI-02",
+                            "B24-DSAI-03",
+                            "B24-DSAI-04",
+                            "B24-DSAI-05",
+                        ],
+                        "students_number": 345,
+                        "excel_range": "H26:S26",
+                        "collision_type": "capacity",
+                        "outlook_info": None,
+                        "room_capacity": 25,
+                    }
+                ]
+            ],
         ),
         (
             "1WcienQ47WiNJVLxO5IpWIN_65OdFKCsgF20E7PBl11M",

@@ -45,6 +45,7 @@ class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
         ..., description="Topleft corner of the cell"
     )
 
+
 class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
     collision_type: CollisionTypeEnum = Field(
         ..., description="Type of collision"
