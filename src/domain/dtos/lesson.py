@@ -1,4 +1,4 @@
-from datetime import time, date
+from datetime import date, time
 
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self

@@ -1,8 +1,8 @@
 import io
-import re
 import pprint
+import re
 from collections import defaultdict
-from datetime import datetime, date
+from datetime import date, datetime
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
