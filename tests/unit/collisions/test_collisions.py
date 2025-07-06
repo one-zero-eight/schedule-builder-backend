@@ -28,7 +28,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -41,7 +41,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [
@@ -59,7 +59,7 @@ from src.domain.interfaces.services.collisions_checker import (
                         collision_type="room",
                         outlook_info=None,
                         date_on=None,
-                        date_except=None
+                        date_except=None,
                     ),
                     LessonWithCollisionTypeDTO(
                         lesson_name="Lesson 2",
@@ -74,7 +74,7 @@ from src.domain.interfaces.services.collisions_checker import (
                         collision_type="room",
                         outlook_info=None,
                         date_on=None,
-                        date_except=None
+                        date_except=None,
                     ),
                 ],
             ],
@@ -93,7 +93,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -106,7 +106,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 3",
@@ -119,7 +119,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [
@@ -137,7 +137,7 @@ from src.domain.interfaces.services.collisions_checker import (
                         collision_type="room",
                         outlook_info=None,
                         date_on=None,
-                        date_except=None
+                        date_except=None,
                     ),
                     LessonWithCollisionTypeDTO(
                         lesson_name="Lesson 2",
@@ -152,7 +152,7 @@ from src.domain.interfaces.services.collisions_checker import (
                         collision_type="room",
                         outlook_info=None,
                         date_on=None,
-                        date_except=None
+                        date_except=None,
                     ),
                     LessonWithCollisionTypeDTO(
                         lesson_name="Lesson 3",
@@ -167,7 +167,7 @@ from src.domain.interfaces.services.collisions_checker import (
                         collision_type="room",
                         outlook_info=None,
                         date_on=None,
-                        date_except=None
+                        date_except=None,
                     ),
                 ],
             ],
@@ -186,7 +186,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -199,7 +199,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [],
@@ -217,7 +217,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -230,7 +230,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [],
@@ -248,7 +248,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -261,7 +261,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     students_number=20,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [],
@@ -293,7 +293,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="a",
@@ -306,7 +306,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             1,
@@ -324,7 +324,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="b",
@@ -337,7 +337,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="c",
@@ -350,7 +350,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             1,
@@ -368,7 +368,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="a",
@@ -381,7 +381,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             0,
@@ -399,7 +399,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="a",
@@ -412,7 +412,7 @@ def test_room_collisions(
                     students_number=20,
                     excel_range="A1:A1",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             0,
@@ -445,7 +445,7 @@ def test_teacher_collisions(
                     students_number=70,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -458,7 +458,7 @@ def test_teacher_collisions(
                     students_number=70,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [
@@ -477,7 +477,7 @@ def test_teacher_collisions(
                         outlook_info=None,
                         room_capacity=30,
                         date_on=None,
-                        date_except=None
+                        date_except=None,
                     ),
                 ],
                 [
@@ -495,7 +495,7 @@ def test_teacher_collisions(
                         outlook_info=None,
                         room_capacity=30,
                         date_on=None,
-                        date_except=None
+                        date_except=None,
                     ),
                 ],
             ],
@@ -513,7 +513,7 @@ def test_teacher_collisions(
                     students_number=70,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -526,7 +526,7 @@ def test_teacher_collisions(
                     students_number=70,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [],
@@ -544,7 +544,7 @@ def test_teacher_collisions(
                     students_number=200,
                     excel_range="F13:G13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
                 LessonWithDateDTO(
                     lesson_name="Lesson 2",
@@ -557,7 +557,7 @@ def test_teacher_collisions(
                     students_number=20,
                     excel_range="B13:E13",
                     date_on=None,
-                    date_except=None
+                    date_except=None,
                 ),
             ],
             [],

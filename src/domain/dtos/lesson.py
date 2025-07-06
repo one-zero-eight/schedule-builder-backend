@@ -39,6 +39,7 @@ class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
         ..., description="Topleft corner of the cell"
     )
 
+
 class LessonWithDateDTO(LessonWithExcelCellsDTO):
     date_on: date | None = Field(
         ..., description="Specific dates with lessons"

@@ -326,9 +326,7 @@ class CollisionsChecker(ICollisionsChecker):
             second_attr,
         )
 
-    def sort_collisions(
-        self, collisions: list[LessonWithDateDTO]
-    ) -> None:
+    def sort_collisions(self, collisions: list[LessonWithDateDTO]) -> None:
         collisions.sort(key=self._sort_by_weekday_and_end_time)
 
     async def get_collisions(
