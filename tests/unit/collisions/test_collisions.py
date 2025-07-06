@@ -4,7 +4,7 @@ import pytest
 
 from src.domain.dtos.lesson import (
     LessonWithCollisionTypeDTO,
-    LessonWithExcelCellsDTO,
+    LessonWithDateDTO,
 )
 from src.domain.interfaces.services.collisions_checker import (
     ICollisionsChecker,
@@ -17,7 +17,7 @@ from src.domain.interfaces.services.collisions_checker import (
         # 107 room = Lesson 1 x Lesson 2
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -30,7 +30,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -82,7 +82,7 @@ from src.domain.interfaces.services.collisions_checker import (
         # 107 room = Lesson 1 x Lesson 2 x Lesson 3
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -95,7 +95,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -108,7 +108,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 3",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -175,7 +175,7 @@ from src.domain.interfaces.services.collisions_checker import (
         # 107 room = Lesson 1 x Lesson 2
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="17:20:00",
@@ -188,7 +188,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -206,7 +206,7 @@ from src.domain.interfaces.services.collisions_checker import (
         ),
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="17:20:00",
@@ -219,7 +219,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="17:30:00",
@@ -237,7 +237,7 @@ from src.domain.interfaces.services.collisions_checker import (
         ),
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="17:20:00",
@@ -250,7 +250,7 @@ from src.domain.interfaces.services.collisions_checker import (
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="18:50:00",
@@ -270,7 +270,7 @@ from src.domain.interfaces.services.collisions_checker import (
 )
 def test_room_collisions(
     collisions_checker: ICollisionsChecker,
-    data: list[LessonWithExcelCellsDTO],
+    data: list[LessonWithDateDTO],
     valid_answer: list[LessonWithCollisionTypeDTO],
 ) -> None:
     collisions = collisions_checker.get_collisions_by_room(data)
@@ -282,7 +282,7 @@ def test_room_collisions(
     [
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="a",
                     weekday="MONDAY",
                     start_time=time(1, 0, 0),
@@ -295,7 +295,7 @@ def test_room_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="a",
                     weekday="MONDAY",
                     start_time=time(1, 30, 0),
@@ -313,7 +313,7 @@ def test_room_collisions(
         ),
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="a",
                     weekday="MONDAY",
                     start_time=time(1, 0, 0),
@@ -326,7 +326,7 @@ def test_room_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="b",
                     weekday="MONDAY",
                     start_time=time(1, 30, 0),
@@ -339,7 +339,7 @@ def test_room_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="c",
                     weekday="MONDAY",
                     start_time=time(1, 25, 0),
@@ -357,7 +357,7 @@ def test_room_collisions(
         ),
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="a",
                     weekday="MONDAY",
                     start_time=time(1, 0, 0),
@@ -370,7 +370,7 @@ def test_room_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="a",
                     weekday="TUESDAY",
                     start_time=time(1, 30, 0),
@@ -388,7 +388,7 @@ def test_room_collisions(
         ),
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="a",
                     weekday="MONDAY",
                     start_time=time(1, 0, 0),
@@ -401,7 +401,7 @@ def test_room_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="a",
                     weekday="MONDAY",
                     start_time=time(3, 30, 0),
@@ -421,7 +421,7 @@ def test_room_collisions(
 )
 def test_teacher_collisions(
     collisions_checker: ICollisionsChecker,
-    timeslots: LessonWithExcelCellsDTO,
+    timeslots: LessonWithDateDTO,
     expected: int,
 ) -> None:
     collisions = collisions_checker.get_collisions_by_teacher(timeslots)
@@ -434,7 +434,7 @@ def test_teacher_collisions(
         # 70 students in 312
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -447,7 +447,7 @@ def test_teacher_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="17:20:00",
@@ -502,7 +502,7 @@ def test_teacher_collisions(
         ),
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -515,7 +515,7 @@ def test_teacher_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="17:20:00",
@@ -533,7 +533,7 @@ def test_teacher_collisions(
         ),
         (
             [
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time="14:20:00",
@@ -546,7 +546,7 @@ def test_teacher_collisions(
                     date_on=None,
                     date_except=None
                 ),
-                LessonWithExcelCellsDTO(
+                LessonWithDateDTO(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time="17:20:00",
@@ -566,7 +566,7 @@ def test_teacher_collisions(
 )
 def test_space_collisions(
     collisions_checker: ICollisionsChecker,
-    data: list[LessonWithExcelCellsDTO],
+    data: list[LessonWithDateDTO],
     valid_answer: list[LessonWithCollisionTypeDTO],
 ) -> None:
     collisions = (

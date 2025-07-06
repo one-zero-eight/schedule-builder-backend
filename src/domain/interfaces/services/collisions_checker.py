@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from src.domain.dtos.lesson import (
     LessonWithCollisionTypeDTO,
-    LessonWithExcelCellsDTO,
+    LessonWithDateDTO,
 )
 
 
@@ -10,7 +10,7 @@ class ICollisionsChecker(ABC):
     @abstractmethod
     async def get_collisions(
         self,
-        timeslots: list[LessonWithExcelCellsDTO],
+        timeslots: list[LessonWithDateDTO],
         check_room_collisions: bool = True,
         check_teacher_collisions: bool = True,
         check_space_collisions: bool = True,
@@ -20,24 +20,24 @@ class ICollisionsChecker(ABC):
 
     @abstractmethod
     async def get_outlook_collisions(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         pass
 
     @abstractmethod
     def get_lessons_where_not_enough_place_for_students(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         pass
 
     @abstractmethod
     def get_collisions_by_teacher(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         pass
 
     @abstractmethod
     def get_collisions_by_room(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         pass

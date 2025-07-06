@@ -38,6 +38,8 @@ class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
     excel_range: str | None = Field(
         ..., description="Topleft corner of the cell"
     )
+
+class LessonWithDateDTO(LessonWithExcelCellsDTO):
     date_on: date | None = Field(
         ..., description="Specific dates with lessons"
     )
@@ -46,7 +48,7 @@ class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
     )
 
 
-class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
+class LessonWithCollisionTypeDTO(LessonWithDateDTO):
     collision_type: CollisionTypeEnum = Field(
         ..., description="Type of collision"
     )

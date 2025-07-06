@@ -10,7 +10,7 @@ from src.application.external_api.innohassle.interfaces.booking import (
 from src.domain.dtos.lesson import (
     BaseLessonDTO,
     LessonWithCollisionTypeDTO,
-    LessonWithExcelCellsDTO,
+    LessonWithDateDTO,
 )
 from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
@@ -69,7 +69,7 @@ class CollisionsChecker(ICollisionsChecker):
 
     def get_colliding_timeslots(
         self,
-        timeslots: list[LessonWithExcelCellsDTO],
+        timeslots: list[LessonWithDateDTO],
         connected_components: list[list[int]],
         collision_type: CollisionTypeEnum,
     ) -> list[list[LessonWithCollisionTypeDTO]]:
@@ -89,10 +89,10 @@ class CollisionsChecker(ICollisionsChecker):
         return collisions
 
     def get_collisions_by_room(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         weekday_to_room_to_slots: dict[
-            str, dict[str, list[tuple[int, LessonWithExcelCellsDTO]]]
+            str, dict[str, list[tuple[int, LessonWithDateDTO]]]
         ] = defaultdict(lambda: defaultdict(list))
         vertices_number = len(timeslots)
         for i, slot in enumerate(timeslots):
@@ -100,7 +100,7 @@ class CollisionsChecker(ICollisionsChecker):
         self.graph.create_graph(vertices_number)
         for weekday in weekday_to_room_to_slots:
             for room, lessons in weekday_to_room_to_slots[weekday].items():
-                lessons: list[tuple[int, LessonWithExcelCellsDTO]]
+                lessons: list[tuple[int, LessonWithDateDTO]]
                 if self.is_online_slot(room):
                     logger.info("No need to check room collision for online")
                     continue
@@ -141,10 +141,10 @@ class CollisionsChecker(ICollisionsChecker):
         return collisions
 
     def get_collisions_by_teacher(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         teachers_to_timeslots: dict[
-            str, list[tuple[int, LessonWithExcelCellsDTO]]
+            str, list[tuple[int, LessonWithDateDTO]]
         ] = defaultdict(list)
         self.graph.create_graph(len(timeslots))
         for i, obj in enumerate(timeslots):
@@ -177,7 +177,7 @@ class CollisionsChecker(ICollisionsChecker):
         )
 
     def get_lessons_where_not_enough_place_for_students(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         result = []
         for timeslot in timeslots:
@@ -200,7 +200,7 @@ class CollisionsChecker(ICollisionsChecker):
         return result
 
     async def get_outlook_collisions(
-        self, timeslots: list[LessonWithExcelCellsDTO]
+        self, timeslots: list[LessonWithDateDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         min_needed_time: datetime.datetime = datetime.datetime.max
         max_needed_time: datetime.datetime = datetime.datetime.min
@@ -317,7 +317,7 @@ class CollisionsChecker(ICollisionsChecker):
         return collisions
 
     def _sort_by_weekday_and_end_time(
-        self, collisions: list[LessonWithExcelCellsDTO]
+        self, collisions: list[LessonWithDateDTO]
     ) -> tuple:
         first_attr = collisions[0].weekday
         second_attr = collisions[0].end_time
@@ -327,13 +327,13 @@ class CollisionsChecker(ICollisionsChecker):
         )
 
     def sort_collisions(
-        self, collisions: list[LessonWithExcelCellsDTO]
+        self, collisions: list[LessonWithDateDTO]
     ) -> None:
         collisions.sort(key=self._sort_by_weekday_and_end_time)
 
     async def get_collisions(
         self,
-        timeslots: list[LessonWithExcelCellsDTO],
+        timeslots: list[LessonWithDateDTO],
         check_room_collisions: bool = True,
         check_teacher_collisions: bool = True,
         check_space_collisions: bool = True,
