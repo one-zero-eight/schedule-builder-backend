@@ -15,6 +15,12 @@ class BaseLessonDTO(BaseModel):
     start_time: time = Field(..., description="Start time of lesson")
     end_time: time = Field(..., description="End time of lesson")
     room: str = Field(..., max_length=100, description="Room for lesson")
+    date_on: date | None = Field(
+        ..., description="Specific dates with lessons"
+    )
+    date_except: date | None = Field(
+        ..., description="Specific dates when there is no lessons"
+    )
 
     @model_validator(mode="after")
     def validate_date(self) -> Self:
@@ -39,17 +45,7 @@ class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
         ..., description="Topleft corner of the cell"
     )
 
-
-class LessonWithDateDTO(LessonWithExcelCellsDTO):
-    date_on: date | None = Field(
-        ..., description="Specific dates with lessons"
-    )
-    date_except: date | None = Field(
-        ..., description="Specific dates when there is no lessons"
-    )
-
-
-class LessonWithCollisionTypeDTO(LessonWithDateDTO):
+class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
     collision_type: CollisionTypeEnum = Field(
         ..., description="Type of collision"
     )

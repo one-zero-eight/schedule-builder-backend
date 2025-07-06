@@ -16,7 +16,7 @@ from openpyxl.utils import (
     get_column_letter,
 )
 
-from src.domain.dtos.lesson import LessonWithDateDTO
+from src.domain.dtos.lesson import LessonWithExcelCellsDTO
 from src.domain.interfaces.services.parser import ICoursesParser
 from src.logging_ import logger
 from src.parsers.core_courses.config import core_courses_config as config
@@ -422,7 +422,7 @@ class CoreCoursesParser(ICoursesParser):
 
     async def get_all_timeslots(
         self, spreadsheet_id: str
-    ) -> list[LessonWithDateDTO]:
+    ) -> list[LessonWithExcelCellsDTO]:
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs, dfs_merged_ranges = self.get_clear_dataframes_from_xlsx(
             xlsx_file=xlsx, targets=config.TARGETS
@@ -475,7 +475,7 @@ class CoreCoursesParser(ICoursesParser):
 
                         for loc, on_, except_ in location:
                             course_lessons.append(
-                                LessonWithDateDTO(
+                                LessonWithExcelCellsDTO(
                                     weekday=weekday,
                                     start_time=start_time,
                                     end_time=end_time,
@@ -514,7 +514,7 @@ class CoreCoursesParser(ICoursesParser):
 
                 merged = []
                 for _lessons in merged_registry.values():
-                    _lessons: list[LessonWithDateDTO]
+                    _lessons: list[LessonWithExcelCellsDTO]
                     groups = []
                     students_number = []
                     excel_ranges = []

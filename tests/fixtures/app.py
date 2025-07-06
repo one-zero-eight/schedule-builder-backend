@@ -18,6 +18,6 @@ async def fastapi_test_client(
     fastapi_app: FastAPI,
 ) -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
-        transport=ASGITransport(app=fastapi_app), base_url="https://test"
+        transport=ASGITransport(app=fastapi_app), base_url="https://api.andycodes.ru/"
     ) as client:
         yield client
