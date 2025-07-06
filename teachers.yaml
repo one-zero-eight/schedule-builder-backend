@@ -1,107 +1,160 @@
 teachers:
 - name: Ahmad Helaly
   study_group: MS1 SE
+  email: "email@example.com"
 - name: Ahmad Taha
   study_group: PhD
+  email: "email@example.com"
 - name: Ahmadsho Akdodshoev
   study_group: MS1 DS
+  email: "email@example.com"
 - name: Ahmed Nouralla
   study_group: MS1 SNE
+  email: "email@example.com"
 - name: Al Badr Amer
   study_group: PhD
+  email: "email@example.com"
 - name: Alaa Aldin Hajjar
   study_group: PhD
+  email: "email@example.com"
 - name: Albert Demian
   study_group: PhD
+  email: "email@example.com"
 - name: Albert Nasybullin
   study_group: PhD
+  email: "email@example.com"
 - name: Alexey Potyomkin
   study_group: PhD
+  email: "email@example.com"
 - name: Alexey Stepanov
   study_group: PhD
+  email: "email@example.com"
 - name: Ali Belal Jnadi
   study_group: PhD
+  email: "email@example.com"
 - name: Alik Valiullin
   study_group: MS1 RO
+  email: "email@example.com"
 - name: Ammar Meslmani
   study_group: BS3
+  email: "email@example.com"
 - name: Anastasiya Andronova
   study_group: PhD
+  email: "email@example.com"
 - name: Anatoliy Baskakov
   study_group: MS2 SE
+  email: "email@example.com"
 - name: Arsen Mutalapov
   study_group: BS4
+  email: "email@example.com"
 - name: Awwal Ishiaku
   study_group: PhD
+  email: "email@example.com"
 - name: Cham An Fam
   study_group: PhD
+  email: "email@example.com"
 - name: Damir Nurtdinov
   study_group: MS1 R
+  email: "email@example.com"
 - name: Danil Leontev
   study_group: PhD
+  email: "email@example.com"
 - name: Dmitrii Alekhin
   study_group: BS4
+  email: "email@example.com"
 - name: Evgeny Gerasimov
   study_group: BS4
+  email: "email@example.com"
 - name: Firas Jolha
   study_group: PhD
+  email: "email@example.com"
 - name: Georgy Andryushchenko
   study_group: MS2 DS
+  email: "email@example.com"
 - name: Ghadeer Issa
   study_group: PhD
+  email: "email@example.com"
 - name: Gleb Stoyko
   study_group: MS1 RO
+  email: "email@example.com"
 - name: Hamidullah Muslih
   study_group: PhD
+  email: "email@example.com"
 - name: Ikechi Kalu Ndukwe
   study_group: PhD
+  email: "email@example.com"
 - name: Imam Muwaffaq
   study_group: PhD
+  email: "email@example.com"
 - name: Imbugwa Gerald
   study_group: PhD
+  email: "email@example.com"
 - name: Kamil Sabbagh
   study_group: MS2 DS
+  email: "email@example.com"
 - name: Karim ElDakroury
   study_group: MS2 SE
+  email: "email@example.com"
 - name: Kirill Saltanov
   study_group: PhD
+  email: "email@example.com"
 - name: Mahmoud Mousatat
   study_group: MS1 DS
+  email: "email@example.com"
 - name: Mahmoud Naderi
   study_group: PhD
+  email: "email@example.com"
 - name: Marina Ivanova
   study_group: MS1 SE
+  email: "email@example.com"
 - name: Marko Pezer
   study_group: PhD
+  email: "email@example.com"
 - name: Markov Andrei
   study_group: BS4
+  email: "email@example.com"
 - name: Mikhail Kuskov
   study_group: PhD
+  email: "email@example.com"
 - name: Mikhail Moshchanetskii
   study_group: PhD
+  email: "email@example.com"
 - name: Naveed Zafar
   study_group: PhD
+  email: "email@example.com"
 - name: Nikita Grigorenko
   study_group: BS4
+  email: "email@example.com"
 - name: Rawan Ali
   study_group: PhD
+  email: "email@example.com"
 - name: Roman Garaev
   study_group: PhD
+  email: "email@example.com"
 - name: Ruslan Damindarov
   study_group: PhD
+  email: "email@example.com"
 - name: Sherif Nafee
   study_group: MS2 SE
+  email: "email@example.com"
 - name: Timur Kharin
   study_group: BS4
+  email: "email@example.com"
 - name: Vladimir Bazilevich
   study_group: MS2 DS
+  email: "email@example.com"
 - name: Vladislav Katkov
   study_group: PhD
+  email: "email@example.com"
 - name: Vyacheslav Koshman
   study_group: MS1 R
+  email: "email@example.com"
 - name: Vyacheslav Sergeev
   study_group: MS2 SE
+  email: "email@example.com"
 - name: Yaroslav Kim
   study_group: MS1 SE
+  email: "email@example.com"
 - name: Yusuf Mesbah
   study_group: PhD
+  email: "email@example.com"
