@@ -388,7 +388,14 @@ class CoreCoursesParser(ICoursesParser):
                                 end_time=end_time,
                                 group_name=group_name,
                                 teacher=teacher,
-                                teacher_email=next((t.get('email', '') for t in self.teachers if t.get('name') == teacher), ''),
+                                teacher_email=next(
+                                    (
+                                        t.get("email", "")
+                                        for t in self.teachers
+                                        if t.get("name") == teacher
+                                    ),
+                                    "",
+                                ),
                                 room=location,
                                 lesson_name=subject_name,
                                 students_number=students_number,
