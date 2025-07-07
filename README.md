@@ -1,11 +1,32 @@
 # Schedule Builder
-## Usage
-### About
+## TODO: Header section 
+### Name and Logo
+#### Name: Schedule Builder for Department of Education
+#### Logo: WIP
+### One-liner description 
+Schedule Builder is created as a tool for Innopolis University Department of Education (DoE) to assist the department in efficient creation of high-quality curriculums for bachelors, masters, and PhD students without any conflicts. 
+### Link to the up-to-date deployed version of your product
+Link: [link](https://docs.google.com/spreadsheets/d/1amQqvE0rfU92pfMsMnUKA-lTGjlcJ-Sv5UcPpGnxW4w/edit?gid=558406858#gid=558406858).
+### Link to the Demo Video 
+Link: WIP 
 
-Schedule Builder is created as a tool for Innopolis University Department of Education (DoE) to assist the department in efficient creation of high-quality curriculums for bachelors, masters, and PhD students without any conflicts.
-
-### Personal Use: Set up for development
-
+## TODO: Body 
+### Project Goal(s) and Description
+#### Project Goal(s)
+WIP
+#### Project Description
+WIP
+### Project Context Diagram (stakeholders, external systems)
+WIP
+### Feature Roadmap (a checklist with both implemented and not) 
+WIP 
+### Usage instructions  
+To test our product, you may follow the deploy link to Google Spreadsheets table with deployed plugin in it. In the plugin, you will be firstly required to visit the special page
+of InNoHassle and obtain your requests token. Paste the token in the special field
+and click the schedule checking button. After collisions fetching, you may navigate through
+them and take actions in the table. 
+### Project Installation and Deployment instructions (must be reproducible and tested by another team member). 
+#### Development setup
 1. Install [Python 3.12+](https://www.python.org/downloads/), [uv](https://docs.astral.sh/uv/), [Docker](https://docs.docker.com/engine/install/).
 2. Install project dependencies with [uv](https://docs.astral.sh/uv/cli/#install).
    ```bash
@@ -29,8 +50,7 @@ Schedule Builder is created as a tool for Innopolis University Department of Edu
 > [!TIP]
 > Edit `settings.yaml` according to your needs, you can view schema in [settings.schema.yaml](settings.schema.yaml).
 
-### Personal Use: Deployment
-
+#### Deployment
 We use Docker with Docker Compose plugin to run the service on servers.
 
 1. Copy the file with settings: `cp settings.example.yaml settings.yaml`.
@@ -39,332 +59,20 @@ We use Docker with Docker Compose plugin to run the service on servers.
 3. Install Docker with Docker Compose.
 4. Build and run docker container: `docker compose up --build`.
 
-### Personal Use: Dependencies updates
-
+#### Dependencies updates
 1. Run `uv sync -U` to update all dependencies.
 2. Run `uv pip list --outdated` to check for outdated dependencies.
 
-### Public Use
-To test our product, you may follow the [link](https://docs.google.com/spreadsheets/d/1amQqvE0rfU92pfMsMnUKA-lTGjlcJ-Sv5UcPpGnxW4w/edit?gid=558406858#gid=558406858) to a sample Google Spreadsheets schedule
-with deployed plugin in it. In the plugin, you will be firstly required to visit the special page
-of InNoHassle and obtain your requests token. Paste the token in the special field
-and click the schedule checking button. After collisions fetching, you may navigate through
-them and take actions in the table.
-
-## Architecture
-### Static view
-![](docs/architecture/static-view/componentDiagram.png)
-
-The created codebase is coupled, as:
-- the entirety of backend is managed with a router,
-- a validator is applied upon the conduction of parsing and Outlook requests,
-- a user has no possibilities to bypass the authorizer and has to be verified in order to use the product.
-
-The maintainability of the product is simplistic with our design choices, since the system is modifiable, testable,
-and analysable (as per [ISO 25010](https://iso25000.com/index.php/en/iso-25000-standards/iso-25010) standard).
-### Dynamic view
-```mermaid
-sequenceDiagram
-    title "/collisions/check" request
-
-    actor User
-    participant Frontend
-    participant Router
-    participant Authorizer
-    participant Parser
-    participant Outlook API
-    participant Validator
-
-    User->>Frontend:Pressing button "Check Scheduling" in the plugin
-    Frontend->>Router:Request to API from Google Spreadsheets
-
-    Router->>Authorizer:User Authorization via token
-    Authorizer->>Parser:Parsing data from Google Spreadsheets
-    Parser->>Validator:Passing data to check for scheduling collisions
-    Authorizer->>Outlook API:Getting information about events to compare from Outlook API
-    Parser->>Validator:Passing data to check collisions
-    Validator->>Router:Returning collisions in expected format
-    Router->>Frontend:Returning response to the extension
-    Frontend->>User:Showing result to the user
-```
-
-We tested the scenario and conducted that it takes up to `10 seconds` to execute in our product environment.
-### Deployment view
-![](docs/architecture/deployment-view/deploymentDiagram.png)
-
-We chose the following deployment structure, specifically `Docker` tool,
-because of the availability of swift servers change without `Docker Hub` deploy
-structure alterations. Moreover, such setup is simplistic to deploy on the
-customer's side:
-- if the customer is **not** interested in project privacy, then a server
-has to be bought for the customer, and `Docker` has to be set up with one
-script on the server; after that, the product is ready for deployment on
-the customer's server,
-- if the customer is **indeed** interested in project privacy, then a separate
-account is registered for the customer, a private `GitHub` repository is created
-for the customer, and deployment is conducted in a private manner with steps provided
-for the previous case. 
-
-## Development
-### Kanban board
-The project's Kanban board is organized in the following way:
-
-| Board column | Entry criteria                                                                                                                                                                                                              |
-|--------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Backlog      | A task is accepted to Backlog if:<br/>- it has been mentioned during the Customer Review,<br/>- the significance of the task has been discovered during the sprint.                                                         |
-| Todo         | A task is accepted to Todo, if it is assigned to the current sprint and has to be completed by the deadline of the current sprint.                                                                                          |
-| In Progress  | A task is accepted to In Progress, if the task is assigned to the current sprint and the task completion has already been started.                                                                                          |
-| In Review    | A task is accepted to In Review, if the task was completed. This way, fellow team members can review the solution and provide useful feedback.                                                                              |
-| Done         | A task is accepted to Done, if it satisfies the project's Definition of Done: the issue is finished (in terms of programming), deployed to the production, and is accordingly tested, thus verified in efficient execution. |
-### Git workflow
-In the project, we use a modified version of trunk-based workflow for workflow management (e.g., the `main` branch is used for
-general code storage, auxiliary branches are made for all Kanban board issues, 
-hotfixes, and features implementation).
-
-The workflow rules can be found below.
-
-| Aspect                                     | Rules                                                                                                                                                                                                                                                                                                                                  |
-|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Creating issues from the defined templates | Templates created within this week (bug report, technical task, user story templates are accessible [here](https://github.com/SWP2025/schedule-builder-backend/issues)) alongside with average issue creation procedures are used in the project.                                                                                      |
-| Labelling issues                           | The opened issues are labelled with an according milestone for issue deadline, complexity evaluation in story points, and additional tasks for development purposes (ex.: `enhancement`).                                                                                                                                              |
-| Assigning issues to team members           | Back-end tasks are assigned to the Back-end development team, and front-end tasks are assigned to the Front-end development team. Any tasks regarding the Product Backlog maintenance, documentation, and other administrative assignments are put on the Team Lead of the project.                                                    | 
-| Creating, naming, merging branches         | A branch is created for each significant development issue and named after the issue (ex.: the issue is to update the `README.md` file, hence, the branch name is `update-readme`). The branch is made off `main` and is merged back to `main` after a pull request and code review with fellow team members.                          |
-| Commit messages format                     | A conventional commit tags [system](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional) is employed alongside with average commit names for commits made through GitHub (e.g., verified). The commit messages should be laconic, concise, and explain the essence of the code changes. |
-| Creating a pull request for an issue       | A template created within this week (accessible [here](https://github.com/SWP2025/schedule-builder-backend/issues)) alongside with average pull request creation is used in the project.                                                                                                                                               |
-| Code reviews                               | Code reviews are conducted within any pull request. For code review, two or three team members are assigned to analyze the code and either give oral feedback without GitHub documentation (during meetings) or leave detailed written feedback in the comments of the pull request (during average development).                      |
-| Merging pull requests                      | A pull request is merged (only to `main`) if an only if the code review for that pull request is passed, and CI/CD does not break under the composed changes.                                                                                                                                                                          |
-| Resolving issues                           | An issue is marked done if and only if the branch assigned to the issue is merged by the pull request upon passing the code review. Issues are resolved within the timeline of the milestone they are assigned to. If the issue is not resolved within the time limit, then it is transferred to the next milestone.                   |
-
-The GitGraph diagram of the workflow may be found below.
-```mermaid
-gitGraph
-    commit id:"2f5b5df"
-    commit id:"cd91de2"
-    commit id:"883e369"
-    branch excel_parsing
-    checkout main
-    commit id:"aa0e661"
-    commit id:"ab9f7c7"
-    commit id:"ce28123"
-    commit id:"adbbf51"
-    commit id:"1197f2b"
-    commit id:"8e6ba24"
-    commit id:"aead224"
-    checkout excel_parsing
-    commit id:"39b05f5"
-    commit id:"75fe106"
-    commit id:"b0770d1"
-    commit id:"a071d4d"
-    commit id:"2553acb"
-    commit id:"e6fe229"
-    commit id:"6d2550b"
-    commit id:"b267401"
-    commit id:"830bea6"
-    commit id:"40cb0d7"
-    commit id:"c93cd10"
-    checkout main
-    merge excel_parsing id:"9f95c30"
-    commit id:"9fc61e7"
-    branch BRANCH_2
-    checkout main
-    commit id:"b307efc"
-    checkout excel_parsing
-    commit id:"3a65e5f"
-    checkout main
-    merge excel_parsing id:"ce925c2"
-    commit id:"f37b37d"
-    commit id:"68296eb"
-    checkout BRANCH_2
-    commit id:"45fd35a"
-    commit id:"b4e62d4"
-    checkout main
-    merge BRANCH_2 id:"adebbca"
-    commit id:"72687c1"
-    commit id:"eee06a5"
-    commit id:"c7f7a39"
-    commit id:"3f3a999"
-    branch pydantic_issue
-    commit id:"3de5d65"
-    commit id:"91c7b61"
-    checkout main
-    branch check_room_capacity
-    commit id:"4ee7efe"
-    commit id:"1c36221"
-    branch readme
-    checkout main
-    merge check_room_capacity id:"c40d316"
-    branch check_outlook_conflicts
-    commit id:"db3e323"
-    commit id:"6a7b4ed"
-    checkout main
-    commit id:"da01c40"
-    checkout readme
-    commit id:"6a30ee1"
-    commit id:"e7d04c0"
-    commit id:"4f8fe8a"
-    checkout main
-    merge readme id:"b96be55"
-    checkout check_outlook_conflicts
-    commit id:"77424c2"
-    checkout main
-    merge check_outlook_conflicts id:"c8104da"
-    commit id:"86c43d0"
-    branch BRANCH_NAME
-    checkout main
-    commit id:"e7afad5"
-    checkout BRANCH_NAME
-    commit id:"b5679bb"
-    commit id:"07c7987"
-    commit id:"ec7c185"
-    checkout main
-    merge BRANCH_NAME id:"c52fb5c"
-    commit id:"f3cbb95"
-    commit id:"ba50e13"
-    commit id:"a5aa8b5"
-    commit id:"8cebd9d"
-    commit id:"9771560"
-    commit id:"b55e385"
-    commit id:"e1c588d"
-    branch optimize-http-request-to-outlook
-    checkout main
-    commit id:"31b1cc7"
-    commit id:"3224eeb"
-    commit id:"adfa936"
-    commit id:"4e434fa"
-    commit id:"6d148fc"
-    commit id:"8fffd33"
-    commit id:"9c65992"
-    commit id:"70338f5"
-    commit id:"0fb2e93"
-    branch change_response_format
-    commit id:"153c641"
-    commit id:"c435155"
-    checkout main
-    commit id:"8923543"
-    checkout optimize-http-request-to-outlook
-    commit id:"11164c3"
-    commit id:"fe6abab"
-    checkout main
-    merge optimize-http-request-to-outlook id:"2a42c56"
-    checkout change_response_format
-    merge main id:"1df38d6"
-    checkout main
-    merge change_response_format id:"297af62"
-    branch warnings_sorted_by_time
-    checkout main
-    branch add-outlook-info
-    commit id:"14987da"
-    commit id:"d2a8358"
-    branch BRANCH_NAME_2
-    commit id:"3c73731"
-    commit id:"db44b34"
-    checkout warnings_sorted_by_time
-    commit id:"0ea73b4"
-    checkout main
-    merge add-outlook-info id:"67b4864"
-    checkout warnings_sorted_by_time
-    merge main id:"ce153b1"
-    checkout main
-    merge warnings_sorted_by_time id:"2ab5e0c"
-    branch tests
-    commit id:"e079d19"
-    commit id:"3755010"
-    commit id:"8059176"
-    checkout tests
-    commit id:"7612af5"
-    merge main id:"3847c51"
-    merge warnings_sorted_by_time id:"beb0394"
-    commit id:"38a7948"
-    commit id:"df3e4fb"
-    commit id:"eeb0c96"
-    commit id:"6f6e978"
-    commit id:"b862e8f"
-    commit id:"caada8d"
-    commit id:"01e2f96"
-    commit id:"0abbe60"
-    commit id:"2af3758"
-    checkout main
-    merge tests id:"5090e9e"
-    branch create-new-technical-task-template
-    commit id:"1a50079"
-    checkout main
-    merge create-new-technical-task-template id:"6b7c4e1"
-    branch create-bug-report-template
-    commit id:"c527fd8"
-    checkout main
-    merge create-bug-report-template id:"63be9d1"
-    branch create-user-story-template
-    commit id:"70dfcc8"
-    checkout main
-    merge create-user-story-template id:"7427b0d"
-    branch create-pull-request-template
-    commit id:"bae3aa0"
-    checkout main
-    merge create-pull-request-template id:"6246fe1"
-    branch tests_update
-    commit id:"97d3607"
-    commit id:"465effc"
-    checkout main
-    merge tests_update id:"5e00141"
-    branch BRANCH_NAME_3
-    commit id:"49d6c96"
-    checkout main
-    branch update-readme
-    commit id:"45f11b4"
-    commit id:"356b28b"
-    commit id:"0a8923f"
-    commit id:"1b18bf4"
-    commit id:"78d8c8d"
-    commit id:"67bd043"
-```
-
-### Secrets management
-In our project, secrets are defined as any piece of information that is critical
-for authorization in the project system. The key rule of secrets management is to
-ensure the safety of information within the desired scope of storage. Secrets storages
-for according fields may be found below.
-
-| Secret             | Storage                                                                                                                                                                                                                     |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| API Token          | Local `settings.yaml` file                                                                                                                                                                                                  |
-| DockerHub Username | GitHub Secrets                                                                                                                                                                                                              |
-| DockerHub Token    | GitHub Secrets                                                                                                                                                                                                              |
-
-## Quality assurance
-### Quality attribute scenarios
-Quality attribute scenarios may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/quality-assurance/quality-attribute-scenarios.md).
-### User acceptance tests
-User acceptance tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/quality-assurance/user-acceptance-tests.md).
-### Automated tests
-**Q1:** Which tools were used for testing?
-
-We used the following tools:
-- `pytest` (because of the tool's widespreadness),
-- `pytest_asyncio` (in order to set up testing fixtures).
-
-**Q2:** Which types of tests have been implemented? 
-
-We implemented **unit** and **integration** tests.
-
-**Q3:** Where are the tests of each type stored in the repository?
-
-Unit tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/tests/unit), whereas integration tests may be found [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/tests/integration).
-
-## Build and deployment
-### Continuous Integration
-Our Continuous Integration system comprises only **one** workflow file that can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/blob/main/.github/workflows/test-and-build.yml).
-Moreover, we used the following testing and static analysis tools in the system:
-- `black` (widespread code linter),
-- `isort` (inputs sorting),
-- `pytest` (universal Python code testing library).
-
-All CI workflow runs can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/actions).
-
-### Continuous Deployment
-Our Continuous Deployment system comprises only **one** workflow file that can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/blob/main/.github/workflows/test-and-build.yml).
-Moreover, we used the following testing and static analysis tools in the system:
-- `black` (widespread code linter),
-- `isort` (inputs sorting),
-- `pytest` (universal Python code testing library).
-
-All CD workflow runs can be accessed [here](https://github.com/SWP2025/schedule-builder-backend/actions).
+## Documentation
+### Development - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/CONTRIBUTING.md).
+### Quality characteristics and quality attribute scenarios - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/quality-attributes/quality-attribute-scenarios.md).
+### Quality assurance
+#### Automated tests - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/quality-assurance/automated-tests.md).
+#### User acceptance tests - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/quality-assurance/user-acceptance-tests.md).
+### Build and deployment automation
+#### Continuous Integration - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/automation/continuous-integration.md).
+#### Continuous Deployment - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/automation/continuous-delivery.md).
+### Architecture
+#### Static view - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/architecture/static-view/static-view.md).
+#### Dynamic view - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/architecture/dynamic-view/dynamic-view.md).
+#### Deployment view - [here](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/architecture/deployment-view/deployment-view.md).
