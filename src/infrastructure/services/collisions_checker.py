@@ -186,7 +186,8 @@ class CollisionsChecker(ICollisionsChecker):
             room = timeslot.room
             capacity = self.room_to_capacity.get(room)
             if not capacity:
-                continue
+                # с учётом того, что все "большие" кабинеты заполнены, будет универсальной заменой
+                capacity = 30
             if capacity < timeslot.students_number:
                 result.append(
                     [

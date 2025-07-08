@@ -6,6 +6,7 @@ from datetime import date, datetime
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
+from dateutil import parser as date_parser
 
 import aiohttp
 import numpy as np
@@ -410,9 +411,9 @@ class CoreCoursesParser(ICoursesParser):
             for room in rooms:
                 # ON и EXCEPT разом не должны выпасть
                 for d in on_dates:
-                    result.append((room.strip(), date(d), None))
+                    result.append((room.strip(), date_parser.parse(d, dayfirst=True), None))
                 for d in except_dates:
-                    result.append((room.strip(), None, date(d)))
+                    result.append((room.strip(), None, date_parser.parse(d, dayfirst=True)))
 
         return result
 
