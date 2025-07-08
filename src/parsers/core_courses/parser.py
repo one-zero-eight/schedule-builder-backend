@@ -6,11 +6,11 @@ from datetime import date, datetime
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
-from dateutil import parser as date_parser
 
 import aiohttp
 import numpy as np
 import pandas as pd
+from dateutil import parser as date_parser
 from openpyxl.utils import (
     column_index_from_string,
     coordinate_to_tuple,
@@ -411,9 +411,21 @@ class CoreCoursesParser(ICoursesParser):
             for room in rooms:
                 # ON и EXCEPT разом не должны выпасть
                 for d in on_dates:
-                    result.append((room.strip(), date_parser.parse(d, dayfirst=True), None))
+                    result.append(
+                        (
+                            room.strip(),
+                            date_parser.parse(d, dayfirst=True),
+                            None,
+                        )
+                    )
                 for d in except_dates:
-                    result.append((room.strip(), None, date_parser.parse(d, dayfirst=True)))
+                    result.append(
+                        (
+                            room.strip(),
+                            None,
+                            date_parser.parse(d, dayfirst=True),
+                        )
+                    )
 
         return result
 
