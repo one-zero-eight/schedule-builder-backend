@@ -1,30 +1,28 @@
 import io
 import re
-from collections import defaultdict
 from datetime import datetime
-from itertools import groupby, pairwise
-from typing import Generator
+from itertools import pairwise
 
+import aiohttp
 import numpy as np
 import pandas as pd
 from openpyxl.utils import coordinate_to_tuple
 
-from src.parsers.electives.config import electives_config as config
-from src.parsers.electives.models import Elective, ElectiveCell, ElectiveEvent
+from src.domain.interfaces.services.parser import ICoursesParser
 from src.logging_ import logger
+from src.parsers.electives.config import electives_config as config
+from src.parsers.electives.models import Elective, ElectiveCell
 from src.parsers.processors.regex import prettify_string
 from src.parsers.utils import get_current_year
+
 
 BRACKETS_PATTERN = re.compile(r"\((.*?)\)")
 
 
-class ElectiveParser:
+class ElectiveCoursesParser:
     """
     Elective parser class
     """
-
-    def __init__(self):
-        self.session = requests.Session()
 
     def get_clear_dataframes_from_xlsx(
         self, xlsx_file: io.BytesIO, targets: list[config.Target]
@@ -42,7 +40,9 @@ class ElectiveParser:
         :rtype: dict[str, pd.DataFrame]
         """
         # ------- Read xlsx file into dataframes -------
-        dfs = pd.read_excel(xlsx_file, engine="openpyxl", sheet_name=None, header=None)
+        dfs = pd.read_excel(
+            xlsx_file, engine="openpyxl", sheet_name=None, header=None
+        )
         # ------- Clean up dataframes -------
         dfs = {key.strip(): value for key, value in dfs.items()}
 
@@ -50,9 +50,9 @@ class ElectiveParser:
             logger.debug(f"Processing sheet: {target.sheet_name}")
             df = dfs[target.sheet_name]
             # -------- Select range --------
-            df = ElectiveParser.select_range(df, target.range)
+            df = ElectiveCoursesParser.select_range(df, target.range)
             # -------- Set time column as index --------
-            df = ElectiveParser.set_time_column_as_index(df)
+            df = ElectiveCoursesParser.set_time_column_as_index(df)
             # -------- Strip all values --------
             df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
             # -------- Fill empty cells --------
@@ -66,7 +66,7 @@ class ElectiveParser:
         logger.debug("Dataframes ready")
         return dfs
 
-    def get_xlsx_file(self, spreadsheet_id: str) -> io.BytesIO:
+    async def get_xlsx_file(self, spreadsheet_id: str) -> io.BytesIO:
         """
         Export xlsx file from Google Sheets and return it as BytesIO object.
 
@@ -76,15 +76,15 @@ class ElectiveParser:
         # ------- Get data from Google Sheets -------
         logger.debug("Getting dataframe from Google Sheets...")
         # ------- Create url for export -------
-        spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
+        spreadsheet_url = (
+            f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}"
+        )
         export_url = spreadsheet_url + "/export?format=xlsx"
         # ------- Export xlsx file -------
         logger.debug(f"Exporting from URL: {export_url}")
-        response = self.session.get(export_url)
-        logger.debug(f"Response status: {response.status_code}")
-        response.raise_for_status()
-        # ------- Return xlsx file as BytesIO object -------
-        return io.BytesIO(response.content)
+        async with aiohttp.ClientSession() as client:
+            async with client.get(export_url) as response:
+                return io.BytesIO(await response.read())
 
     @classmethod
     def select_range(cls, df: pd.DataFrame, target_range: str) -> pd.DataFrame:
@@ -107,7 +107,9 @@ class ElectiveParser:
         ]
 
     @classmethod
-    def set_time_column_as_index(cls, df: pd.DataFrame, column: int = 0) -> pd.DataFrame:
+    def set_time_column_as_index(
+        cls, df: pd.DataFrame, column: int = 0
+    ) -> pd.DataFrame:
         """
         Set time column as index and process it to datetime format
 
@@ -117,13 +119,21 @@ class ElectiveParser:
         :type column: int, optional
         """
         # "9:00-10:30" -> datetime.time(9, 0), datetime.time(10, 30)
-        df[column] = df[column].apply(lambda x: ElectiveParser.proces_time_cell(x) if isinstance(x, str) else x)
+        df[column] = df[column].apply(
+            lambda x: (
+                ElectiveCoursesParser.proces_time_cell(x)
+                if isinstance(x, str)
+                else x
+            )
+        )
         df.set_index(column, inplace=True)
         df.rename_axis(index="time", inplace=True)
         return df
 
     @classmethod
-    def set_date_row_as_header(cls, df: pd.DataFrame, row: int = 0) -> pd.DataFrame:
+    def set_date_row_as_header(
+        cls, df: pd.DataFrame, row: int = 0
+    ) -> pd.DataFrame:
         """
         Set date row as columns and process it to datetime format
 
@@ -134,14 +144,22 @@ class ElectiveParser:
         """
         # "June 7" -> datetime.date(current_year, 6, 7)
         index = df.index[row]
-        df.loc[index] = df.loc[index].apply(lambda x: ElectiveParser.process_date_cell(x) if isinstance(x, str) else x)
+        df.loc[index] = df.loc[index].apply(
+            lambda x: (
+                ElectiveCoursesParser.process_date_cell(x)
+                if isinstance(x, str)
+                else x
+            )
+        )
         df.columns = df.loc[index]
         df.drop(index, inplace=True)
         df.rename_axis(columns="date", inplace=True)
         return df
 
     @classmethod
-    def proces_time_cell(cls, cell: str) -> tuple[datetime.time, datetime.time] | str:
+    def proces_time_cell(
+        cls, cell: str
+    ) -> tuple[datetime.time, datetime.time] | str:
         """
         Process time cell and return tuple of start and end time
 
@@ -203,87 +221,66 @@ class ElectiveParser:
         dfs = []
         for start, end in pairwise(week_locations):
             week = df.index[start]
-            logger.debug(f"Processing week: {week}... From ({start}) to ({end})")
+            logger.debug(
+                f"Processing week: {week}... From ({start}) to ({end})"
+            )
             week_df: pd.DataFrame = df.iloc[start:end].copy()
             # ----- Set date row as header -----
-            week_df = ElectiveParser.set_date_row_as_header(week_df)
+            week_df = ElectiveCoursesParser.set_date_row_as_header(week_df)
             dfs.append(week_df)
         return dfs
 
-    @classmethod
-    def parse_df(cls, df: pd.DataFrame) -> Generator[ElectiveEvent, None, None]:
-        """
-        Parse dataframe with schedule
+    # @classmethod
+    # def parse_df(cls, df: pd.DataFrame) -> Generator[ElectiveEvent, None, None]:
+    #     """
+    #     Parse dataframe with schedule
 
-        :param df: dataframe with schedule
-        :type df: pd.DataFrame
-        :return: parsed events
-        """
+    #     :param df: dataframe with schedule
+    #     :type df: pd.DataFrame
+    #     :return: parsed events
+    #     """
 
-        _elective_aliases = [e.alias for e in config.ELECTIVES]
-        _elective_line_pattern = re.compile(r"(?P<elective_alias>" + "|".join(_elective_aliases) + r")")
+    #     _elective_aliases = [e.alias for e in config.ELECTIVES]
+    #     _elective_line_pattern = re.compile(r"(?P<elective_alias>" + "|".join(_elective_aliases) + r")")
 
-        def process_line(line: str) -> ElectiveCell | str:
-            """
-            Process line of the dataframe
+    #     def process_line(line: str) -> ElectiveCell | str:
+    #         """
+    #         Process line of the dataframe
 
-            :param line: line to process
-            :type line: str
-            :return: ElectiveCell or original line
-            :rtype: ElectiveCell | str
-            """
-            if pd.isna(line):
-                return line
-            line = line.strip()
-            # find all matches in the string and split by them
-            matches = _elective_line_pattern.finditer(line)
-            # get substrings
-            breaks = [m.start() for m in matches]
-            substrings = [line[i:j] for i, j in zip(breaks, breaks[1:] + [None])]
-            substrings = [line[: breaks[0]]] + substrings
-            substrings = filter(len, substrings)
-            substrings = map(str.strip, substrings)
-            return ElectiveCell(original=list(substrings))
+    #         :param line: line to process
+    #         :type line: str
+    #         :return: ElectiveCell or original line
+    #         :rtype: ElectiveCell | str
+    #         """
+    #         if pd.isna(line):
+    #             return line
+    #         line = line.strip()
+    #         # find all matches in the string and split by them
+    #         matches = _elective_line_pattern.finditer(line)
+    #         # get substrings
+    #         breaks = [m.start() for m in matches]
+    #         substrings = [line[i:j] for i, j in zip(breaks, breaks[1:] + [None])]
+    #         substrings = [line[: breaks[0]]] + substrings
+    #         substrings = filter(len, substrings)
+    #         substrings = map(str.strip, substrings)
+    #         return ElectiveCell(original=list(substrings))
 
-        df = df.map(lambda x: process_line(x) if isinstance(x, str) else x)
+    #     df = df.map(lambda x: process_line(x) if isinstance(x, str) else x)
 
-        for date, date_column in df.items():
-            date: datetime.date
-            for timeslot, cell in date_column.items():
-                timeslot: tuple[datetime.time, datetime.time]
+    #     for date, date_column in df.items():
+    #         date: datetime.date
+    #         for timeslot, cell in date_column.items():
+    #             timeslot: tuple[datetime.time, datetime.time]
 
-                if isinstance(cell, ElectiveCell):
-                    yield from cell.generate_events(date, timeslot)
+    #             if isinstance(cell, ElectiveCell):
+    #                 yield from cell.generate_events(date, timeslot)
 
-
-def convert_separation(
-    events: list[ElectiveEvent],
-) -> dict[str, list[str, list[ElectiveEvent]]]:
-    """
-    Convert list of events to dict with separation by Elective and group.
-
-    :param events: list of events to convert
-    :type events: list[ElectiveEvent]
-    :return: dict with separation by Elective and group
-    :rtype: dict[str, list[str, list[ElectiveEvent]]] (name, events)
-    """
-    output = defaultdict(lambda: [None, list()])
-
-    # # by groups of elective
-    # for (elective, group), _events in groupby(events, lambda e: (e.elective, e.group)):
-    #     elective: Elective
-    #     if group is None:
-    #         continue  # cal = output[elective.alias]
-    #     else:
-    #         cal = output[f"{elective.alias}-{group}"]
-    #     cal: list[ElectiveEvent]
-    #     cal.extend(_events)
-
-    # only by Elective
-    for elective, _events in groupby(events, lambda e: e.elective):
-        elective: Elective
-        cal = output[elective.alias]
-        cal[0] = elective.name
-        cal[1].extend(_events)
-
-    return dict(output)
+    async def get_all_timeslots(self, spreadsheet_id: str):
+        xlsx = await self.get_xlsx_file(
+            spreadsheet_id=spreadsheet_id,
+        )
+        dfs = self.get_clear_dataframes_from_xlsx(
+            xlsx_file=xlsx,
+            targets=config.TARGETS,
+        )
+        lessons = []

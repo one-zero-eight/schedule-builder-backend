@@ -1,3 +1,4 @@
+import datetime
 import re
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
@@ -82,3 +83,8 @@ def split_range_to_xy(
     end_row, end_col = coordinate_to_tuple(end)
     end_row, end_col = end_row - 1, end_col - 1
     return (start_row, start_col), (end_row, end_col)
+
+
+def get_current_year() -> int:
+    """Returns current year."""
+    return datetime.datetime.now().year

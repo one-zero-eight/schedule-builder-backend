@@ -16,6 +16,7 @@ from openpyxl.utils import (
 )
 
 from src.domain.dtos.lesson import LessonWithExcelCellsDTO
+from src.domain.enums import CourseTypeEnum
 from src.domain.interfaces.services.parser import ICoursesParser
 from src.logging_ import logger
 from src.parsers.core_courses.config import core_courses_config as config
@@ -26,12 +27,11 @@ from src.parsers.utils import (
     get_sheets,
     split_range_to_xy,
 )
-from src.domain.enums import CourseTypeEnum
 
 
 class CoreCoursesParser(ICoursesParser):
     """
-    Elective parser class
+    Core courses parser class
     """
 
     def get_clear_dataframes_from_xlsx(

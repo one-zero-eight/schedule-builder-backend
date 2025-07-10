@@ -1,8 +1,8 @@
 import datetime
 import re
-from typing import Optional, Any
+from typing import Any, Optional
 
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, Field, field_validator
 
 from src.parsers.processors.regex import process_spaces
 
@@ -18,10 +18,10 @@ class Elective(BaseModel):
     """Name of elective"""
     instructor: Optional[str]
     """Instructor of elective"""
-    elective_type: Optional[str]
+    elective_type: Optional[str] = None
     """Type of elective"""
 
-    @field_validator("name", "instructor", "elective_type", pre=True)
+    @field_validator("name", "instructor", "elective_type", mode="before")
     def beatify_string(cls: type["Elective"], string: str) -> str:
         """Beatify string
 
@@ -80,22 +80,38 @@ class ElectiveCell(BaseModel):
             # just first word as elective
             splitter = string.split(" ")
             elective_alias = splitter[0]
-            self.elective = next(elective for elective in config.ELECTIVES if elective.alias == elective_alias)
+            self.elective = next(
+                elective
+                for elective in config.ELECTIVES
+                if elective.alias == elective_alias
+            )
             string = " ".join(splitter[1:])
             # find time xx:xx-xx:xx
 
-            if timeslot_m := re.search(r"\(?(\d{2}:\d{2})-(\d{2}:\d{2})\)?", string):
-                self.starts_at = datetime.datetime.strptime(timeslot_m.group(1), "%H:%M").time()
-                self.ends_at = datetime.datetime.strptime(timeslot_m.group(2), "%H:%M").time()
+            if timeslot_m := re.search(
+                r"\(?(\d{2}:\d{2})-(\d{2}:\d{2})\)?", string
+            ):
+                self.starts_at = datetime.datetime.strptime(
+                    timeslot_m.group(1), "%H:%M"
+                ).time()
+                self.ends_at = datetime.datetime.strptime(
+                    timeslot_m.group(2), "%H:%M"
+                ).time()
                 string = string.replace(timeslot_m.group(0), "")
 
             # find starts at xx:xx
-            if timeslot_m := re.search(r"\(?starts at (\d{2}:\d{2})\)?", string):
-                self.starts_at = datetime.datetime.strptime(timeslot_m.group(1), "%H:%M").time()
+            if timeslot_m := re.search(
+                r"\(?starts at (\d{2}:\d{2})\)?", string
+            ):
+                self.starts_at = datetime.datetime.strptime(
+                    timeslot_m.group(1), "%H:%M"
+                ).time()
                 string = string.replace(timeslot_m.group(0), "")
 
             # find (lab), (lec)
-            if class_type_m := re.search(r"\(?(lab|lec)\)?", string, flags=re.IGNORECASE):
+            if class_type_m := re.search(
+                r"\(?(lab|lec)\)?", string, flags=re.IGNORECASE
+            ):
                 self.class_type = class_type_m.group(1).lower()
                 string = string.replace(class_type_m.group(0), "")
 
