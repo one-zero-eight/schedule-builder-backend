@@ -18,7 +18,7 @@ class BaseLessonDTO(BaseModel):
     date_on: date | None = Field(
         ..., description="Specific dates with lessons"
     )
-    date_except: date | None = Field(
+    date_except: list[date] | None = Field(
         ..., description="Specific dates when there is no lessons"
     )
 

@@ -408,6 +408,19 @@ class CoreCoursesParser(ICoursesParser):
                 for room in rooms:
                     result.append((room.strip(), None, None))
 
+            if len(on_dates) == 0 and len(except_dates) != 0:
+                for room in rooms:
+                    result.append(
+                        (
+                            room.strip(),
+                            None,
+                            [
+                                date_parser.parse(d, dayfirst=True)
+                                for d in except_dates
+                            ],
+                        )
+                    )
+
             for room in rooms:
                 # ON и EXCEPT разом не должны выпасть
                 for d in on_dates:
@@ -418,20 +431,12 @@ class CoreCoursesParser(ICoursesParser):
                             None,
                         )
                     )
-                for d in except_dates:
-                    result.append(
-                        (
-                            room.strip(),
-                            None,
-                            date_parser.parse(d, dayfirst=True),
-                        )
-                    )
 
         return result
 
     def parse_schedule_string(
         self, s: str
-    ) -> list[tuple[str, date | None, date | None]]:
+    ) -> list[tuple[str, date | None, list[date] | None]]:
         try:
             return self._parse_schedule_string(s)
         except Exception as e:
@@ -493,7 +498,7 @@ class CoreCoursesParser(ICoursesParser):
                         for loc, on_, except_ in location:
                             course_lessons.append(
                                 LessonWithExcelCellsDTO(
-                                    weekday=weekday,
+                                    weekday=weekday if on_ == None else None,
                                     start_time=start_time,
                                     end_time=end_time,
                                     group_name=group_name,
