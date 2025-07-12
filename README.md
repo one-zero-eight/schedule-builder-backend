@@ -23,7 +23,7 @@
     &middot;
     <a href="https://github.com/SWP2025/schedule-builder-backend/issues/new?template=technical-task-template.md">Request Feature</a>
     &middot;
-    <a href="ADD DEMO VIDEO LINK HERE">Demo Video</a>
+    <a href="https://disk.yandex.ru/i/31xWqPXMcE1HCw">Demo Video</a>
   </p>
 </div>
 
