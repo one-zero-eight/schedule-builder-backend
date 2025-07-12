@@ -1,5 +1,5 @@
 ## Static view
-![](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/architecture/static-view/componentDiagram.png)
+![](https://github.com/SWP2025/schedule-builder-backend/blob/main/docs/architecture/static-view/componentDiagram.png)
 
 The created codebase is coupled, as:
 - the entirety of backend is managed with a router,
