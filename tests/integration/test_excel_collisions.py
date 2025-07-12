@@ -191,7 +191,32 @@ from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
                         "outlook_info": None,
                         "room_capacity": None,
                     },
-                ]
+                ],
+                [
+                    {
+                        "collision_type": "capacity",
+                        "date_except": None,
+                        "date_on": None,
+                        "end_time": "12:10:00",
+                        "excel_range": "H29:L29",
+                        "group_name": [
+                            "B24-CSE-01",
+                            "B24-CSE-02",
+                            "B24-CSE-03",
+                            "B24-CSE-04",
+                            "B24-CSE-05",
+                        ],
+                        "lesson_name": "Физическая культура и спорт (Теоретическая) - Модуль 1 Психология",
+                        "outlook_info": None,
+                        "room": "460",
+                        "room_capacity": 30,
+                        "start_time": "10:40:00",
+                        "students_number": 145,
+                        "teacher": "Элеонора Ильина",
+                        "teacher_email": "",
+                        "weekday": "TUESDAY",
+                    },
+                ],
             ],
         ),
         (
