@@ -1,5 +1,5 @@
 ## Deployment view
-![](https://github.com/SWP2025/schedule-builder-backend/tree/main/docs/architecture/deployment-view/deploymentDiagram.png)
+![](https://github.com/SWP2025/schedule-builder-backend/blob/main/docs/architecture/deployment-view/deploymentDiagram.png)
 
 We chose the following deployment structure, specifically `Docker` tool,
 because of the availability of swift servers change without `Docker Hub` deploy
