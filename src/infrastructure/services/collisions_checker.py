@@ -104,8 +104,8 @@ class CollisionsChecker(ICollisionsChecker):
     @staticmethod
     def is_online_slot(slot_or_room: BaseLessonDTO | str) -> bool:
         if isinstance(slot_or_room, str):
-            return "ONLINE" == slot_or_room
-        return "ONLINE" == slot_or_room.room
+            return "ONLINE" in slot_or_room
+        return "ONLINE" in slot_or_room.room
 
     def get_colliding_timeslots(
         self,
