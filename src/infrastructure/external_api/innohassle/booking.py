@@ -1,5 +1,5 @@
 import datetime
-from urllib.parse import quote, urljoin
+from urllib.parse import quote, urljoin, urlparse
 
 import aiohttp
 
@@ -10,6 +10,8 @@ from src.domain.dtos.booking import BookingDTO
 from src.domain.exceptions.base import AppException
 from src.domain.exceptions.room import RoomNotFoundException
 from src.domain.exceptions.tokens import InvalidTokenException
+
+DOMAINS_ALLOWLIST = ["api.innohassle.ru"]
 
 
 class BookingService(IBookingService):
@@ -27,6 +29,9 @@ class BookingService(IBookingService):
             base_url = "https://api.innohassle.ru/room-booking/staging-v0/room/"
             safe_room_id = quote(room_id, safe="")
             full_url = urljoin(base_url, f"{safe_room_id}/bookings")
+
+            if urlparse(full_url).hostname not in DOMAINS_ALLOWLIST:
+                raise AppException(f"URL {full_url} is not whitelisted.")
 
             async with client.get(
                 full_url,
