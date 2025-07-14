@@ -11,6 +11,7 @@ from src.domain.exceptions.base import AppException
 from src.domain.exceptions.room import RoomNotFoundException
 from src.domain.exceptions.tokens import InvalidTokenException
 
+
 DOMAINS_ALLOWLIST = ["api.innohassle.ru"]
 
 
@@ -26,7 +27,9 @@ class BookingService(IBookingService):
         async with aiohttp.ClientSession(
             headers={"Authorization": f"Bearer {self.token}"}
         ) as client:
-            base_url = "https://api.innohassle.ru/room-booking/staging-v0/room/"
+            base_url = (
+                "https://api.innohassle.ru/room-booking/staging-v0/room/"
+            )
             safe_room_id = quote(room_id, safe="")
             full_url = urljoin(base_url, f"{safe_room_id}/bookings")
 
