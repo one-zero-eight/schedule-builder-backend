@@ -284,7 +284,10 @@ class CollisionsChecker(ICollisionsChecker):
                 30
             ):  # TODO: Change fixed 30-day window to semester based window
                 check_date = today + datetime.timedelta(days=day_offset)
-                if check_date.weekday() == lesson_weekday and (lesson.date_except is None or check_date not in lesson.date_except):
+                if check_date.weekday() == lesson_weekday and (
+                    lesson.date_except is None
+                    or check_date not in lesson.date_except
+                ):
                     lesson_dates.append(check_date)
                 elif check_date == lesson_date:
                     lesson_dates.append(check_date)
