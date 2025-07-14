@@ -93,7 +93,7 @@ class CollisionsChecker(ICollisionsChecker):
             and slot1.date_on in slot2.date_except
         ):
             return False
-        if slot2.date_on.weekday() != CollisionsChecker.WEEKDAYS_MAP.get(
+        if slot1.date_on.weekday() != CollisionsChecker.WEEKDAYS_MAP.get(
             slot2.weekday.lower()
         ):
             return False
@@ -270,8 +270,12 @@ class CollisionsChecker(ICollisionsChecker):
             if self.is_online_slot(lesson) or lesson.room not in valid_rooms:
                 continue
 
-            lesson_weekday = self.WEEKDAYS_MAP.get(lesson.weekday.lower())
-            if lesson_weekday is None:
+            lesson_weekday = lesson_date = None
+            if lesson.weekday is not None:
+                lesson_weekday = self.WEEKDAYS_MAP.get(lesson.weekday)
+            elif lesson.date_on is not None:
+                lesson_date = lesson.date_on
+            else:
                 continue
 
             lesson_dates = []
@@ -280,7 +284,9 @@ class CollisionsChecker(ICollisionsChecker):
                 30
             ):  # TODO: Change fixed 30-day window to semester based window
                 check_date = today + datetime.timedelta(days=day_offset)
-                if check_date.weekday() == lesson_weekday:
+                if check_date.weekday() == lesson_weekday and (lesson.date_except is None or check_date not in lesson.date_except):
+                    lesson_dates.append(check_date)
+                elif check_date == lesson_date:
                     lesson_dates.append(check_date)
 
             lesson_collisions = [
