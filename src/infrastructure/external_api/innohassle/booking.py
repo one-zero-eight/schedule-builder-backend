@@ -1,4 +1,5 @@
 import datetime
+from urllib.parse import quote
 
 import aiohttp
 
@@ -56,8 +57,8 @@ class BookingService(IBookingService):
             async with client.get(
                 "https://api.innohassle.ru/room-booking/staging-v0/bookings/",
                 params={
-                    "start": start.isoformat(),
-                    "end": end.isoformat(),
+                    "start": quote(start.isoformat()),
+                    "end": quote(end.isoformat()),
                 },
             ) as response:
                 if response.status == 401:
