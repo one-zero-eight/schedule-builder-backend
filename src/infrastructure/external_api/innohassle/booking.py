@@ -27,8 +27,8 @@ class BookingService(IBookingService):
             async with client.get(
                 f"https://api.innohassle.ru/room-booking/staging-v0/room/{room_id}/bookings",
                 params={
-                    "start": start.isoformat(),
-                    "end": end.isoformat(),
+                    "start": quote(start.isoformat()),
+                    "end": quote(end.isoformat()),
                 },
             ) as response:
                 if response.status == 401:
