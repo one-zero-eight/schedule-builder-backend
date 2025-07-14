@@ -23,6 +23,16 @@ from src.logging_ import logger
 
 
 class CollisionsChecker(ICollisionsChecker):
+    WEEKDAYS_MAP = {
+        "monday": 0,
+        "tuesday": 1,
+        "wednesday": 2,
+        "thursday": 3,
+        "friday": 4,
+        "saturday": 5,
+        "sunday": 6,
+    }
+
     def __init__(
         self,
         teachers: list[TeacherDTO],
@@ -55,11 +65,41 @@ class CollisionsChecker(ICollisionsChecker):
         slot1: BaseLessonDTO,
         slot2: BaseLessonDTO,
     ) -> bool:
-        if (slot1.end_time < slot2.start_time) or (
-            slot1.start_time > slot2.end_time
+        # если у обоих есть date_on, то есть в какую-то дату
+        if slot1.date_on is not None and slot2.date_on is not None:
+            if slot1.date_on != slot2.date_on:
+                return False
+            return CollisionsChecker.check_datetimes_intersect(
+                slot1.start_time,
+                slot1.end_time,
+                slot2.start_time,
+                slot2.end_time,
+            )
+        # если у обоих нет date_on, а есть weekday
+        if slot1.date_on is None and slot2.date_on is None:
+            if slot1.weekday != slot2.weekday:
+                return False
+            return CollisionsChecker.check_datetimes_intersect(
+                slot1.start_time,
+                slot1.end_time,
+                slot2.start_time,
+                slot2.end_time,
+            )
+        # если у одного weekday, у другого date_on
+        if slot2.date_on is not None:
+            slot1, slot2 = slot2, slot1
+        if (
+            slot2.date_except is not None
+            and slot1.date_on in slot2.date_except
         ):
             return False
-        return True
+        if slot2.date_on.weekday() != CollisionsChecker.WEEKDAYS_MAP.get(
+            slot2.weekday.lower()
+        ):
+            return False
+        return CollisionsChecker.check_datetimes_intersect(
+            slot1.start_time, slot1.end_time, slot2.start_time, slot2.end_time
+        )
 
     @staticmethod
     def is_online_slot(slot_or_room: BaseLessonDTO | str) -> bool:
@@ -91,46 +131,43 @@ class CollisionsChecker(ICollisionsChecker):
     def get_collisions_by_room(
         self, timeslots: list[LessonWithExcelCellsDTO]
     ) -> list[list[LessonWithCollisionTypeDTO]]:
-        weekday_to_room_to_slots: dict[
-            str, dict[str, list[tuple[int, LessonWithExcelCellsDTO]]]
-        ] = defaultdict(lambda: defaultdict(list))
+        room_to_slots: dict[str, list[tuple[int, LessonWithExcelCellsDTO]]] = (
+            defaultdict(list)
+        )
         vertices_number = len(timeslots)
         for i, slot in enumerate(timeslots):
-            weekday_to_room_to_slots[slot.weekday][slot.room].append((i, slot))
+            room_to_slots[slot.room].append((i, slot))
         self.graph.create_graph(vertices_number)
-        for weekday in weekday_to_room_to_slots:
-            for room, lessons in weekday_to_room_to_slots[weekday].items():
-                lessons: list[tuple[int, LessonWithExcelCellsDTO]]
-                if self.is_online_slot(room):
-                    logger.info("No need to check room collision for online")
-                    continue
+        for room, lessons in room_to_slots.items():
+            lessons: list[tuple[int, LessonWithExcelCellsDTO]]
+            if self.is_online_slot(room):
+                logger.info("No need to check room collision for online")
+                continue
 
-                if len(lessons) == 1:
-                    logger.info(
-                        f"Room {room} has only one lesson on {weekday}"
-                    )
-                    continue
+            if len(lessons) == 1:
+                logger.info(f"Room {room} has only one lesson")
+                continue
 
-                for i, (ind1, lesson1) in enumerate(lessons):
+            for i, (ind1, lesson1) in enumerate(lessons):
+                if (
+                    lesson1.lesson_name
+                    == "Elective course on Physical Education"
+                ):
+                    logger.info("Skip Physical Education")
+                    continue
+                for j in range(i + 1, len(lessons)):
+                    ind2, lesson2 = lessons[j]
                     if (
-                        lesson1.lesson_name
+                        lesson2.lesson_name
                         == "Elective course on Physical Education"
                     ):
                         logger.info("Skip Physical Education")
                         continue
-                    for j in range(i + 1, len(lessons)):
-                        ind2, lesson2 = lessons[j]
-                        if (
-                            lesson2.lesson_name
-                            == "Elective course on Physical Education"
-                        ):
-                            logger.info("Skip Physical Education")
-                            continue
 
-                        if self.check_two_timeslots_collisions_by_time(
-                            lesson1, lesson2
-                        ):
-                            self.graph.add_edge(ind1, ind2)
+                    if self.check_two_timeslots_collisions_by_time(
+                        lesson1, lesson2
+                    ):
+                        self.graph.add_edge(ind1, ind2)
         connected_components = self.graph.get_connected_components()
         collisions = self.get_colliding_timeslots(
             timeslots, connected_components, CollisionTypeEnum.ROOM
@@ -186,7 +223,8 @@ class CollisionsChecker(ICollisionsChecker):
             room = timeslot.room
             capacity = self.room_to_capacity.get(room)
             if not capacity:
-                continue
+                # с учётом того, что все "большие" кабинеты заполнены, будет универсальной заменой
+                capacity = 30
             if capacity < timeslot.students_number:
                 result.append(
                     [
@@ -226,23 +264,13 @@ class CollisionsChecker(ICollisionsChecker):
 
         collisions = []
 
-        weekday_map = {
-            "monday": 0,
-            "tuesday": 1,
-            "wednesday": 2,
-            "thursday": 3,
-            "friday": 4,
-            "saturday": 5,
-            "sunday": 6,
-        }
-
         valid_rooms = {room.id for room in self.rooms}
 
         for lesson in timeslots:
             if self.is_online_slot(lesson) or lesson.room not in valid_rooms:
                 continue
 
-            lesson_weekday = weekday_map.get(lesson.weekday.lower())
+            lesson_weekday = self.WEEKDAYS_MAP.get(lesson.weekday.lower())
             if lesson_weekday is None:
                 continue
 

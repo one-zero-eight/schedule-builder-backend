@@ -1,7 +1,8 @@
 import io
 import pprint
+import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import date, datetime
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
@@ -9,6 +10,7 @@ from zipfile import ZipFile
 import aiohttp
 import numpy as np
 import pandas as pd
+from dateutil import parser as date_parser
 from openpyxl.utils import (
     column_index_from_string,
     coordinate_to_tuple,
@@ -331,6 +333,116 @@ class CoreCoursesParser(ICoursesParser):
             return location
         return guess
 
+    def _parse_schedule_string(
+        self, s: str
+    ) -> list[tuple[str, date | None, date | None]]:
+        # удаляю время
+        s = re.sub(r"STARTS AT \d{1,2}:\d{2}", "", s)
+        s = s.replace("ТОЛЬКО НА", "ON")
+
+        # извлекаю всё из скобок
+        bracket_parts = re.findall(r"\((.*?)\)", s)
+        s = re.sub(r"\(.*?\)", "", s)
+
+        # разбиваю главную часть на другие части, если они есть
+        parts = [p.strip() for p in re.split(r"\|", s) if p.strip()]
+        parts.extend(bracket_parts)
+
+        result = []
+        for part in parts:
+            part = part.strip()
+            if not part:
+                continue
+
+            # отдельно для online
+            if part.startswith("ONLINE"):
+                content = part[6:].strip()
+                if content.startswith("ON"):
+                    content = content[2:].strip()
+                    dates = re.findall(r"\d{1,2}/\d{2}", content)
+                    if dates:
+                        for d in dates:
+                            result.append(("ONLINE", date(d), None))
+                        continue
+                elif content.startswith("EXCEPT"):
+                    content = content[6:].strip()
+                    dates = re.findall(r"\d{1,2}/\d{2}", content)
+                    if dates:
+                        for d in dates:
+                            result.append(("ONLINE", None, date(d)))
+                    continue
+                result.append(("ONLINE", None, None))
+                continue
+
+            room_match = re.match(r"^[\d /]+", part)
+            if not room_match:
+                continue
+
+            room_str = room_match.group(0)
+            rooms = room_str.split("/")
+            rest = part[len(room_str) :].strip()
+
+            on_dates = []
+            except_dates = []
+            rest = rest.replace("STARTS ON", "ON")
+
+            if "ON" in rest:
+                rest_after_on = rest[rest.find("ON") + 2 :].strip()
+                dates = re.findall(r"\d{1,2}/\d{2}", rest_after_on)
+                if dates:
+                    on_dates = dates
+
+            if "EXCEPT" in rest:
+                dates_str = rest[: rest.find("EXCEPT")].strip()
+                except_str = rest[rest.find("EXCEPT") + 6 :].strip()
+
+                dates = re.findall(r"\d{1,2}/\d{2}", dates_str)
+                except_dates_list = re.findall(r"\d{1,2}/\d{2}", except_str)
+
+                if dates:
+                    on_dates = dates
+                if except_dates_list:
+                    except_dates = except_dates_list
+
+            if len(on_dates) == 0 and len(except_dates) == 0:
+                for room in rooms:
+                    result.append((room.strip(), None, None))
+
+            if len(on_dates) == 0 and len(except_dates) != 0:
+                for room in rooms:
+                    result.append(
+                        (
+                            room.strip(),
+                            None,
+                            [
+                                date_parser.parse(d, dayfirst=True)
+                                for d in except_dates
+                            ],
+                        )
+                    )
+
+            for room in rooms:
+                # ON и EXCEPT разом не должны выпасть
+                for d in on_dates:
+                    result.append(
+                        (
+                            room.strip(),
+                            date_parser.parse(d, dayfirst=True),
+                            None,
+                        )
+                    )
+
+        return result
+
+    def parse_schedule_string(
+        self, s: str
+    ) -> list[tuple[str, date | None, list[date] | None]]:
+        try:
+            return self._parse_schedule_string(s)
+        except Exception as e:
+            logger.error(f"Не удалось спарсить {s}, error: {e}")
+            return [(s, None, None)]
+
     async def get_all_timeslots(
         self, spreadsheet_id: str
     ) -> list[LessonWithExcelCellsDTO]:
@@ -374,34 +486,40 @@ class CoreCoursesParser(ICoursesParser):
                             )
                             subject = subject.rsplit("$", maxsplit=1)
                             subject_name, cell = subject
-                            location = self.identify_room(str(location))
+                            location = self.parse_schedule_string(
+                                str(location)
+                            )
                             group = group.split()
                             group_name = group[0]
                             if len(group) > 1:
                                 students_number = int(group[1][1:-1])
                             else:
                                 students_number = 1
-                        course_lessons.append(
-                            LessonWithExcelCellsDTO(
-                                weekday=weekday,
-                                start_time=start_time,
-                                end_time=end_time,
-                                group_name=group_name,
-                                teacher=teacher,
-                                teacher_email=next(
-                                    (
-                                        t.get("email", "")
-                                        for t in self.teachers
-                                        if t.get("name") == teacher
+                        for loc, on_, except_ in location:
+                            course_lessons.append(
+                                LessonWithExcelCellsDTO(
+                                    weekday=weekday if on_ == None else None,
+                                    start_time=start_time,
+                                    end_time=end_time,
+                                    group_name=group_name,
+                                    teacher=teacher,
+                                    teacher_email=next(
+                                        (
+                                            t.get("email", "")
+                                            for t in self.teachers
+                                            if t.get("name") == teacher
+                                        ),
+                                        "",
                                     ),
-                                    "",
-                                ),
-                                room=location,
-                                lesson_name=subject_name,
-                                students_number=students_number,
-                                excel_range=cell,
+                                    room=loc,
+                                    lesson_name=subject_name,
+                                    students_number=students_number,
+                                    excel_range=cell,
+                                    date_on=on_,
+                                    date_except=except_,
+                                )
                             )
-                        )
+
                 merged_registry = defaultdict(
                     list
                 )  # merged range index X list of lessons
