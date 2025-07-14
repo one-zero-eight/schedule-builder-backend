@@ -214,12 +214,12 @@ We use Docker with Docker Compose plugin to run the service on servers.
 
 ## Project Structure Tree (for customer)
 The project structure tree is important to properly navigate the project and enhance simplified third-party
-contributions. It is accessible [here](TODO: fix link later).
+contributions. It is accessible [here](https://github.com/SWP2025/schedule-builder-backend/blob/main/docs/customer/project-structure-tree.md).
 
 ## Contributions Guide (for customer)
 
 A contributions guide is important to help collaborators with default contribution
-steps. It is accessible [here](TODO: fix link later).
+steps. It is accessible [here](https://github.com/SWP2025/schedule-builder-backend/blob/main/docs/customer/contributions-guide.md).
 
 
 
