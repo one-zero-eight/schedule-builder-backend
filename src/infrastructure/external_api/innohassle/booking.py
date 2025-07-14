@@ -1,5 +1,5 @@
 import datetime
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 
 import aiohttp
 
@@ -24,8 +24,12 @@ class BookingService(IBookingService):
         async with aiohttp.ClientSession(
             headers={"Authorization": f"Bearer {self.token}"}
         ) as client:
+            base_url = "https://api.innohassle.ru/room-booking/staging-v0/room/"
+            safe_room_id = quote(room_id, safe="")
+            full_url = urljoin(base_url, f"{safe_room_id}/bookings")
+
             async with client.get(
-                f"https://api.innohassle.ru/room-booking/staging-v0/room/{room_id}/bookings",
+                full_url,
                 params={
                     "start": quote(start.isoformat()),
                     "end": quote(end.isoformat()),
