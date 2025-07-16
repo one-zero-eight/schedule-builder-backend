@@ -41,6 +41,10 @@ class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
     students_number: int = Field(
         ..., description="Number of students in the group"
     )
+    display_group_name: list[str] | None = Field(
+        ...,
+        description="Display group name"
+    )
 
 
 class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):

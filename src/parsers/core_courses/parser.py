@@ -40,6 +40,36 @@ class CoreCoursesParser(ICoursesParser):
         with open("teachers.yaml", "r", encoding="utf-8") as file:
             self.teachers: list[dict] = safe_load(file)["teachers"]
 
+        # STATIC ALL GROUPS, TODO: add dynamic refreshment
+        self.ALL_GROUPS = {
+            "B": {
+                "24": {
+                    "CSE": 7,
+                    "DSAI": 5,
+                    "MFAI": 4,
+                    "RO": 1,
+                },
+                "23": {
+                    "SD": 3,
+                    "CBS": 2,
+                    "DS": 2,
+                    "AI": 2,
+                    "GD": 1,
+                    "RO": 1,
+                }
+            },
+            "M": {
+                "24": {
+                    "SE": 2,
+                    "DS": 1,
+                    "RO": 1,
+                    "RO15": 1,
+                    "TE": 1,
+                    "SNE": 1
+                }
+            }
+        }
+
     def get_clear_dataframes_from_xlsx(
         self, xlsx_file: io.BytesIO, targets: list[config.Target]
     ) -> tuple[dict[str, pd.DataFrame], dict]:
@@ -559,6 +589,7 @@ class CoreCoursesParser(ICoursesParser):
                         if lesson.excel_range:
                             excel_ranges.append(lesson.excel_range)
                     lesson1.group_name = groups
+                    lesson1.display_group_name = self.beautify_group_display(groups)
                     lesson1.students_number = (
                         sum(students_number)
                         if students_number
@@ -588,3 +619,34 @@ class CoreCoursesParser(ICoursesParser):
                 )
                 lessons.extend(non_merged)
         return lessons
+
+    def beautify_group_display(self, groups: list[str]) -> list[str]:
+        parsed_groups = []
+
+        # Step 1 - parse groups into degree, year, academic group, and number
+        for group in groups:
+            split_group = group.split("-")
+            parsed_groups.append([split_group[0][0], split_group[0][1:]] + [i for i in split_group[1:]])
+
+        # Step 2 - check with counter
+        for degree in self.ALL_GROUPS:
+            for admissionYear in self.ALL_GROUPS[degree]:
+                for group in self.ALL_GROUPS[degree][admissionYear]:
+                    count = [i[2] for i in parsed_groups].count(group)
+                    if count == self.ALL_GROUPS[degree][admissionYear][group]:
+                        for counter in range(1, self.ALL_GROUPS[degree][admissionYear][group] + 1):
+                            item_to_remove = [degree, admissionYear, group, f"{counter:02}"]  # Format with leading zero
+                            if item_to_remove in parsed_groups:
+                                parsed_groups.remove(item_to_remove)
+                        parsed_groups.append(degree + admissionYear + "-" + group)
+
+        # Step 3 - bring back unparsed groups to proper display
+        beautified_groups = []
+        for group in parsed_groups:
+            if isinstance(group, list):
+                united_group = group[0] + '-'.join(group[1:])
+                beautified_groups.append(united_group)
+            else:
+                beautified_groups.append(group)
+
+        return beautified_groups
