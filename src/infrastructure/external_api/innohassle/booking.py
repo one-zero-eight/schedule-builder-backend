@@ -39,8 +39,8 @@ class BookingService(IBookingService):
             async with client.get(
                 full_url,
                 params={
-                    "start": quote(start.isoformat()),
-                    "end": quote(end.isoformat()),
+                    "start": start.isoformat(),
+                    "end": end.isoformat(),
                 },
             ) as response:
                 if response.status == 401:
@@ -69,8 +69,8 @@ class BookingService(IBookingService):
             async with client.get(
                 "https://api.innohassle.ru/room-booking/staging-v0/bookings/",
                 params={
-                    "start": quote(start.isoformat()),
-                    "end": quote(end.isoformat()),
+                    "start": start.isoformat(),
+                    "end": end.isoformat(),
                 },
             ) as response:
                 if response.status == 401:
