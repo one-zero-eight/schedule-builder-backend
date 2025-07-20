@@ -149,9 +149,13 @@ hidden from the user's view). The user may repeat scanning until all conflicts a
   - [x] Improved parser functionality
   - [x] Additional Integration Tests
   - [x] Additional Unit Tests
-- [ ] **MVP v3**
-  - [ ] Automatic Collisions Fixing
-  - [ ] Staff Preferences
+- [x] **MVP v3**
+  - [x] Multiple bugs fixing
+- [ ] **MVP v4**
+  - [ ] Conflicts resolving suggestions
+  - [ ] Staff preferences
+- [ ] **MVP v5**
+  - [ ] Automatic conflicts fixing 
 
 See the [open issues](https://github.com/SWP2025/schedule-builder-backend/issues) for a full list of proposed features (and known issues).
 ## Testing User Guide
