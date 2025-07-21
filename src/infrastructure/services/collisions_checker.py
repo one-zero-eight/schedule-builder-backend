@@ -242,7 +242,8 @@ class CollisionsChecker(ICollisionsChecker):
     ) -> list[list[LessonWithCollisionTypeDTO]]:
         min_needed_time: datetime.datetime = datetime.datetime.max
         max_needed_time: datetime.datetime = datetime.datetime.min
-        today = datetime.datetime.now(pytz.utc).date()
+        tz = datetime.timezone(datetime.timedelta(hours=3))
+        today = datetime.datetime.now(tz).date()
 
         for lesson in timeslots:
             start_datetime = datetime.datetime.combine(
@@ -302,10 +303,10 @@ class CollisionsChecker(ICollisionsChecker):
             for lesson_date in lesson_dates:
                 lesson_start = datetime.datetime.combine(
                     lesson_date, lesson.start_time
-                ).replace(tzinfo=pytz.utc)
+                ).replace(tzinfo=tz)
                 lesson_end = datetime.datetime.combine(
                     lesson_date, lesson.end_time
-                ).replace(tzinfo=pytz.utc)
+                ).replace(tzinfo=tz)
 
                 intersected_bookings = list(
                     filter(
