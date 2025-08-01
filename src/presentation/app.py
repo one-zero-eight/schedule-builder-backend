@@ -86,10 +86,10 @@ def create_app() -> FastAPI:
     load_dotenv()
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Allows all origins
+        allow_origin_regex=".*",
         allow_credentials=True,
-        allow_methods=["*"],  # Allows all methods
-        allow_headers=["*"],  # Allows all headers
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     return app
 
