@@ -1,24 +1,74 @@
 {
-  "SPREADSHEET_ID": "1uD48Zw6-RpuJnjVxwyWX9iaZn87ClIV1C63wYvc9aQg",
+  "SPREADSHEET_ID": "1GlRGsy6-UvdIqj_E-iT9UBz9gvBNba5qHTjfm-npyjI",
   "SEMESTER_TAG": {
     "alias": "sum25",
-    "name": "Summer 2025",
+    "name": "Core Courses Fall 2025",
     "type": "semester"
   },
   "TARGETS": [
     {
-      "sheet_name": "SUMMER",
-      "range": "A1:AM119",
+      "sheet_name": "BS1",
+      "range": "A1:M116",
       "start_date": "2025-06-02",
-      "end_date": "2025-07-21",
+      "end_date": "2026-01-01",
+      "time_columns": [
+        "A"
+      ]
+    },
+
+    {
+      "sheet_name": "BS2",
+      "range": "A1:K116",
+      "start_date": "2025-06-02",
+      "end_date": "2026-07-21",
+      "time_columns": [
+        "A"
+      ]
+    },
+    {
+      "sheet_name": "BS3 (block 1)",
+      "range": "A1:L116",
+      "start_date": "2025-06-02",
+      "end_date": "2026-07-21",
+      "time_columns": [
+        "A"
+      ]
+    },
+    {
+      "sheet_name": "MS 1 (block 1)",
+      "range": "A1:I116",
+      "start_date": "2025-06-02",
+      "end_date": "2026-07-21",
       "time_columns": [
         "A",
-        "G",
-        "T",
-        "AF"
+        "H"
+      ]
+    },
+    {
+      "sheet_name": "Ru Programs",
+      "range": "A1:P131",
+      "start_date": "2025-06-02",
+      "end_date": "2026-07-21",
+      "time_columns": [
+        "A",
+        "J"
+      ]
+    },
+    {
+      "sheet_name": "1st block common (since 2608)",
+      "range": "A1:BD116",
+      "start_date": "2025-06-02",
+      "end_date": "2026-07-21",
+      "time_columns": [
+        "A",
+        "N",
+        "AA",
+        "AM",
+        "AV",
+        "BC"
       ]
     }
   ],
   "SAVE_ICS_PATH": "sum25/core-courses",
-  "SAVE_JSON_PATH": "sum25/core-courses.json"
+  "SAVE_JSON_PATH": "sum25/core-courses.json" 
 }

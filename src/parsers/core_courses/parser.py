@@ -486,10 +486,14 @@ class CoreCoursesParser(ICoursesParser):
                             )
                             subject = subject.rsplit("$", maxsplit=1)
                             subject_name, cell = subject
+
                             location = self.parse_schedule_string(
                                 str(location)
                             )
-                            group = group.split()
+                            if not isinstance(group, float):
+                                group = group.split()
+                            else:
+                                group = ["None"]
                             group_name = group[0]
                             if len(group) > 1:
                                 students_number = int(group[1][1:-1])
@@ -502,7 +506,9 @@ class CoreCoursesParser(ICoursesParser):
                                     start_time=start_time,
                                     end_time=end_time,
                                     group_name=group_name,
-                                    teacher=teacher,
+                                    teacher=(
+                                        teacher if type(teacher) == str else ""
+                                    ),
                                     teacher_email=next(
                                         (
                                             t.get("email", "")
