@@ -15,7 +15,6 @@
         "A"
       ]
     },
-
     {
       "sheet_name": "BS2",
       "range": "A1:K116",
@@ -55,8 +54,8 @@
       ]
     },
     {
-      "sheet_name": "1st block common (since 2608)",
-      "range": "A1:BD116",
+      "sheet_name": "1st block common",
+      "range": "A1:AV116",
       "start_date": "2025-06-02",
       "end_date": "2026-07-21",
       "time_columns": [
@@ -64,8 +63,7 @@
         "N",
         "AA",
         "AM",
-        "AV",
-        "BC"
+        "AU"
       ]
     }
   ],
