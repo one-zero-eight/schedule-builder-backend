@@ -9,52 +9,11 @@ accounts:
 teachers: []
 
 core_courses_config:
-  spreadsheet_id: "1GlRGsy6-UvdIqj_E-iT9UBz9gvBNba5qHTjfm-npyjI"
   targets:
-    - sheet_name: "BS1"
-      range: "A1:M116"
-      start_date: "2025-06-02"
-      end_date: "2026-01-01"
-      time_columns:
-        - "A"
-
-    - sheet_name: "BS2"
-      range: "A1:K116"
-      start_date: "2025-06-02"
-      end_date: "2026-07-21"
-      time_columns:
-        - "A"
-
-    - sheet_name: "BS3 (block 1)"
-      range: "A1:L116"
-      start_date: "2025-06-02"
-      end_date: "2026-07-21"
-      time_columns:
-        - "A"
-
-    - sheet_name: "MS 1 (block 1)"
-      range: "A1:I116"
-      start_date: "2025-06-02"
-      end_date: "2026-07-21"
-      time_columns:
-        - "A"
-        - "H"
-
     - sheet_name: "Ru Programs"
-      range: "A1:P131"
       start_date: "2025-06-02"
       end_date: "2026-07-21"
-      time_columns:
-        - "A"
-        - "J"
 
     - sheet_name: "1st block common"
-      range: "A1:AV116"
       start_date: "2025-06-02"
       end_date: "2026-07-21"
-      time_columns:
-        - "A"
-        - "N"
-        - "AA"
-        - "AM"
-        - "AU"
