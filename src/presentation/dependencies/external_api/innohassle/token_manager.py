@@ -1,11 +1,6 @@
 from dishka import Provider, Scope, provide
 
-from src.application.external_api.innohassle.interfaces.accounts import (
-    IInNoHassleAccounts,
-)
-from src.application.external_api.innohassle.interfaces.token_manager import (
-    ITokenManager,
-)
+from src.infrastructure.external_api.innohassle.accounts import InNoHassleAccounts
 from src.infrastructure.external_api.innohassle.token_manager import (
     TokenManager,
 )
@@ -16,6 +11,6 @@ class TokenManagerProvider(Provider):
 
     @provide
     async def get_token_manager(
-        self, accounts: IInNoHassleAccounts
-    ) -> ITokenManager:
+        self, accounts: InNoHassleAccounts
+    ) -> TokenManager:
         return TokenManager(accounts)

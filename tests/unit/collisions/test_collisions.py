@@ -6,9 +6,7 @@ from src.domain.dtos.lesson import (
     LessonWithCollisionTypeDTO,
     LessonWithExcelCellsDTO,
 )
-from src.domain.interfaces.services.collisions_checker import (
-    ICollisionsChecker,
-)
+from src.infrastructure.services.collisions_checker import CollisionsChecker
 
 
 @pytest.mark.parametrize(
@@ -269,7 +267,7 @@ from src.domain.interfaces.services.collisions_checker import (
     ],
 )
 def test_room_collisions(
-    collisions_checker: ICollisionsChecker,
+    collisions_checker: CollisionsChecker,
     data: list[LessonWithExcelCellsDTO],
     valid_answer: list[LessonWithCollisionTypeDTO],
 ) -> None:
@@ -420,7 +418,7 @@ def test_room_collisions(
     ],
 )
 def test_teacher_collisions(
-    collisions_checker: ICollisionsChecker,
+    collisions_checker: CollisionsChecker,
     timeslots: LessonWithExcelCellsDTO,
     expected: int,
 ) -> None:
@@ -565,7 +563,7 @@ def test_teacher_collisions(
     ],
 )
 def test_space_collisions(
-    collisions_checker: ICollisionsChecker,
+    collisions_checker: CollisionsChecker,
     data: list[LessonWithExcelCellsDTO],
     valid_answer: list[LessonWithCollisionTypeDTO],
 ) -> None:

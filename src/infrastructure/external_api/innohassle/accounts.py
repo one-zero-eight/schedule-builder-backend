@@ -1,13 +1,10 @@
 import aiohttp
 from authlib.jose import JsonWebKey, KeySet
 
-from src.application.external_api.innohassle.interfaces.accounts import (
-    IInNoHassleAccounts,
-)
 from src.domain.exceptions.base import AppException
 
 
-class InNoHassleAccounts(IInNoHassleAccounts):
+class InNoHassleAccounts:
     api_url: str
     api_jwt_token: str
     PUBLIC_KID = "public"

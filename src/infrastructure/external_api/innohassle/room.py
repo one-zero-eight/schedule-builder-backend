@@ -1,14 +1,11 @@
 import aiohttp
 
-from src.application.external_api.innohassle.interfaces.room import (
-    IRoomService,
-)
 from src.domain.dtos.room import RoomDTO
 from src.domain.exceptions.base import AppException
 from src.domain.exceptions.tokens import InvalidTokenException
 
 
-class RoomService(IRoomService):
+class RoomService:
     def __init__(self, token: str) -> None:
         self.token = token
 

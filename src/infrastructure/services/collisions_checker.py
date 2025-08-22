@@ -2,11 +2,6 @@ import datetime
 import pprint
 from collections import defaultdict
 
-import pytz
-
-from src.application.external_api.innohassle.interfaces.booking import (
-    IBookingService,
-)
 from src.domain.dtos.lesson import (
     BaseLessonDTO,
     LessonWithCollisionTypeDTO,
@@ -15,14 +10,10 @@ from src.domain.dtos.lesson import (
 from src.domain.dtos.room import RoomDTO
 from src.domain.dtos.teacher import TeacherDTO
 from src.domain.enums import CollisionTypeEnum, Weekdays
-from src.domain.interfaces.graph import IGraph
-from src.domain.interfaces.services.collisions_checker import (
-    ICollisionsChecker,
-)
 from src.logging_ import logger
 
 
-class CollisionsChecker(ICollisionsChecker):
+class CollisionsChecker:
     WEEKDAYS_MAP = {
         "monday": 0,
         "tuesday": 1,
@@ -37,8 +28,8 @@ class CollisionsChecker(ICollisionsChecker):
         self,
         teachers: list[TeacherDTO],
         rooms: list[RoomDTO],
-        booking_service: IBookingService,
-        graph: IGraph,
+        booking_service,
+        graph,
     ) -> None:
         self.teachers = teachers
         self.rooms = rooms

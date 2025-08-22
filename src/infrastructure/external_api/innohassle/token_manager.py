@@ -2,18 +2,12 @@ import time
 
 from authlib.jose import JoseError, JWTClaims, jwt
 
-from src.application.external_api.innohassle.interfaces.accounts import (
-    IInNoHassleAccounts,
-)
-from src.application.external_api.innohassle.interfaces.token_manager import (
-    ITokenManager,
-)
 from src.domain.dtos.users import UserTokenDataDTO
 from src.domain.exceptions.tokens import InvalidTokenException
 
 
-class TokenManager(ITokenManager):
-    def __init__(self, innohassle_accounts: IInNoHassleAccounts) -> None:
+class TokenManager:
+    def __init__(self, innohassle_accounts) -> None:
         self.innohassle_accounts = innohassle_accounts
 
     def decode_token(self, token: str) -> JWTClaims:

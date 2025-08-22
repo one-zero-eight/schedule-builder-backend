@@ -1,12 +1,10 @@
 from dishka import Provider, Scope, provide
 from fastapi import Request
 
-from src.application.external_api.innohassle.interfaces.token_manager import (
-    ITokenManager,
-)
 from src.config import DEBUG
 from src.domain.dtos.users import UserTokenDataDTO
 from src.domain.exceptions.tokens import InvalidTokenException
+from src.infrastructure.external_api.innohassle.token_manager import TokenManager
 
 
 class UserTokenDataProvider(Provider):
@@ -16,7 +14,7 @@ class UserTokenDataProvider(Provider):
     async def verify_user(
         self,
         request: Request,
-        token_manager: ITokenManager,
+        token_manager: TokenManager,
     ) -> UserTokenDataDTO:
         if DEBUG:
             return UserTokenDataDTO(innohassle_id="1", token="token")

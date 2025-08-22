@@ -19,7 +19,6 @@ from openpyxl.utils import (
 from yaml import safe_load
 
 from src.domain.dtos.lesson import LessonWithExcelCellsDTO
-from src.domain.interfaces.services.parser import ICoursesParser
 from src.logging_ import logger
 from src.parsers.core_courses.config import core_courses_config as config
 from src.parsers.processors.regex import prettify_string
@@ -31,13 +30,13 @@ from src.parsers.utils import (
 )
 
 
-class CoreCoursesParser(ICoursesParser):
+class CoreCoursesParser:
     """
     Elective parser class
     """
 
     def __init__(self):
-        with open("teachers.yaml", "r", encoding="utf-8") as file:
+        with open("teachers.yaml", encoding="utf-8") as file:
             self.teachers: list[dict] = safe_load(file)["teachers"]
 
     def get_clear_dataframes_from_xlsx(

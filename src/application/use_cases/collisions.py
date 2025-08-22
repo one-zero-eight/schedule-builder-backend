@@ -1,14 +1,9 @@
 from src.domain.dtos.lesson import LessonWithCollisionTypeDTO
-from src.domain.interfaces.services.collisions_checker import (
-    ICollisionsChecker,
-)
-from src.domain.interfaces.services.parser import ICoursesParser
-from src.domain.interfaces.use_cases.collisions import ICollisionsUseCase
 
 
-class CollisionsUseCase(ICollisionsUseCase):
+class CollisionsUseCase:
     def __init__(
-        self, parser: ICoursesParser, collisions_checker: ICollisionsChecker
+        self, parser, collisions_checker
     ) -> None:
         self.parser = parser
         self.collisions_checker = collisions_checker

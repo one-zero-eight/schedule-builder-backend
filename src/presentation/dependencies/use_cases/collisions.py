@@ -1,11 +1,8 @@
 from dishka import Provider, Scope, provide
 
 from src.application.use_cases.collisions import CollisionsUseCase
-from src.domain.interfaces.services.collisions_checker import (
-    ICollisionsChecker,
-)
-from src.domain.interfaces.services.parser import ICoursesParser
-from src.domain.interfaces.use_cases.collisions import ICollisionsUseCase
+from src.infrastructure.services.collisions_checker import CollisionsChecker
+from src.parsers.core_courses.parser import CoreCoursesParser
 
 
 class CollisionsUseCaseProvider(Provider):
@@ -14,7 +11,7 @@ class CollisionsUseCaseProvider(Provider):
     @provide
     def get_collisions_use_case(
         self,
-        parser: ICoursesParser,
-        collisions_checker: ICollisionsChecker,
-    ) -> ICollisionsUseCase:
+        parser: CoreCoursesParser,
+        collisions_checker: CollisionsChecker,
+    ) -> CollisionsUseCase:
         return CollisionsUseCase(parser, collisions_checker)

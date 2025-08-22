@@ -1,9 +1,7 @@
 from collections import defaultdict
 
-from src.domain.interfaces.graph import IGraph
 
-
-class UndirectedGraph(IGraph):
+class UndirectedGraph:
     def create_graph(self, vertices_number: int) -> None:
         self.vertices_number = vertices_number
         self.graph = defaultdict(list)
