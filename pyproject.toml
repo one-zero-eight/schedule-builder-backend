@@ -22,40 +22,17 @@ dependencies = [
     "pytest>=8.4.1",
     "httpx>=0.28.1",
     "pytest-asyncio>=1.0.0",
+    "ruff>=0.12.2",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "black>=25.1.0",
-    "isort>=6.0.1",
+[tool.ruff]
+line-length = 120
+lint.ignore = [
+    # wildcard imports are fine
+    "F403",
+    "F405",
+    "PLR",
 ]
-test = [
-    "pytest>=8.3.5",
-    "pytest-asyncio>=1.0.0",
-    "httpx>=0.28.1",
-    "pytest-cov>=6.2.1",
-]
-
-[tool.black]
-line-length=79
-extend-exclude='''
-(
-    \.git
-  | \.venv
-)
-'''
-
-[tool.isort]
-default_section = "THIRDPARTY" 
-known_local_folder = ["src", "domain", "infrastructure", "presentation", "application"]
-sections = ["FUTURE","STDLIB","THIRDPARTY","FIRSTPARTY","LOCALFOLDER"] 
-skip = [".gitignore", "venv", ".venv"] 
-multi_line_output = 3
-line_length = 79
-lines_after_imports = 2
-include_trailing_comma = true
-
-[dependency-groups]
-dev = [
-    "ruff>=0.12.0",
-]
+lint.extend-select = ["I", "UP", "PL"]
+lint.extend-ignore = ["PLC0415"]
+target-version = "py312"
