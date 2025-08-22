@@ -4,11 +4,9 @@ version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "aiohttp>=3.12.13",
     "asyncpg>=0.30.0",
     "authlib>=1.6.0",
     "colorlog>=6.9.0",
-    "dishka>=1.6.0",
     "fastapi>=0.115.12",
     "numpy>=2.3.0",
     "openpyxl>=3.1.5",
@@ -19,10 +17,16 @@ dependencies = [
     "pytz>=2025.2",
     "pyyaml>=6.0.2",
     "uvicorn>=0.34.2",
-    "pytest>=8.4.1",
     "httpx>=0.28.1",
-    "pytest-asyncio>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
     "ruff>=0.12.2",
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.2.1",
 ]
 
 [tool.ruff]

@@ -6,7 +6,7 @@ from src.domain.dtos.lesson import (
     LessonWithCollisionTypeDTO,
     LessonWithExcelCellsDTO,
 )
-from src.infrastructure.services.collisions_checker import CollisionsChecker
+from src.modules.collisions.collision_checker import CollisionChecker
 
 
 @pytest.mark.parametrize(
@@ -267,7 +267,7 @@ from src.infrastructure.services.collisions_checker import CollisionsChecker
     ],
 )
 def test_room_collisions(
-    collisions_checker: CollisionsChecker,
+    collisions_checker: CollisionChecker,
     data: list[LessonWithExcelCellsDTO],
     valid_answer: list[LessonWithCollisionTypeDTO],
 ) -> None:
@@ -418,7 +418,7 @@ def test_room_collisions(
     ],
 )
 def test_teacher_collisions(
-    collisions_checker: CollisionsChecker,
+    collisions_checker: CollisionChecker,
     timeslots: LessonWithExcelCellsDTO,
     expected: int,
 ) -> None:
@@ -563,13 +563,9 @@ def test_teacher_collisions(
     ],
 )
 def test_space_collisions(
-    collisions_checker: CollisionsChecker,
+    collisions_checker: CollisionChecker,
     data: list[LessonWithExcelCellsDTO],
     valid_answer: list[LessonWithCollisionTypeDTO],
 ) -> None:
-    collisions = (
-        collisions_checker.get_lessons_where_not_enough_place_for_students(
-            data
-        )
-    )
+    collisions = collisions_checker.get_lessons_where_not_enough_place_for_students(data)
     assert collisions == valid_answer

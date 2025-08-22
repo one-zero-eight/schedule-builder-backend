@@ -46,14 +46,14 @@ them and take actions in the table.
    ```
 3. Copy settings.example.yaml to settings.yaml and add token:
    ```bash
-   cp settings.example.yaml settings.yaml 
+   cp settings.example.yaml settings.yaml
    ```
 5. Start development server:
    ```bash
-   uv run uvicorn src.presentation.app:app --port=8000 --host=0.0.0.0 --reload
+   uv run -m src.api --reload
    ```
    > Follow the provided instructions (if needed).
-6. Open the following link the browser: http://localhost:8000.
+6. Open the following link the browser: http://localhost:8012.
    > The API will be reloaded when you edit the code.
 
 > [!IMPORTANT]

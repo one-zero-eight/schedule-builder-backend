@@ -1,0 +1,45 @@
+from datetime import date, time
+from typing import Self
+
+from pydantic import model_validator
+
+from src.custom_pydantic import CustomModel
+
+
+class BaseLessonDTO(CustomModel):
+    lesson_name: str
+    "Name of the lesson"
+    weekday: str | None = None
+    "Weekday of a lesson"
+    start_time: time
+    "Start time of lesson"
+    end_time: time
+    "End time of lesson"
+    room: str
+    "Room for lesson"
+    date_on: date | None = None
+    "Specific dates with lessons"
+    date_except: list[date] | None = None
+    "Specific dates when there is no lessons"
+
+    @model_validator(mode="after")
+    def validate_date(self) -> Self:
+        if not self.start_time < self.end_time:
+            raise ValueError("Start time has to be less than end time")
+        return self
+
+
+class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
+    teacher: str
+    "Teacher on lesson"
+    teacher_email: str | None = None
+    "Email of teacher"
+    group_name: str | list[str] | None = None
+    "Name of the group or list of groups"
+    students_number: int
+    "Number of students in the group"
+
+
+class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
+    excel_range: str | None = None
+    "Topleft corner of the cell"
