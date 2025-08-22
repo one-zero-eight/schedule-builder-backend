@@ -2,7 +2,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/one-zero-eight/schedule-builder-backend">
-    <img src="docs/images/logo.png" alt="Logo" width="80" height="80">
+    <img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/2c09e1e0-6bb0-4541-9ceb-c47202a67401" />
   </a>
 
 <h3 align="center">Schedule Builder</h3>
@@ -100,3 +100,4 @@ We are open to contributions of any kind.
 You can help us with code, bugs, design, documentation, media, new ideas, etc.
 If you are interested in contributing, please read
 our [contribution guide](https://github.com/one-zero-eight/.github/blob/main/CONTRIBUTING.md).
+
