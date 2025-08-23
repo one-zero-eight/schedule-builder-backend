@@ -42,3 +42,9 @@ lint.ignore = [
 lint.extend-select = ["I", "UP", "PL"]
 lint.extend-ignore = ["PLC0415"]
 target-version = "py312"
+
+[tool.coverage.run]
+omit = [
+    "src/prepare.py",
+    "src/api/__main__.py",
+]
