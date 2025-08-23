@@ -6,7 +6,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/one-zero-eight/schedule-builder-backend">
-    <img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/2c09e1e0-6bb0-4541-9ceb-c47202a67401" />
+    <img width="128" height="128" alt="image" src="https://github.com/user-attachments/assets/2c09e1e0-6bb0-4541-9ceb-c47202a67401" />
   </a>
 
 <h3 align="center">Schedule Builder</h3>
