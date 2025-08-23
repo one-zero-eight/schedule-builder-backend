@@ -32,7 +32,7 @@ class OptionsData(CustomModel):
 
 
 class OptionsRepository:
-    def __init__(self, file_path: str = "options.json"):
+    def __init__(self, file_path: str = "data/options.json"):
         self.file_path = Path(file_path)
 
     def _ensure_file_exists(self) -> None:
