@@ -6,7 +6,7 @@ from openpyxl.utils import coordinate_to_tuple
 
 
 def sanitize_sheet_name(name: str) -> str:
-    """Convert any string to a valid Excel sheet name following Google Sheets export behavior.
+    r"""Convert any string to a valid Excel sheet name following Google Sheets export behavior.
 
     Excel sheet name restrictions:
     - Max 31 characters
