@@ -100,7 +100,7 @@ We use Docker with Docker Compose plugin to run the service on servers.
 
 ### How to run tests?
 
-Run `SETTINGS_PATH=settings.test.yaml uv run pytest` to run all tests.
+Run `uv run pytest` to run all tests.
 
 
 ### How to update dependencies?
