@@ -146,7 +146,7 @@ class CollisionChecker:
             and lesson1.date_except == lesson2.date_except
         )
 
-    def get_collisions_by_room(self, lessons: list[LessonWithExcelCellsDTO]) -> list[RoomIssue]:
+    def check_for_room_issue(self, lessons: list[LessonWithExcelCellsDTO]) -> list[RoomIssue]:
         room_to_slots: dict[str, list[tuple[int, LessonWithExcelCellsDTO]]] = defaultdict(list)
 
         vertices_number = len(lessons)
@@ -214,7 +214,7 @@ class CollisionChecker:
                 room_issues.append(room_issue)
         return room_issues
 
-    def get_collisions_by_teacher(self, lessons: list[LessonWithExcelCellsDTO]) -> list[TeacherIssue]:
+    def check_for_teacher_issue(self, lessons: list[LessonWithExcelCellsDTO]) -> list[TeacherIssue]:
         class TeacherOccupation(CustomModel):
             teaching_lessons: list[LessonWithExcelCellsDTO] = []
             studying_lessons: list[LessonWithExcelCellsDTO] = []
@@ -280,9 +280,7 @@ class CollisionChecker:
 
         return teacher_issues
 
-    def get_lessons_where_not_enough_place_for_students(
-        self, lessons: list[LessonWithExcelCellsDTO]
-    ) -> list[CapacityIssue]:
+    def check_for_capacity_issue(self, lessons: list[LessonWithExcelCellsDTO]) -> list[CapacityIssue]:
         result = []
         for lesson in lessons:
             if self.is_online_slot(lesson) or lesson.room is None or isinstance(lesson.room, tuple):
@@ -306,7 +304,7 @@ class CollisionChecker:
         for n in range(days):
             yield start_date + datetime.timedelta(n)
 
-    async def get_outlook_collisions(self, lessons: list[LessonWithExcelCellsDTO]) -> list[OutlookIssue]:
+    async def check_for_outlook_issue(self, lessons: list[LessonWithExcelCellsDTO]) -> list[OutlookIssue]:
         min_needed_time: datetime.datetime = datetime.datetime.max
         max_needed_time: datetime.datetime = datetime.datetime.min
         tz = datetime.timezone(datetime.timedelta(hours=3))
@@ -452,14 +450,14 @@ class CollisionChecker:
         issues: list[Issue] = []
 
         if check_room_collisions:
-            _ = self.get_collisions_by_room(lessons)
+            _ = self.check_for_room_issue(lessons)
             issues.extend(_)
         if check_teacher_collisions:
-            issues.extend(self.get_collisions_by_teacher(lessons))
+            issues.extend(self.check_for_teacher_issue(lessons))
         if check_space_collisions:
-            issues.extend(self.get_lessons_where_not_enough_place_for_students(lessons))
+            issues.extend(self.check_for_capacity_issue(lessons))
         if check_outlook_collisions:
-            issues.extend(await self.get_outlook_collisions(lessons))
+            issues.extend(await self.check_for_outlook_issue(lessons))
 
         logger.info(f"Found {len(issues)} issues")
         return issues

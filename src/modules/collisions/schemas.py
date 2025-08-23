@@ -15,15 +15,6 @@ class CollisionTypeEnum(StrEnum):
     OUTLOOK = "outlook"
 
 
-class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
-    collision_type: CollisionTypeEnum
-    "Type of collision"
-    outlook_info: BookingDTO | None = None
-    "Outlook info"
-    room_capacity: int | None = None
-    "Capacity of the room"
-
-
 class CapacityIssue(CustomModel):
     """
     Issue when there is not enough places in the room for the lesson.
