@@ -451,13 +451,20 @@ class CollisionChecker:
 
         if check_room_collisions:
             _ = self.check_for_room_issue(lessons)
+            logger.info(f"Found {len(_)} room issues")
             issues.extend(_)
         if check_teacher_collisions:
-            issues.extend(self.check_for_teacher_issue(lessons))
+            _ = self.check_for_teacher_issue(lessons)
+            logger.info(f"Found {len(_)} teacher issues")
+            issues.extend(_)
         if check_space_collisions:
-            issues.extend(self.check_for_capacity_issue(lessons))
+            _ = self.check_for_capacity_issue(lessons)
+            logger.info(f"Found {len(_)} capacity issues")
+            issues.extend(_)
         if check_outlook_collisions:
-            issues.extend(await self.check_for_outlook_issue(lessons))
+            _ = await self.check_for_outlook_issue(lessons)
+            logger.info(f"Found {len(_)} outlook issues")
+            issues.extend(_)
 
         logger.info(f"Found {len(issues)} issues")
         return issues
