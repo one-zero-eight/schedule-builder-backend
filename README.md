@@ -100,4 +100,3 @@ We are open to contributions of any kind.
 You can help us with code, bugs, design, documentation, media, new ideas, etc.
 If you are interested in contributing, please read
 our [contribution guide](https://github.com/one-zero-eight/.github/blob/main/CONTRIBUTING.md).
-

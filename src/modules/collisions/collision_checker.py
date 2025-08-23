@@ -1,30 +1,24 @@
 import datetime
-import pprint
 from collections import defaultdict
-from enum import Enum, StrEnum
+from collections.abc import Generator
+from enum import Enum
 
-from src.config_schema import TeacherDTO
+from src.custom_pydantic import CustomModel
 from src.logging_ import logger
-from src.modules.bookings.client import BookingDTO, RoomDTO, booking_client
+from src.modules.bookings.client import RoomDTO, booking_client
+from src.modules.collisions.schemas import (
+    CapacityIssue,
+    CollisionTypeEnum,
+    Issue,
+    OutlookIssue,
+    RoomIssue,
+    TeacherIssue,
+)
+from src.modules.options.repository import Teacher, options_repository
 from src.modules.parsers.schemas import BaseLessonDTO, LessonWithExcelCellsDTO
+from src.utcnow import utcnow
 
 from .graph import UndirectedGraph
-
-
-class CollisionTypeEnum(StrEnum):
-    ROOM = "room"
-    TEACHER = "teacher"
-    CAPACITY = "capacity"
-    OUTLOOK = "outlook"
-
-
-class LessonWithCollisionTypeDTO(LessonWithExcelCellsDTO):
-    collision_type: CollisionTypeEnum
-    "Type of collision"
-    outlook_info: BookingDTO | None = None
-    "Outlook info"
-    room_capacity: int | None = None
-    "Capacity of the room"
 
 
 class Weekdays(Enum):
@@ -36,33 +30,27 @@ class Weekdays(Enum):
     SATURDAY = 6
     SUNDAY = 7
 
+    @staticmethod
+    def get_weekday(weekday: str) -> int:
+        return Weekdays[weekday.upper()].value
+
 
 class CollisionChecker:
-    WEEKDAYS_MAP = {
-        "monday": 0,
-        "tuesday": 1,
-        "wednesday": 2,
-        "thursday": 3,
-        "friday": 4,
-        "saturday": 5,
-        "sunday": 6,
-    }
-
     def __init__(
         self,
         token: str,
-        teachers: list[TeacherDTO] | None = None,
+        teachers: list[Teacher] | None = None,
         rooms: list[RoomDTO] | None = None,
-        graph: UndirectedGraph | None = None,
     ) -> None:
         self.token = token
         self.teachers = teachers or []
         self.rooms = rooms or []
-        self.graph = graph or UndirectedGraph()
-        self.group_to_studying_teachers = defaultdict(list)
+
+        self.group_to_studying_teachers: dict[str, list[Teacher]] = defaultdict(list)
         for teacher in self.teachers:
-            self.group_to_studying_teachers[teacher.group].append(teacher)
-        self.room_to_capacity = dict()
+            if teacher.alias is not None:
+                self.group_to_studying_teachers[teacher.alias].append(teacher)
+        self.room_to_capacity: dict[str, int | None] = dict()
         for room in self.rooms:
             self.room_to_capacity[room.id] = room.capacity
 
@@ -73,7 +61,17 @@ class CollisionChecker:
         start_b: datetime.time,
         end_b: datetime.time,
     ) -> bool:
-        return not (end_a < start_b or end_b < start_a)
+        _today = datetime.date.today()
+        as_datetime_start_a = datetime.datetime.combine(_today, start_a)
+        as_datetime_end_a = datetime.datetime.combine(_today, end_a)
+        as_datetime_start_b = datetime.datetime.combine(_today, start_b)
+        as_datetime_end_b = datetime.datetime.combine(_today, end_b)
+        return CollisionChecker.check_datetimes_intersect(
+            as_datetime_start_a,
+            as_datetime_end_a,
+            as_datetime_start_b,
+            as_datetime_end_b,
+        )
 
     @staticmethod
     def check_datetimes_intersect(
@@ -82,7 +80,8 @@ class CollisionChecker:
         start_b: datetime.datetime,
         end_b: datetime.datetime,
     ) -> bool:
-        return not (end_a < start_b or end_b < start_a)
+        overlap_timedelta = min(end_a, end_b) - max(start_a, start_b)
+        return overlap_timedelta > datetime.timedelta(minutes=1)
 
     @staticmethod
     def check_two_timeslots_collisions_by_time(
@@ -117,7 +116,7 @@ class CollisionChecker:
         assert slot1.date_on is not None
         assert slot2.weekday is not None
 
-        if slot1.date_on.weekday() != CollisionChecker.WEEKDAYS_MAP.get(slot2.weekday.lower()):
+        if slot1.date_on.weekday() != Weekdays.get_weekday(slot2.weekday):
             return False
         return CollisionChecker.check_times_intersect(
             slot1.start_time, slot1.end_time, slot2.start_time, slot2.end_time
@@ -127,7 +126,11 @@ class CollisionChecker:
     def is_online_slot(slot_or_room: BaseLessonDTO | str) -> bool:
         if isinstance(slot_or_room, str):
             return "ONLINE" in slot_or_room
-        return "ONLINE" in slot_or_room.room
+        elif isinstance(slot_or_room, BaseLessonDTO):
+            if slot_or_room.room is None:
+                return False
+            else:
+                return "ONLINE" in slot_or_room.room
 
     @staticmethod
     def _are_lessons_identical(lesson1: LessonWithExcelCellsDTO, lesson2: LessonWithExcelCellsDTO) -> bool:
@@ -141,135 +144,181 @@ class CollisionChecker:
             and lesson1.teacher == lesson2.teacher
             and lesson1.date_on == lesson2.date_on
             and lesson1.date_except == lesson2.date_except
-            and lesson1.group_name == lesson2.group_name
         )
 
-    def get_colliding_timeslots(
-        self,
-        timeslots: list[LessonWithExcelCellsDTO],
-        connected_components: list[list[int]],
-        collision_type: CollisionTypeEnum,
-    ) -> list[list[LessonWithCollisionTypeDTO]]:
-        collisions = []
-        for component in connected_components:
-            if len(component) == 1:
-                continue
-            collisions_list = []
-            for i in component:
-                collisions_list.append(
-                    LessonWithCollisionTypeDTO(
-                        **timeslots[i].model_dump(),
-                        collision_type=collision_type,
-                    )
-                )
-            collisions.append(collisions_list)
-        return collisions
-
-    def get_collisions_by_room(
-        self, timeslots: list[LessonWithExcelCellsDTO]
-    ) -> list[list[LessonWithCollisionTypeDTO]]:
+    def get_collisions_by_room(self, lessons: list[LessonWithExcelCellsDTO]) -> list[RoomIssue]:
         room_to_slots: dict[str, list[tuple[int, LessonWithExcelCellsDTO]]] = defaultdict(list)
-        vertices_number = len(timeslots)
-        for i, slot in enumerate(timeslots):
-            room_to_slots[slot.room].append((i, slot))
-        self.graph.create_graph(vertices_number)
-        for room, lessons in room_to_slots.items():
-            lessons: list[tuple[int, LessonWithExcelCellsDTO]]
+
+        vertices_number = len(lessons)
+        for i, slot in enumerate(lessons):
+            if self.is_online_slot(slot) or slot.room is None:
+                continue
+            for room in slot.room if isinstance(slot.room, tuple) else [slot.room]:
+                room_to_slots[room].append((i, slot))
+
+        graph = UndirectedGraph(vertices_number)
+        collision_room_map: dict[tuple[int, int], str] = {}
+
+        for room, room_lessons in room_to_slots.items():
+            room_lessons: list[tuple[int, LessonWithExcelCellsDTO]]
             if self.is_online_slot(room):
-                logger.info("No need to check room collision for online")
+                logger.debug("No need to check room collision for online")
                 continue
 
-            if len(lessons) == 1:
-                logger.info(f"Room {room} has only one lesson")
+            if len(room_lessons) == 1:
+                logger.debug(f"Room {room} has only one lesson")
                 continue
 
-            for i, (ind1, lesson1) in enumerate(lessons):
+            for i, (ind1, lesson1) in enumerate(room_lessons):
                 if lesson1.lesson_name == "Elective course on Physical Education":
                     logger.info("Skip Physical Education")
                     continue
-                for j in range(i + 1, len(lessons)):
-                    ind2, lesson2 = lessons[j]
+                for j in range(i + 1, len(room_lessons)):
+                    ind2, lesson2 = room_lessons[j]
                     if lesson2.lesson_name == "Elective course on Physical Education":
-                        logger.info("Skip Physical Education")
+                        logger.debug("Skip Physical Education")
+                        continue
+
+                    if lesson1 is lesson2:
                         continue
 
                     if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
                         # Skip identical lessons (same lesson appearing in different Excel cells)
                         if self._are_lessons_identical(lesson1, lesson2):
-                            logger.info(f"Skipping identical lessons: {lesson1.lesson_name}")
+                            logger.debug(f"Skipping identical lessons: {lesson1.lesson_name}")
                             continue
-                        self.graph.add_edge(ind1, ind2)
-        connected_components = self.graph.get_connected_components()
-        collisions = self.get_colliding_timeslots(timeslots, connected_components, CollisionTypeEnum.ROOM)
-        logger.info(f"Total collisions: {len(collisions)}: {pprint.pformat(collisions)}")
-        return collisions
+                        graph.add_edge(ind1, ind2)
+                        collision_room_map[(min(ind1, ind2), max(ind1, ind2))] = room
 
-    def get_collisions_by_teacher(
-        self, timeslots: list[LessonWithExcelCellsDTO]
-    ) -> list[list[LessonWithCollisionTypeDTO]]:
-        teachers_to_timeslots: dict[str, list[tuple[int, LessonWithExcelCellsDTO]]] = defaultdict(list)
-        self.graph.create_graph(len(timeslots))
-        for i, obj in enumerate(timeslots):
-            teachers_to_timeslots[obj.teacher].append((i, obj))
-            if isinstance(obj.group_name, str):
-                if obj.teacher in self.group_to_studying_teachers[obj.group_name]:
-                    teachers_to_timeslots[obj.teacher].append((i, obj))
-                continue
-            for group_name in obj.group_name:
-                if obj.teacher in self.group_to_studying_teachers[group_name]:
-                    teachers_to_timeslots[obj.teacher].append((i, obj))
-        for teacher in teachers_to_timeslots:  # noqa: PLC0206
-            n = len(teachers_to_timeslots[teacher])
-            for i in range(n):
-                ind1, slot1 = teachers_to_timeslots[teacher][i]
-                for j in range(i + 1, n):
-                    ind2, slot2 = teachers_to_timeslots[teacher][j]
-                    if slot1.weekday != slot2.weekday:
-                        continue
-                    if self.check_two_timeslots_collisions_by_time(slot1, slot2):
-                        self.graph.add_edge(ind1, ind2)
-        connected_components = self.graph.get_connected_components()
-        return self.get_colliding_timeslots(timeslots, connected_components, CollisionTypeEnum.TEACHER)
+        connected_components = graph.get_connected_components()
+        collisions = graph.get_colliding_elements(lessons, connected_components)
+        room_issues = []
+
+        for collision in collisions:
+            # Find all rooms that are involved in this collision
+            conflicting_rooms = set()
+            for i, lesson1 in enumerate(collision):
+                for j, lesson2 in enumerate(collision[i + 1 :], i + 1):
+                    lesson1_idx = lessons.index(lesson1)
+                    lesson2_idx = lessons.index(lesson2)
+                    edge_key = (min(lesson1_idx, lesson2_idx), max(lesson1_idx, lesson2_idx))
+                    if edge_key in collision_room_map:
+                        conflicting_rooms.add(collision_room_map[edge_key])
+
+            if conflicting_rooms:
+                room_issue = RoomIssue(
+                    collision_type=CollisionTypeEnum.ROOM,
+                    room=tuple(sorted(conflicting_rooms)) if len(conflicting_rooms) > 1 else list(conflicting_rooms)[0],
+                    lessons=sorted(collision, key=lambda x: len(x.room) if isinstance(x.room, tuple) else 1),
+                )
+                room_issues.append(room_issue)
+        return room_issues
+
+    def get_collisions_by_teacher(self, lessons: list[LessonWithExcelCellsDTO]) -> list[TeacherIssue]:
+        class TeacherOccupation(CustomModel):
+            teaching_lessons: list[LessonWithExcelCellsDTO] = []
+            studying_lessons: list[LessonWithExcelCellsDTO] = []
+
+        occupancies: dict[str, TeacherOccupation] = defaultdict(TeacherOccupation)
+
+        for lesson in lessons:
+            if lesson.teacher:
+                occupancies[lesson.teacher].teaching_lessons.append(lesson)
+
+        for lesson in lessons:
+            if lesson.group_name:
+                group_names = lesson.group_name if isinstance(lesson.group_name, tuple) else (lesson.group_name,)
+
+                for group_name in group_names:
+                    group_students = self.group_to_studying_teachers.get(group_name, [])
+                    if lesson.teacher in group_students:
+                        occupancies[lesson.teacher].studying_lessons.append(lesson)
+
+        teacher_issues = []
+
+        for teacher, occupation in occupancies.items():
+            occupation_lessons = occupation.teaching_lessons + occupation.studying_lessons
+
+            graph = UndirectedGraph(len(occupation_lessons))
+            # find collisions in occupation_lessons
+            for i, lesson1 in enumerate(occupation_lessons):
+                for j in range(i + 1, len(occupation_lessons)):
+                    lesson2 = occupation_lessons[j]
+                    if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
+                        if self._are_lessons_identical(lesson1, lesson2):
+                            logger.debug(f"Skipping identical lessons: {lesson1.lesson_name}")
+                            continue
+                        if lesson1 is lesson2:
+                            logger.debug(f"Skipping identical lessons (same id): {lesson1.lesson_name}")
+                            continue
+                        if lesson1.excel_range and lesson2.excel_range and lesson1.excel_range == lesson2.excel_range:
+                            logger.debug(f"Skipping identical lessons (same excel range): {lesson1.lesson_name}")
+                            continue
+                        graph.add_edge(i, j)
+
+            connected_components = graph.get_connected_components()
+            collisions_indices_list = graph.get_colliding_elements(
+                list(range(len(occupation_lessons))), connected_components
+            )
+
+            for collision_indices in collisions_indices_list:
+                teaching_lessons = []
+                studying_lessons = []
+                for i in collision_indices:
+                    if i < len(occupation.teaching_lessons):
+                        teaching_lessons.append(occupation.teaching_lessons[i])
+                    else:
+                        studying_lessons.append(occupation.studying_lessons[i - len(occupation.teaching_lessons)])
+
+                teacher_issue = TeacherIssue(
+                    collision_type=CollisionTypeEnum.TEACHER,
+                    teacher=teacher,
+                    teaching_lessons=teaching_lessons,
+                    studying_lessons=studying_lessons,
+                )
+                teacher_issues.append(teacher_issue)
+
+        return teacher_issues
 
     def get_lessons_where_not_enough_place_for_students(
-        self, timeslots: list[LessonWithExcelCellsDTO]
-    ) -> list[list[LessonWithCollisionTypeDTO]]:
+        self, lessons: list[LessonWithExcelCellsDTO]
+    ) -> list[CapacityIssue]:
         result = []
-        for timeslot in timeslots:
-            if self.is_online_slot(timeslot):
+        for lesson in lessons:
+            if self.is_online_slot(lesson) or lesson.room is None or isinstance(lesson.room, tuple):
                 continue
-            room = timeslot.room
-            capacity = self.room_to_capacity.get(room)
-            if not capacity:
-                # с учётом того, что все "большие" кабинеты заполнены, будет универсальной заменой
-                capacity = 30
-            if capacity < timeslot.students_number:
+            capacity = self.room_to_capacity.get(lesson.room)
+            check_capacity = capacity or 30  # Unspecified capacity is 30
+            if check_capacity < lesson.students_number:
                 result.append(
-                    [
-                        LessonWithCollisionTypeDTO(
-                            **timeslot.model_dump(),
-                            room_capacity=capacity,
-                            collision_type=CollisionTypeEnum.CAPACITY,
-                        )
-                    ]
+                    CapacityIssue(
+                        collision_type=CollisionTypeEnum.CAPACITY,
+                        room=lesson.room,
+                        room_capacity=capacity,
+                        needed_capacity=lesson.students_number,
+                        lesson=lesson,
+                    )
                 )
         return result
 
-    async def get_outlook_collisions(
-        self, timeslots: list[LessonWithExcelCellsDTO]
-    ) -> list[list[LessonWithCollisionTypeDTO]]:
+    def daterange(self, start_date: datetime.date, end_date: datetime.date) -> Generator[datetime.date, None, None]:
+        days = int((end_date - start_date).days)
+        for n in range(days):
+            yield start_date + datetime.timedelta(n)
+
+    async def get_outlook_collisions(self, lessons: list[LessonWithExcelCellsDTO]) -> list[OutlookIssue]:
         min_needed_time: datetime.datetime = datetime.datetime.max
         max_needed_time: datetime.datetime = datetime.datetime.min
         tz = datetime.timezone(datetime.timedelta(hours=3))
         today = datetime.datetime.now(tz).date()
 
-        for lesson in timeslots:
+        for lesson in lessons:
             start_datetime = datetime.datetime.combine(today, lesson.start_time)
             end_datetime = datetime.datetime.combine(today + datetime.timedelta(days=30), lesson.end_time)
             min_needed_time = min(start_datetime, min_needed_time)
             max_needed_time = max(end_datetime, max_needed_time)
 
-        if not timeslots:
+        if not lessons:
             return []
 
         try:
@@ -282,47 +331,48 @@ class CollisionChecker:
             logger.warning(f"Error while fetching bookings: {e}", exc_info=True)
             return []
 
-        collisions = []
+        result = []
 
         valid_rooms = {room.id for room in self.rooms}
 
-        for lesson in timeslots:
-            if self.is_online_slot(lesson) or lesson.room not in valid_rooms:
+        for lesson in lessons:
+            if self.is_online_slot(lesson) or lesson.room is None:
+                logger.debug(f"Skipping online or no room lesson: {lesson.lesson_name}, room: {lesson.room}")
+                continue
+            rooms = lesson.room if isinstance(lesson.room, tuple) else (lesson.room,)
+            filtered_rooms = []
+            for room in rooms:
+                if room in valid_rooms:
+                    filtered_rooms.append(room)
+                else:
+                    logger.warning(f"Room {room} is not valid")
+
+            if not filtered_rooms:
+                logger.debug(f"No valid rooms for {lesson.lesson_name}")
                 continue
 
-            lesson_weekday = lesson_date = None
-            if lesson.weekday is not None:
-                lesson_weekday = self.WEEKDAYS_MAP.get(lesson.weekday)
-            elif lesson.date_on is not None:
-                lesson_date = lesson.date_on
+            dates_to_check = []
+            semester = options_repository.get_semester()
+            if semester:
+                daterange = self.daterange(semester.start_date, semester.end_date)
             else:
-                continue
+                daterange = self.daterange(today, today + datetime.timedelta(days=30))
 
-            lesson_dates = []
+            for check_date in daterange:
+                if lesson.weekday:
+                    if check_date.weekday() == Weekdays.get_weekday(lesson.weekday):
+                        if lesson.date_except is None or check_date not in lesson.date_except:
+                            dates_to_check.append(check_date)
+                elif lesson.date_on and check_date == lesson.date_on:
+                    dates_to_check.append(check_date)
 
-            for day_offset in range(30):  # TODO: Change fixed 30-day window to semester based window
-                check_date = today + datetime.timedelta(days=day_offset)
-                if check_date.weekday() == lesson_weekday and (
-                    lesson.date_except is None or check_date not in lesson.date_except
-                ):
-                    lesson_dates.append(check_date)
-                elif check_date == lesson_date:
-                    lesson_dates.append(check_date)
-
-            lesson_collisions = [
-                LessonWithCollisionTypeDTO(
-                    **lesson.model_dump(),
-                    collision_type=CollisionTypeEnum.OUTLOOK,
-                )
-            ]
-
-            for lesson_date in lesson_dates:
+            for lesson_date in dates_to_check:
                 lesson_start = datetime.datetime.combine(lesson_date, lesson.start_time).replace(tzinfo=tz)
                 lesson_end = datetime.datetime.combine(lesson_date, lesson.end_time).replace(tzinfo=tz)
 
                 intersected_bookings = list(
                     filter(
-                        lambda booking: booking.room_id == lesson.room
+                        lambda booking: booking.room_id in filtered_rooms
                         and self.check_datetimes_intersect(
                             booking.start_time,
                             booking.end_time,
@@ -333,95 +383,83 @@ class CollisionChecker:
                     )
                 )
 
+                filtered_intersected_bookings = []
+
                 for booking in intersected_bookings:
-                    if booking.title.lower().strip() == lesson.lesson_name.lower().strip():
+                    b_title = booking.title.lower().strip()
+                    if (
+                        b_title == lesson.lesson_name.lower().strip()
+                        or b_title == "lectures"
+                        or b_title == "labs"
+                        or b_title == "schedule assistant iu"
+                    ):
+                        logger.debug(f"Skipping booking for that lesson: {lesson.lesson_name} and {booking.title}")
                         continue
-
-                    if booking.start_time < lesson_end and booking.end_time > lesson_start:
-                        booking_as_lesson = LessonWithCollisionTypeDTO(
-                            lesson_name=booking.title,
-                            weekday=lesson.weekday,
-                            start_time=booking.start_time.time(),
-                            end_time=booking.end_time.time(),
-                            room=lesson.room,
-                            teacher="External Booking",  # Placeholder
-                            teacher_email="External Booking",
-                            group_name=None,
-                            students_number=0,
-                            collision_type=CollisionTypeEnum.OUTLOOK,
-                            outlook_info=booking,
-                            excel_range=lesson.excel_range,
+                    _now = utcnow()
+                    if booking.end_time < _now:
+                        logger.debug(
+                            f"Skipping booking for that lesson: {lesson.lesson_name} and {booking.title} because it's in the past"
                         )
+                        continue
+                    filtered_intersected_bookings.append(booking)
+                if filtered_intersected_bookings:
+                    result.append(
+                        OutlookIssue(
+                            collision_type=CollisionTypeEnum.OUTLOOK,
+                            lesson=lesson,
+                            outlook_info=filtered_intersected_bookings,
+                        )
+                    )
+        return result
 
-                    if booking_as_lesson not in lesson_collisions:
-                        lesson_collisions.append(booking_as_lesson)
-
-            if len(lesson_collisions) > 1:
-                collisions.append(lesson_collisions)
-
-        return collisions
-
-    def _sort_by_weekday_and_end_time(self, collisions: list[LessonWithExcelCellsDTO]) -> tuple:
-        first_attr = collisions[0].weekday
-        second_attr = collisions[0].end_time
-        return (
-            Weekdays.__members__.get(first_attr, Weekdays.SUNDAY).value,
-            second_attr,
-        )
-
-    def _sort_collision_group(self, collision_group: list[LessonWithCollisionTypeDTO]) -> None:
-        """Sort collision group: unique lessons first, identical lessons last"""
-        unique_lessons = []
-        identical_lessons = []
-
-        # Group lessons by uniqueness
-        for i, lesson in enumerate(collision_group):
-            is_identical_to_others = False
-            for j, other_lesson in enumerate(collision_group):
-                if i != j and self._are_lessons_identical(lesson, other_lesson):
-                    is_identical_to_others = True
-                    break
-
-            if is_identical_to_others:
-                identical_lessons.append(lesson)
+    def merge_identical_lessons(self, lessons: list[LessonWithExcelCellsDTO]) -> list[LessonWithExcelCellsDTO]:
+        graph = UndirectedGraph(len(lessons))
+        for i, lesson1 in enumerate(lessons):
+            for j in range(i + 1, len(lessons)):
+                lesson2 = lessons[j]
+                if self._are_lessons_identical(lesson1, lesson2):
+                    graph.add_edge(i, j)
+        connected_components = graph.get_connected_components()
+        result = []
+        for component in connected_components:
+            component_lessons = [lessons[i] for i in component]
+            if len(component_lessons) > 1:
+                excel_ranges = [lesson.excel_range or "" for lesson in component_lessons]
+                groups = []
+                for lesson in component_lessons:
+                    groups.extend(lesson.group_name if isinstance(lesson.group_name, tuple) else [lesson.group_name])
+                students_number = sum(lesson.students_number for lesson in component_lessons)
+                lesson = component_lessons[0].model_copy()
+                lesson.excel_range = ";".join(excel_ranges)
+                lesson.group_name = tuple(sorted(groups))
+                lesson.students_number = students_number
+                result.append(lesson)
             else:
-                unique_lessons.append(lesson)
-
-        # Sort each group by weekday and time
-        unique_lessons.sort(key=lambda x: (Weekdays.__members__.get(x.weekday, Weekdays.SUNDAY).value, x.end_time))
-        identical_lessons.sort(key=lambda x: (Weekdays.__members__.get(x.weekday, Weekdays.SUNDAY).value, x.end_time))
-
-        # Replace collision_group contents: unique first, identical last
-        collision_group.clear()
-        collision_group.extend(unique_lessons + identical_lessons)
-
-    def sort_collisions(self, collisions: list[list[LessonWithCollisionTypeDTO]]) -> None:
-        # Sort each collision group internally
-        for collision_group in collisions:
-            self._sort_collision_group(collision_group)
-
-        # Sort collision groups by their first lesson
-        collisions.sort(key=self._sort_by_weekday_and_end_time)
+                result.append(component_lessons[0])
+        return result
 
     async def get_collisions(
         self,
-        timeslots: list[LessonWithExcelCellsDTO],
+        lessons: list[LessonWithExcelCellsDTO],
         check_room_collisions: bool = True,
         check_teacher_collisions: bool = True,
         check_space_collisions: bool = True,
         check_outlook_collisions: bool = True,
-    ) -> list[list[LessonWithCollisionTypeDTO]]:
-        logger.info(f"{len(timeslots)} Timeslots")
-        collisions = []
+    ) -> list[Issue]:
+        logger.info(f"{len(lessons)} lessons")
+        lessons = self.merge_identical_lessons(lessons)
+        logger.info(f"{len(lessons)} lessons after merging identical lessons")
+        issues: list[Issue] = []
 
         if check_room_collisions:
-            _ = self.get_collisions_by_room(timeslots)
-            collisions.extend(_)
+            _ = self.get_collisions_by_room(lessons)
+            issues.extend(_)
         if check_teacher_collisions:
-            collisions.extend(self.get_collisions_by_teacher(timeslots))
+            issues.extend(self.get_collisions_by_teacher(lessons))
         if check_space_collisions:
-            collisions.extend(self.get_lessons_where_not_enough_place_for_students(timeslots))
+            issues.extend(self.get_lessons_where_not_enough_place_for_students(lessons))
         if check_outlook_collisions:
-            collisions.extend(await self.get_outlook_collisions(timeslots))
-        self.sort_collisions(collisions)
-        return collisions
+            issues.extend(await self.get_outlook_collisions(lessons))
+
+        logger.info(f"Found {len(issues)} issues")
+        return issues

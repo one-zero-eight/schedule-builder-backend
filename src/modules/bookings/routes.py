@@ -12,6 +12,19 @@ security = HTTPBearer()
 router = APIRouter(tags=["Bookings"])
 
 
+@router.get("/dev/bookings")
+async def get_all_bookings(
+    user_and_token: VerifyTokenDep,
+) -> list[BookingDTO]:
+    _now = utcnow()
+    user, token = user_and_token
+    return await booking_client.get_all_bookings(
+        token,
+        _now,
+        _now + datetime.timedelta(days=30),
+    )
+
+
 @router.get("/dev/bookings/{room_id}")
 async def get_bookings(
     room_id: str,
@@ -23,7 +36,7 @@ async def get_bookings(
         token,
         room_id,
         _now,
-        _now + datetime.timedelta(days=1),
+        _now + datetime.timedelta(days=30),
     )
 
 

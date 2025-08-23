@@ -1,4 +1,3 @@
-import datetime
 from pathlib import Path
 
 import yaml
@@ -25,36 +24,6 @@ class Booking(SettingBaseModel):
     "URL of the Booking API"
 
 
-class TeacherDTO(SettingBaseModel):
-    name: str
-    "First and second name of teacher"
-    group: str
-    "Group of a teacher"
-    email: str
-    "Email of teacher"
-
-
-class CoreCoursesConfig(BaseModel):
-    """
-    Config for electives parser from Google Sheets
-    """
-
-    class Target(BaseModel):
-        """
-        Target model
-        """
-
-        sheet_name: str
-        """Sheet name"""
-        start_date: datetime.date
-        """Datetime start"""
-        end_date: datetime.date
-        """Datetime end"""
-
-    targets: list[Target]
-    """List of targets"""
-
-
 class Settings(SettingBaseModel):
     """Settings for the application."""
 
@@ -67,10 +36,6 @@ class Settings(SettingBaseModel):
     "InNoHassle Accounts integration settings"
     booking: Booking = Booking()
     "Booking API integration settings"
-    teachers: list[TeacherDTO]
-    "List of teachers"
-    core_courses_config: CoreCoursesConfig
-    "Config for core courses parser from Google Sheets"
 
     @classmethod
     def from_yaml(cls, path: Path) -> "Settings":

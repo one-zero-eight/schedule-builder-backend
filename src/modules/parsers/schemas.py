@@ -15,8 +15,8 @@ class BaseLessonDTO(CustomModel):
     "Start time of lesson"
     end_time: time
     "End time of lesson"
-    room: str
-    "Room for lesson"
+    room: str | tuple[str, ...] | None = None
+    "Room for lesson, None - TBA, if list - multiple rooms simultaneously"
     date_on: date | None = None
     "Specific dates with lessons"
     date_except: list[date] | None = None
@@ -34,7 +34,7 @@ class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
     "Teacher on lesson"
     teacher_email: str | None = None
     "Email of teacher"
-    group_name: str | list[str] | None = None
+    group_name: str | tuple[str, ...] | None = None
     "Name of the group or list of groups"
     students_number: int
     "Number of students in the group"
@@ -42,4 +42,4 @@ class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
 
 class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
     excel_range: str | None = None
-    "Topleft corner of the cell"
+    "Range of the lessos: may be multiple cells, for example 'A1:A10'"

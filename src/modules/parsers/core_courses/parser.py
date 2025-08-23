@@ -17,7 +17,6 @@ from openpyxl.utils import (
     get_column_letter,
 )
 
-from src.config_schema import CoreCoursesConfig
 from src.logging_ import logger
 from src.modules.parsers.processors.regex import prettify_string
 from src.modules.parsers.schemas import LessonWithExcelCellsDTO
@@ -45,11 +44,8 @@ class CoreCoursesParser:
     Elective parser class
     """
 
-    def __init__(self, targets: list[CoreCoursesConfig.Target]) -> None:
-        self.targets = targets
-
     def get_clear_dataframes_from_xlsx(
-        self, xlsx_file: io.BytesIO, targets: list[CoreCoursesConfig.Target]
+        self, xlsx_file: io.BytesIO, target_sheet_names: list[str]
     ) -> tuple[dict[str, pd.DataFrame], dict]:
         """
         Get data from xlsx file and return it as a DataFrame with merged
@@ -68,31 +64,20 @@ class CoreCoursesParser:
         # ------- Clean up dataframes -------
         dfs = {key.strip(): value for key, value in dfs.items()}
         merged_ranges: dict = {key.strip(): None for key in dfs}
-        for target in targets:
-            df = None
-            df_sheet_name = None
-            for key, value in dfs.items():
-                if key.startswith(target.sheet_name) or sanitize_sheet_name(key) == sanitize_sheet_name(
-                    target.sheet_name
-                ):
-                    df = value
-                    df_sheet_name = key
-                    break
-            if df is None or df_sheet_name is None:
-                logger.error(f"Sheet {target.sheet_name} not found in xlsx file")
-                continue
+        for target_sheet_name in target_sheet_names:
+            df = dfs[target_sheet_name]
             # -------- Fill merged cells with values --------
-            merged_ranges[target.sheet_name] = self.merge_cells(df, xlsx_file, df_sheet_name)
+            merged_ranges[target_sheet_name] = self.merge_cells(df, xlsx_file, target_sheet_name)
             # -------- Assign excel cell to subject --------
             self.assign_excel_row_and_column_to_subjects(df)
             # -------- Select range --------
-            df = self.select_range(df, self.auto_detect_range(df, xlsx_file, df_sheet_name))
+            df = self.select_range(df, self.auto_detect_range(df, xlsx_file, target_sheet_name))
             # -------- Fill empty cells --------
             df = df.replace(r"^\s*$", np.nan, regex=True)
             # -------- Strip, translate and remove trailing spaces --------
             df = df.map(prettify_string)
             # -------- Update dataframe --------
-            dfs[target.sheet_name] = df
+            dfs[target_sheet_name] = df
 
         return dfs, merged_ranges
 
@@ -294,15 +279,6 @@ class CoreCoursesParser:
             split_dfs.append(split_df)
         return split_dfs
 
-    def identify_room(self, location: str) -> str:
-        location = location.strip().rstrip()
-        if "ONLINE" in location:
-            return location
-        guess = location.split()[0]
-        if not guess.isnumeric():
-            return location
-        return guess
-
     def _parse_schedule_string(self, s: str) -> list[tuple[str, date | None, date | None]]:
         # удаляю время
         s = re.sub(r"STARTS AT \d{1,2}:\d{2}", "", s)
@@ -462,27 +438,29 @@ class CoreCoursesParser:
         logger.info(f"Target range: {target_range}")
         return target_range
 
-    async def get_all_timeslots(self, spreadsheet_id: str) -> list[LessonWithExcelCellsDTO]:
+    async def get_all_lessons(
+        self, spreadsheet_id: str, target_sheet_names: list[str]
+    ) -> list[LessonWithExcelCellsDTO]:
+        target_sheet_names = [sanitize_sheet_name(target_sheet_name) for target_sheet_name in target_sheet_names]
+
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
-        with open("xlsx.xlsx", "wb") as f:
-            f.write(xlsx.getvalue())
-        dfs, dfs_merged_ranges = self.get_clear_dataframes_from_xlsx(xlsx_file=xlsx, targets=self.targets)
+        dfs, dfs_merged_ranges = self.get_clear_dataframes_from_xlsx(
+            xlsx_file=xlsx, target_sheet_names=target_sheet_names
+        )
         lessons = []
 
-        for target in self.targets:
+        for target_sheet_name in target_sheet_names:
             # find dataframe from dfs
-            if target.sheet_name not in dfs:
-                logger.warning(f"Sheet {target.sheet_name} not found in xlsx file")
+            if target_sheet_name not in dfs:
+                logger.warning(f"Sheet {target_sheet_name} not found in xlsx file")
                 continue
-            sheet_df = dfs[target.sheet_name]
-            merged_ranges = [split_range_to_xy(merged_range) for merged_range in dfs_merged_ranges[target.sheet_name]]
+            sheet_df = dfs[target_sheet_name]
+            merged_ranges = [split_range_to_xy(merged_range) for merged_range in dfs_merged_ranges[target_sheet_name]]
             # [(start_row, start_col), (end_row, end_col)]
 
             time_columns_index = self.get_time_columns(sheet_df)
             logger.info(f"Sheet Time columns: {[get_column_letter(col + 1) for col in time_columns_index]}")
-            rightmost_column_index = self.get_rightmost_column_index(
-                xlsx, sanitize_sheet_name(target.sheet_name), time_columns_index
-            )
+            rightmost_column_index = self.get_rightmost_column_index(xlsx, target_sheet_name, time_columns_index)
             logger.info(f"Rightmost column index: {get_column_letter(rightmost_column_index + 1)}")
             by_courses = self.split_df_by_courses(sheet_df, time_columns_index)
             for course_df in by_courses:
@@ -510,6 +488,17 @@ class CoreCoursesParser:
                             subject_name, cell = subject
 
                             location = self.parse_schedule_string(str(location))
+                            if len(location) > 1:
+                                all_on_and_except_nones = True
+
+                                for loc, on_, except_ in location:
+                                    if on_ is not None or except_ is not None:
+                                        all_on_and_except_nones = False
+                                        break
+                                if all_on_and_except_nones:
+                                    locs = tuple(loc for loc, on_, except_ in location)
+                                    location = [(locs, None, None)]
+
                             if not isinstance(group, float):
                                 group = group.split()
                             else:
@@ -518,7 +507,11 @@ class CoreCoursesParser:
                             if len(group) > 1:
                                 students_number = int(group[1][1:-1])
                             else:
-                                students_number = 1
+                                students_number = 0
+
+                        if len(location) > 1:
+                            logger.info(f"Location: {location}")
+
                         for loc, on_, except_ in location:
                             course_lessons.append(
                                 LessonWithExcelCellsDTO(
@@ -529,7 +522,7 @@ class CoreCoursesParser:
                                     teacher=(teacher if isinstance(teacher, str) else ""),
                                     room=loc,
                                     lesson_name=subject_name,
-                                    students_number=students_number,
+                                    students_number=0,
                                     excel_range=cell,
                                     date_on=on_,
                                     date_except=except_,
@@ -560,7 +553,7 @@ class CoreCoursesParser:
                     excel_ranges = []
                     lesson1 = _lessons[0]
                     for lesson in _lessons:
-                        if isinstance(lesson.group_name, list):
+                        if isinstance(lesson.group_name, list | tuple):
                             groups.extend(lesson.group_name)
                         elif lesson.group_name:
                             groups.append(lesson.group_name)
@@ -568,7 +561,7 @@ class CoreCoursesParser:
                             students_number.append(lesson.students_number)
                         if lesson.excel_range:
                             excel_ranges.append(lesson.excel_range)
-                    lesson1.group_name = groups
+                    lesson1.group_name = tuple(groups)
                     lesson1.students_number = sum(students_number) if students_number else lesson1.students_number
                     rows = {"".join(filter(str.isdigit, c)) for c in excel_ranges}
                     if len(rows) != 1:

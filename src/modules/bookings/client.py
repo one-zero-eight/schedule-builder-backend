@@ -1,14 +1,12 @@
 import datetime
 from typing import Literal
-from urllib.parse import quote, urljoin, urlparse
+from urllib.parse import quote, urljoin
 
 import httpx
 from pydantic import Field
 
 from src.config import settings
 from src.custom_pydantic import CustomModel
-
-DOMAINS_ALLOWLIST = ["api.innohassle.ru"]
 
 
 class BookingDTO(CustomModel):
@@ -58,11 +56,7 @@ class BookingClient:
     ) -> list[BookingDTO]:  # TODO: Rewrite functions to use same endpoint once updated booking is in production
         async with httpx.AsyncClient(headers={"Authorization": f"Bearer {token}"}) as client:
             safe_room_id = quote(room_id, safe="")
-            full_url = urljoin(self.url, f"{safe_room_id}/bookings")
-
-            if urlparse(full_url).hostname not in DOMAINS_ALLOWLIST:
-                raise ValueError(f"URL {full_url} is not whitelisted.")
-
+            full_url = urljoin(self.url, f"room/{safe_room_id}/bookings")
             response = await client.get(
                 full_url,
                 params={"start": start.isoformat(), "end": end.isoformat()},
@@ -80,7 +74,8 @@ class BookingClient:
         async with httpx.AsyncClient(headers={"Authorization": f"Bearer {token}"}) as client:
             response = await client.get(
                 urljoin(self.url, "bookings/"),
-                params={"start": start.isoformat(), "end": end.isoformat()},
+                params={"start": start.isoformat(), "end": end.isoformat(), "include_red": True},
+                timeout=60,
             )
             response.raise_for_status()
             data = response.json()
