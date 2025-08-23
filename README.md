@@ -1,3 +1,7 @@
+# Schedule Builder API | InNoHassle ecosystem
+
+> https://api.innohassle.ru/schedule-builder/v0
+
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
@@ -14,6 +18,11 @@
     <a href="https://disk.yandex.ru/i/31xWqPXMcE1HCw">Demo Video</a>
   </p>
 </div>
+
+## Table of contents
+
+Did you know that GitHub supports table of
+contents [by default](https://github.blog/changelog/2021-04-13-table-of-contents-support-in-markdown-files/) 🤔
 
 ## About Us
 
