@@ -11,3 +11,6 @@ services:
     volumes:
       - "./settings.yaml:/app/settings.yaml:ro" # Read-only settings file
       - "data:/app/data"
+
+volumes:
+  data:
