@@ -26,16 +26,21 @@ contents [by default](https://github.blog/changelog/2021-04-13-table-of-contents
 
 ## About
 
-#### Project Goal
+### Project Goal
 
 Our key goal is to simplify the process of schedule creation and correction for Innopolis University DoE.
 
-#### Project Description
+### Project Description
 
 Schedule Builder is a Google Spreadsheets plugin. The plugin is opened in parallel with the schedule and launched to check
 the table for conflicts. Upon successful fetching, the user receives a list of conflicts found by the plugin. To simplify
 the navigation, conflicts may be **highlighted** (user's cursor is moved to the conflicting cell) and **ignored** (conflict is
 hidden from the user's view). The user may repeat scanning until all conflicts are resolved.
+
+### Technologies
+
+- [Python 3.12+](https://www.python.org/downloads/) & [uv](https://astral.sh/uv/)
+- [FastAPI](https://fastapi.tiangolo.com/)
 
 ## How to use?
 
