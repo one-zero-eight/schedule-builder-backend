@@ -22,13 +22,14 @@ from .graph import UndirectedGraph
 
 
 class Weekdays(Enum):
-    MONDAY = 1
-    TUESDAY = 2
-    WEDNESDAY = 3
-    THURSDAY = 4
-    FRIDAY = 5
-    SATURDAY = 6
-    SUNDAY = 7
+    # Monday is 0, Sunday is 6, like in date.weekday()
+    MONDAY = 0
+    TUESDAY = 1
+    WEDNESDAY = 2
+    THURSDAY = 3
+    FRIDAY = 4
+    SATURDAY = 5
+    SUNDAY = 6
 
     @staticmethod
     def get_weekday(weekday: str) -> int:
