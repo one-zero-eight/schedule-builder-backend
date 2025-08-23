@@ -1,50 +1,46 @@
 ###########################################################
-# Base Python image. Set shared environment variables.
-FROM python:3.12-alpine AS base
-ENV PYTHONUNBUFFERED=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv" \
-    UV_PYTHON_DOWNLOADS=never \ 
-    UV_COMPILE_BYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
-ENV PATH="$VENV_PATH/bin:$PATH"
-
-###########################################################
 # Builder stage. Build dependencies.
-FROM base AS builder
-RUN apk add --no-cache \
-        build-base \
-        curl \
-        netcat-openbsd \
-        bash
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=0
 
-# Install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    mv ~/.local/bin/uv /usr/local/bin/ && \
-    uv --version
+WORKDIR /app
+COPY ./pyproject.toml ./uv.lock ./
 
-# Create virtual environment and install dependencies
-WORKDIR $PYSETUP_PATH
-RUN uv venv $VENV_PATH
-COPY ./uv.lock ./pyproject.toml ./
-RUN uv sync
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
+
 
 ###########################################################
-# Production stage. Copy only runtime deps.
-FROM base AS production
+# Production stage. Copy only runtime deps that were installed in the Builder stage.
+FROM python:3.13-slim-bookworm AS production
 
-COPY --from=builder $VENV_PATH $VENV_PATH
+ENV PYTHONUNBUFFERED=1
 
-COPY --chmod=755 entrypoint.sh /
+# Copy the applicant from the builder
+COPY --from=builder /app /app
 
-# Create user with the name uvuser
-RUN addgroup -g 1500 uvuser && \
-    adduser -D -u 1500 -G uvuser uvuser
+# Create user with the name uv
+RUN groupadd -g 1500 uv && \
+    useradd -m -u 1500 -g uv uv
 
-COPY --chown=uvuser:uvuser . /code
-USER uvuser
-WORKDIR /code
+USER uv
+WORKDIR /app
+
+# Place executables in the environment at the front of the path
+ENV PATH="/app/.venv/bin:$PATH"
+
+COPY --chown=uv:uv . /app
 
 EXPOSE 8000
-ENTRYPOINT [ "/entrypoint.sh" ]
+CMD ["gunicorn", \
+    "--worker-class", "uvicorn.workers.UvicornWorker", \
+    "--bind", "0.0.0.0:8000", \
+    "--workers", "1", \
+    "src.api.app:app", \
+    "--timeout", "300", \
+    "--forwarded-allow-ips=*" \
+]
