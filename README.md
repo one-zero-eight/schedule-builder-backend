@@ -24,7 +24,7 @@
 Did you know that GitHub supports table of
 contents [by default](https://github.blog/changelog/2021-04-13-table-of-contents-support-in-markdown-files/) 🤔
 
-## About Us
+## About
 
 #### Project Goal
 
