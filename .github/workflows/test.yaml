@@ -20,8 +20,6 @@ jobs:
         run: uv sync --dev
       - name: 📦 Install pytest dependencies
         run: uv pip install pytest pytest-cov
-      - name: 📦 Run migrations
-        run: uv run alembic upgrade head
       - name: 🧪 Run Tests
         run: uv run pytest
       - name: 📊 Generate and Check Coverage
