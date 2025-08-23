@@ -5,6 +5,8 @@ on: [ push, pull_request ]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      SETTINGS_PATH: settings.example.yaml
     steps:
       - name: 👾 Check out repository
         uses: actions/checkout@v4
