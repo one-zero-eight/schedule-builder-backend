@@ -147,6 +147,14 @@ class CollisionChecker:
             and lesson1.date_except == lesson2.date_except
         )
 
+    @staticmethod
+    def _remove_suffix(name: str):
+        """Remove suffixes like (lec), (tut) from the end of the string to compare outlook bookings with lessons"""
+        name = name.lower().strip()
+        for suffix in ["(lec)", "(tut)", "(lab)", "(lec + tut)", "(лек)", "(тут)", "(лаб)", "(лек + тут)"]:
+            name = name.removesuffix(suffix).rstrip()
+        return name
+
     def check_for_room_issue(self, lessons: list[LessonWithExcelCellsDTO]) -> list[RoomIssue]:
         room_to_slots: dict[str, list[tuple[int, LessonWithExcelCellsDTO]]] = defaultdict(list)
 
@@ -385,12 +393,13 @@ class CollisionChecker:
                 filtered_intersected_bookings = []
 
                 for booking in intersected_bookings:
-                    b_title = booking.title.lower().strip()
+                    b_title: str = booking.title.lower().strip()
                     if (
                         b_title == lesson.lesson_name.lower().strip()
                         or b_title == "lectures"
                         or b_title == "labs"
                         or b_title == "schedule assistant iu"
+                        or self._remove_suffix(b_title) == self._remove_suffix(lesson.lesson_name)
                     ):
                         logger.debug(f"Skipping booking for that lesson: {lesson.lesson_name} and {booking.title}")
                         continue
