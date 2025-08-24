@@ -5,7 +5,7 @@ from enum import Enum
 
 from src.custom_pydantic import CustomModel
 from src.logging_ import logger
-from src.modules.bookings.client import RoomDTO, booking_client
+from src.modules.bookings.client import BookingDTO, RoomDTO, booking_client
 from src.modules.collisions.schemas import (
     CapacityIssue,
     CollisionTypeEnum,
@@ -353,6 +353,7 @@ class CollisionChecker:
         result = []
 
         valid_rooms = {room.id for room in self.rooms}
+        conflict_edges: list[tuple[Lesson, list[BookingDTO]]] = []
 
         for lesson in lessons:
             if self.is_online_slot(lesson) or lesson.room is None:
@@ -431,13 +432,62 @@ class CollisionChecker:
                         continue
                     filtered_intersected_bookings.append(booking)
                 if filtered_intersected_bookings:
-                    result.append(
-                        OutlookIssue(
-                            collision_type=CollisionTypeEnum.OUTLOOK,
-                            lesson=lesson,
-                            outlook_info=filtered_intersected_bookings,
-                        )
-                    )
+                    conflict_edges.append((lesson, filtered_intersected_bookings))
+
+        results = defaultdict(
+            lambda: OutlookIssue(
+                collision_type=CollisionTypeEnum.OUTLOOK,
+                outlook_event_title="",
+                lessons=[],
+                outlook_info=[],
+            )
+        )
+
+        for lesson, bookings in conflict_edges:
+            for booking in bookings:
+                normalized_title = booking.title.lower().strip()
+                results[normalized_title].outlook_event_title = booking.title.strip()
+                results[normalized_title].lessons.append(lesson)
+                results[normalized_title].outlook_info.append(booking)
+
+        for result in results.values():
+            # deduplicate lessons
+            visited_lessons = set()
+            to_remove = []
+            for lesson in result.lessons:
+                if id(lesson) in visited_lessons:
+                    to_remove.append(lesson)
+                else:
+                    visited_lessons.add(id(lesson))
+            for lesson in to_remove:
+                result.lessons.remove(lesson)
+            result.lessons = sorted(result.lessons, key=lambda x: (x.weekday, x.start_time, x.room))
+
+            # deduplicate bookings by event_id
+            visited_bookings = set()
+            to_remove = []
+            for booking in result.outlook_info:
+                if booking.event_id in visited_bookings:
+                    to_remove.append(booking)
+                else:
+                    visited_bookings.add(booking.event_id)
+            for booking in to_remove:
+                result.outlook_info.remove(booking)
+
+            # deduplicate if booking by id(booking)
+            visited = set()
+            to_remove = []
+            for booking in result.outlook_info:
+                if id(booking) in visited:
+                    to_remove.append(booking)
+                else:
+                    visited.add(id(booking))
+            for booking in to_remove:
+                result.outlook_info.remove(booking)
+
+            result.outlook_info = sorted(result.outlook_info, key=lambda x: (x.start_time, x.room_id))
+
+        result = list(results.values())
         return result
 
     def merge_identical_lessons(self, lessons: list[Lesson]) -> list[Lesson]:

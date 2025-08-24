@@ -48,15 +48,19 @@ class RoomIssue(CustomModel):
 
 class OutlookIssue(CustomModel):
     """
-    Issue when there is a Outlook booking in the room at the same time as the lesson.
+    Issue when there is a Outlook booking in the room at the same time as the lesson. Grouped by Outlook event title.
     """
 
     collision_type: Literal[CollisionTypeEnum.OUTLOOK]
 
-    outlook_info: list[BookingDTO]
-    "Outlook info about the booking in the room same time"
+    outlook_event_title: str
+    "Title of the Outlook event"
 
-    lesson: Lesson
+    outlook_info: list[BookingDTO]
+    "Outlook info about the bookings in the same time"
+
+    lessons: list[Lesson]
+    "Lessons that are in conflict with the Outlook event"
 
 
 class TeacherIssue(CustomModel):
