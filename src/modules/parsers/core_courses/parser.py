@@ -523,6 +523,7 @@ class CoreCoursesParser:
                                     room=loc,
                                     lesson_name=subject_name,
                                     students_number=0,
+                                    excel_sheet_name=target_sheet_name,
                                     excel_range=cell,
                                     date_on=on_,
                                     date_except=except_,

@@ -41,5 +41,7 @@ class LessonWithTeacherAndGroupDTO(BaseLessonDTO):
 
 
 class LessonWithExcelCellsDTO(LessonWithTeacherAndGroupDTO):
+    excel_sheet_name: str | None = None
+    "Sheet name to which the lesson belongs"
     excel_range: str | None = None
-    "Range of the lessos: may be multiple cells, for example 'A1:A10'"
+    "Range of the lesson: may be multiple cells, for example 'A1:A10'"

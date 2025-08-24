@@ -20,7 +20,7 @@ router = APIRouter(prefix="/collisions", tags=["Collisions"])
 async def check_timetable_collisions(
     user_and_token: VerifyTokenDep,
     google_spreadsheet_id: str,
-    target_sheet_name: str,
+    target_sheet_names: list[str],
     check_room_collisions: bool = True,
     check_teacher_collisions: bool = True,
     check_space_collisions: bool = True,
@@ -30,7 +30,7 @@ async def check_timetable_collisions(
     parser = CoreCoursesParser()
     lessons = await parser.get_all_lessons(
         google_spreadsheet_id,
-        target_sheet_names=[target_sheet_name],
+        target_sheet_names,
     )
 
     teachers_data = options_repository.get_teachers()
