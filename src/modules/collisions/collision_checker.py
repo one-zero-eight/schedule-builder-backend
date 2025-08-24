@@ -260,7 +260,12 @@ class CollisionChecker:
                         if lesson1 is lesson2:
                             logger.debug(f"Skipping identical lessons (same id): {lesson1.lesson_name}")
                             continue
-                        if lesson1.excel_range and lesson2.excel_range and lesson1.excel_range == lesson2.excel_range:
+                        if (
+                            lesson1.excel_range
+                            and lesson2.excel_range
+                            and lesson1.excel_range == lesson2.excel_range
+                            and lesson1.excel_sheet_name == lesson2.excel_sheet_name
+                        ):
                             logger.debug(f"Skipping identical lessons (same excel range): {lesson1.lesson_name}")
                             continue
                         graph.add_edge(i, j)

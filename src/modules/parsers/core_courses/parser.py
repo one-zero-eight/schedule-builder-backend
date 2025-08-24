@@ -441,6 +441,7 @@ class CoreCoursesParser:
     async def get_all_lessons(
         self, spreadsheet_id: str, target_sheet_names: list[str]
     ) -> list[LessonWithExcelCellsDTO]:
+        original_target_sheet_names = target_sheet_names
         sanitized_sheet_names = [sanitize_sheet_name(target_sheet_name) for target_sheet_name in target_sheet_names]
 
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
@@ -449,7 +450,7 @@ class CoreCoursesParser:
         )
         lessons = []
 
-        for target_sheet_name, original_sheet_name in zip(sanitized_sheet_names, target_sheet_names):
+        for target_sheet_name, original_target_sheet_name in zip(sanitized_sheet_names, original_target_sheet_names):
             # find dataframe from dfs
             if target_sheet_name not in dfs:
                 logger.warning(f"Sheet {target_sheet_name} not found in xlsx file")
@@ -523,7 +524,7 @@ class CoreCoursesParser:
                                     room=loc,
                                     lesson_name=subject_name,
                                     students_number=0,
-                                    excel_sheet_name=original_sheet_name,
+                                    excel_sheet_name=original_target_sheet_name,
                                     excel_range=cell,
                                     date_on=on_,
                                     date_except=except_,
@@ -562,6 +563,7 @@ class CoreCoursesParser:
                             students_number.append(lesson.students_number)
                         if lesson.excel_range:
                             excel_ranges.append(lesson.excel_range)
+                        assert lesson.excel_sheet_name == lesson1.excel_sheet_name, "All lessons should be in the same sheet"
                     lesson1.group_name = tuple(groups)
                     lesson1.students_number = sum(students_number) if students_number else lesson1.students_number
                     rows = {"".join(filter(str.isdigit, c)) for c in excel_ranges}

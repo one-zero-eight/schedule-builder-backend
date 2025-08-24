@@ -32,6 +32,7 @@ async def check_timetable_collisions(
     params: CheckParameters,
 ) -> CheckResults:
     user, token = user_and_token
+
     parser = CoreCoursesParser()
     lessons = await parser.get_all_lessons(
         params.google_spreadsheet_id,
