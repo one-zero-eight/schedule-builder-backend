@@ -441,15 +441,15 @@ class CoreCoursesParser:
     async def get_all_lessons(
         self, spreadsheet_id: str, target_sheet_names: list[str]
     ) -> list[LessonWithExcelCellsDTO]:
-        target_sheet_names = [sanitize_sheet_name(target_sheet_name) for target_sheet_name in target_sheet_names]
+        sanitized_sheet_names = [sanitize_sheet_name(target_sheet_name) for target_sheet_name in target_sheet_names]
 
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs, dfs_merged_ranges = self.get_clear_dataframes_from_xlsx(
-            xlsx_file=xlsx, target_sheet_names=target_sheet_names
+            xlsx_file=xlsx, target_sheet_names=sanitized_sheet_names
         )
         lessons = []
 
-        for target_sheet_name in target_sheet_names:
+        for target_sheet_name, original_sheet_name in zip(sanitized_sheet_names, target_sheet_names):
             # find dataframe from dfs
             if target_sheet_name not in dfs:
                 logger.warning(f"Sheet {target_sheet_name} not found in xlsx file")
@@ -523,7 +523,7 @@ class CoreCoursesParser:
                                     room=loc,
                                     lesson_name=subject_name,
                                     students_number=0,
-                                    excel_sheet_name=target_sheet_name,
+                                    excel_sheet_name=original_sheet_name,
                                     excel_range=cell,
                                     date_on=on_,
                                     date_except=except_,
