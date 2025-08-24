@@ -276,6 +276,22 @@ class CoreCoursesParser:
             split_dfs.append(split_df)
         return split_dfs
 
+    def auto_detect_range(
+        self, sheet_df: pd.DataFrame, xlsx_file: io.BytesIO, sheet_name: str
+    ) -> tuple[int, int, int, int]:
+        """
+        :return: tuple of (min_row, min_col, max_row, max_col)
+        """
+        time_columns_index = self.get_time_columns(sheet_df)
+        logger.info(f"Time columns: {[get_column_letter(col + 1) for col in time_columns_index]}")
+        # -------- Get rightmost column index --------
+        rightmost_column_index = self.get_rightmost_column_index(xlsx_file, sheet_name, time_columns_index)
+        logger.info(f"Rightmost column index: {get_column_letter(rightmost_column_index + 1)}")
+        last_row_index = self.get_last_row_index(xlsx_file, sheet_name)
+        target_range = f"A1:{get_column_letter(rightmost_column_index + 1)}{last_row_index}"
+        logger.info(f"Target range: {target_range}")
+        return (0, 0, last_row_index, rightmost_column_index)
+
     def get_time_columns(self, sheet_df: pd.DataFrame) -> list[int]:
         # find columns where presents "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
         time_columns = []
@@ -320,22 +336,6 @@ class CoreCoursesParser:
         wb = openpyxl.load_workbook(xlsx_file)
         sheet = wb[sheet_name]
         return sheet.max_row
-
-    def auto_detect_range(
-        self, sheet_df: pd.DataFrame, xlsx_file: io.BytesIO, sheet_name: str
-    ) -> tuple[int, int, int, int]:
-        """
-        :return: tuple of (min_row, min_col, max_row, max_col)
-        """
-        time_columns_index = self.get_time_columns(sheet_df)
-        logger.info(f"Time columns: {[get_column_letter(col + 1) for col in time_columns_index]}")
-        # -------- Get rightmost column index --------
-        rightmost_column_index = self.get_rightmost_column_index(xlsx_file, sheet_name, time_columns_index)
-        logger.info(f"Rightmost column index: {get_column_letter(rightmost_column_index + 1)}")
-        last_row_index = self.get_last_row_index(xlsx_file, sheet_name)
-        target_range = f"A1:{get_column_letter(rightmost_column_index + 1)}{last_row_index}"
-        logger.info(f"Target range: {target_range}")
-        return (0, 0, last_row_index, rightmost_column_index)
 
     async def get_all_lessons(self, spreadsheet_id: str, target_sheet_names: list[str]) -> list[Lesson]:
         original_target_sheet_names = target_sheet_names
