@@ -86,12 +86,12 @@ class CoreCoursesParser:
         merged_ranges: dict = {key.strip(): None for key in dfs}
         for target_sheet_name in target_sheet_names:
             df = dfs[target_sheet_name]
+            # -------- Select range --------
+            df = self.select_range(df, self.auto_detect_range(df, xlsx_file, target_sheet_name))
             # -------- Fill merged cells with values --------
             merged_ranges[target_sheet_name] = self.merge_cells(df, xlsx_file, target_sheet_name)
             # -------- Assign excel cell to subject --------
             self.assign_excel_row_and_column_to_subjects(df)
-            # -------- Select range --------
-            df = self.select_range(df, self.auto_detect_range(df, xlsx_file, target_sheet_name))
             # -------- Fill empty cells --------
             df = df.replace(r"^\s*$", np.nan, regex=True)
             # -------- Strip, translate and remove trailing spaces --------
@@ -183,7 +183,7 @@ class CoreCoursesParser:
             # get value from top left cell
             value = df.iloc[start_row, start_col]
             # fill merged cells with value
-            df.iloc[start_row : end_row + 1, start_col : end_col + 1] = value
+            df.iloc[start_row : end_row + 1, start_col:end_col] = value
         return merged_ranges
 
     def select_range(self, df: pd.DataFrame, target_range: str) -> pd.DataFrame:
