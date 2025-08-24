@@ -89,9 +89,9 @@ class CollisionChecker:
         slot1: BaseLessonDTO,
         slot2: BaseLessonDTO,
     ) -> bool:
-        # если у обоих есть date_on, то есть в какую-то дату
-        if slot1.date_on is not None and slot2.date_on is not None:
-            if slot1.date_on != slot2.date_on:
+        if slot1.date_on and slot2.date_on:
+            same_dates = set(slot1.date_on) & set(slot2.date_on)
+            if not same_dates:
                 return False
             return CollisionChecker.check_times_intersect(
                 slot1.start_time,
@@ -99,8 +99,8 @@ class CollisionChecker:
                 slot2.start_time,
                 slot2.end_time,
             )
-        # если у обоих нет date_on, а есть weekday
-        if slot1.date_on is None and slot2.date_on is None:
+
+        elif not slot1.date_on and not slot2.date_on:
             if slot1.weekday != slot2.weekday:
                 return False
             return CollisionChecker.check_times_intersect(
@@ -109,29 +109,31 @@ class CollisionChecker:
                 slot2.start_time,
                 slot2.end_time,
             )
-        # если у одного weekday, у другого date_on
-        if slot2.date_on is not None:
-            slot1, slot2 = slot2, slot1
-        if slot2.date_except is not None and slot1.date_on in slot2.date_except:
-            return False
-        assert slot1.date_on is not None
-        assert slot2.weekday is not None
 
-        if slot1.date_on.weekday() != Weekdays.get_weekday(slot2.weekday):
+        if slot2.date_on:
+            slot1, slot2 = slot2, slot1
+        if slot2.date_except and slot1.date_on in slot2.date_except:
             return False
+
+        assert slot1.date_on
+        assert slot2.weekday
+
+        if not any(date.weekday() == Weekdays.get_weekday(slot2.weekday) for date in slot1.date_on):
+            return False
+
         return CollisionChecker.check_times_intersect(
             slot1.start_time, slot1.end_time, slot2.start_time, slot2.end_time
         )
 
     @staticmethod
-    def is_online_slot(slot_or_room: BaseLessonDTO | str) -> bool:
-        if isinstance(slot_or_room, str):
-            return "ONLINE" in slot_or_room
-        elif isinstance(slot_or_room, BaseLessonDTO):
-            if slot_or_room.room is None:
+    def is_online_slot(lessor_or_room: BaseLessonDTO | str) -> bool:
+        if isinstance(lessor_or_room, str):
+            return "ONLINE" == lessor_or_room or "ОНЛАЙН" == lessor_or_room
+        elif isinstance(lessor_or_room, BaseLessonDTO):
+            if lessor_or_room.room is None:
                 return False
             else:
-                return "ONLINE" in slot_or_room.room
+                return "ONLINE" == lessor_or_room.room or "ОНЛАЙН" == lessor_or_room.room
 
     @staticmethod
     def _are_lessons_identical(lesson1: LessonWithExcelCellsDTO, lesson2: LessonWithExcelCellsDTO) -> bool:
@@ -375,7 +377,7 @@ class CollisionChecker:
                     if check_date.weekday() == Weekdays.get_weekday(lesson.weekday):
                         if lesson.date_except is None or check_date not in lesson.date_except:
                             dates_to_check.append(check_date)
-                elif lesson.date_on and check_date == lesson.date_on:
+                elif lesson.date_on and check_date in lesson.date_on:
                     dates_to_check.append(check_date)
 
             for lesson_date in dates_to_check:

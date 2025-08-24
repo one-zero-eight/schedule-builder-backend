@@ -17,10 +17,12 @@ class BaseLessonDTO(CustomModel):
     "End time of lesson"
     room: str | tuple[str, ...] | None = None
     "Room for lesson, None - TBA, if list - multiple rooms simultaneously"
-    date_on: date | None = None
+    date_on: list[date] | None = None
     "Specific dates with lessons"
     date_except: list[date] | None = None
     "Specific dates when there is no lessons"
+    date_from: date | None = None
+    "Date from which the lesson starts"
 
     @model_validator(mode="after")
     def validate_date(self) -> Self:

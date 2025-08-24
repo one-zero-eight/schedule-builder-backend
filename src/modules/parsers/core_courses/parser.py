@@ -1,7 +1,7 @@
+import datetime
 import io
 import re
 from collections import defaultdict
-from datetime import date, datetime
 from itertools import pairwise
 from string import ascii_uppercase
 from zipfile import ZipFile
@@ -10,7 +10,6 @@ import httpx
 import numpy as np
 import openpyxl
 import pandas as pd
-from dateutil import parser as date_parser
 from openpyxl.utils import (
     column_index_from_string,
     coordinate_to_tuple,
@@ -18,6 +17,8 @@ from openpyxl.utils import (
 )
 
 from src.logging_ import logger
+from src.modules.options.repository import options_repository
+from src.modules.parsers.core_courses.location_parser import Item, parse_location_string
 from src.modules.parsers.processors.regex import prettify_string
 from src.modules.parsers.schemas import LessonWithExcelCellsDTO
 from src.modules.parsers.utils import (
@@ -37,6 +38,25 @@ WEEKDAYS = [
     "SATURDAY",
     "SUNDAY",
 ]
+
+
+def nearest_weekday(date: datetime.date, day: int | str) -> datetime.date:
+    """
+    Returns the date of the next given weekday after
+    the given date. For example, the date of next Monday.
+
+    :param date: date to start from
+    :type date: datetime.date
+    :param day: weekday to find (0 is Monday, 6 is Sunday)
+    :type day: int
+    :return: date of the next given weekday
+    :rtype: datetime.date
+    """
+    if isinstance(day, str):
+        day = ["mo", "tu", "we", "th", "fr", "sa", "su"].index(day[:2].lower())
+
+    days = (day - date.weekday() + 7) % 7
+    return date + datetime.timedelta(days=days)
 
 
 class CoreCoursesParser:
@@ -221,8 +241,8 @@ class CoreCoursesParser:
             # "9:00-10:30" -> datetime.time(9, 0), datetime.time(10, 30)
             start, end = cell.split("-")
             df_column.loc[i] = (
-                datetime.strptime(start, "%H:%M").time(),
-                datetime.strptime(end, "%H:%M").time(),
+                datetime.datetime.strptime(start, "%H:%M").time(),
+                datetime.datetime.strptime(end, "%H:%M").time(),
             )
 
         # create multiindex from index mapping and time column
@@ -278,109 +298,6 @@ class CoreCoursesParser:
             split_df = df.iloc[:, start:end].copy()
             split_dfs.append(split_df)
         return split_dfs
-
-    def _parse_schedule_string(self, s: str) -> list[tuple[str, date | None, date | None]]:
-        # удаляю время
-        s = re.sub(r"STARTS AT \d{1,2}:\d{2}", "", s)
-        s = s.replace("ТОЛЬКО НА", "ON")
-
-        # извлекаю всё из скобок
-        bracket_parts = re.findall(r"\((.*?)\)", s)
-        s = re.sub(r"\(.*?\)", "", s)
-
-        # разбиваю главную часть на другие части, если они есть
-        parts = [p.strip() for p in re.split(r"\|", s) if p.strip()]
-        parts.extend(bracket_parts)
-
-        result = []
-        for part in parts:
-            part = part.strip()  # noqa: PLW2901
-            if not part:
-                continue
-
-            # отдельно для online
-            if part.startswith("ONLINE"):
-                content = part[6:].strip()
-                if content.startswith("ON"):
-                    content = content[2:].strip()
-                    dates = re.findall(r"\d{1,2}/\d{2}", content)
-                    if dates:
-                        for d in dates:
-                            result.append(("ONLINE", date(d), None))
-                        continue
-                elif content.startswith("EXCEPT"):
-                    content = content[6:].strip()
-                    dates = re.findall(r"\d{1,2}/\d{2}", content)
-                    if dates:
-                        for d in dates:
-                            result.append(("ONLINE", None, date(d)))
-                    continue
-                result.append(("ONLINE", None, None))
-                continue
-
-            room_match = re.match(r"^[\d /]+", part)
-            if not room_match:
-                continue
-
-            room_str = room_match.group(0)
-            rooms = room_str.split("/")
-            rest = part[len(room_str) :].strip()
-
-            on_dates = []
-            except_dates = []
-            rest = rest.replace("STARTS ON", "ON")
-
-            if "ON" in rest:
-                rest_after_on = rest[rest.find("ON") + 2 :].strip()
-                dates = re.findall(r"\d{1,2}/\d{2}", rest_after_on)
-                if dates:
-                    on_dates = dates
-
-            if "EXCEPT" in rest:
-                dates_str = rest[: rest.find("EXCEPT")].strip()
-                except_str = rest[rest.find("EXCEPT") + 6 :].strip()
-
-                dates = re.findall(r"\d{1,2}/\d{2}", dates_str)
-                except_dates_list = re.findall(r"\d{1,2}/\d{2}", except_str)
-
-                if dates:
-                    on_dates = dates
-                if except_dates_list:
-                    except_dates = except_dates_list
-
-            if len(on_dates) == 0 and len(except_dates) == 0:
-                for room in rooms:
-                    result.append((room.strip(), None, None))
-
-            if len(on_dates) == 0 and len(except_dates) != 0:
-                for room in rooms:
-                    result.append(
-                        (
-                            room.strip(),
-                            None,
-                            [date_parser.parse(d, dayfirst=True) for d in except_dates],
-                        )
-                    )
-
-            for room in rooms:
-                # ON и EXCEPT разом не должны выпасть
-                for d in on_dates:
-                    result.append(
-                        (
-                            room.strip(),
-                            date_parser.parse(d, dayfirst=True),
-                            None,
-                        )
-                    )
-
-        return result
-
-    def parse_schedule_string(self, s: str) -> list[tuple[str, date | None, list[date] | None]]:
-        try:
-            return self._parse_schedule_string(s)
-        except Exception as e:
-            logger.error(f"Не удалось спарсить {s}, error: {e}")
-            return [(s, None, None)]
 
     def get_time_columns(self, sheet_df: pd.DataFrame) -> list[int]:
         # find columns where presents "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
@@ -443,6 +360,8 @@ class CoreCoursesParser:
     ) -> list[LessonWithExcelCellsDTO]:
         original_target_sheet_names = target_sheet_names
         sanitized_sheet_names = [sanitize_sheet_name(target_sheet_name) for target_sheet_name in target_sheet_names]
+        semester = options_repository.get_semester()
+        assert semester is not None, "Semester is not set"
 
         xlsx = await self.get_xlsx_file(spreadsheet_id=spreadsheet_id)
         dfs, dfs_merged_ranges = self.get_clear_dataframes_from_xlsx(
@@ -475,6 +394,20 @@ class CoreCoursesParser:
                     for column, cell_values_series in timeslot_df.items():
                         cell_values_series: pd.Series
                         year, group = column
+                        group_name: str | tuple[str, ...]
+                        students_number: int
+                        if isinstance(group, str):
+                            # find student number in B24-CSE-02 (29) format
+                            if m := re.search(r"\((\d+)\)", group):
+                                students_number = int(m.group(1))
+                                group_name = re.sub(r"\(\d+\)", "", group).strip()
+                            else:
+                                students_number = 0
+                                group_name = group.strip()
+                        else:
+                            students_number = 0
+                            group_name = tuple()
+
                         if pd.isna(cell_values_series).all():
                             continue
                         else:
@@ -488,48 +421,120 @@ class CoreCoursesParser:
                                 logger.warning(f"Subject {subject} not found in xlsx file")
                             subject_name, cell = subject
 
-                            location = self.parse_schedule_string(str(location))
-                            if len(location) > 1:
-                                all_on_and_except_nones = True
+                            if pd.isna(teacher):
+                                teacher = None
+                            if pd.isna(location):
+                                location = None
+                            if (
+                                location == "Elective courses on Physical Education"
+                                or location == "Elective course on Physical Education"
+                            ):
+                                subject = "Elective courses on Physical Education"
+                                location = None
 
-                                for loc, on_, except_ in location:
-                                    if on_ is not None or except_ is not None:
-                                        all_on_and_except_nones = False
-                                        break
-                                if all_on_and_except_nones:
-                                    locs = tuple(loc for loc, on_, except_ in location)
-                                    location = [(locs, None, None)]
-
-                            if not isinstance(group, float):
-                                group = group.split()
+                            if location:
+                                location_str = str(location)
+                                location_item = parse_location_string(location_str)
+                                if not location_item:
+                                    logger.warning(f"Location {location_str} cannot be parsed")
                             else:
-                                group = ["None"]
-                            group_name = group[0]
-                            if len(group) > 1:
-                                students_number = int(group[1][1:-1])
+                                location_str = None
+                                location_item = None
+
+                            if location_item is None:
+                                course_lessons.append(
+                                    LessonWithExcelCellsDTO(
+                                        lesson_name=subject_name,
+                                        weekday=weekday,
+                                        start_time=start_time,
+                                        end_time=end_time,
+                                        group_name=group_name,
+                                        teacher=(teacher if isinstance(teacher, str) else ""),
+                                        room=location_str,
+                                        date_on=None,
+                                        date_except=None,
+                                        students_number=students_number,
+                                        excel_sheet_name=original_target_sheet_name,
+                                        excel_range=cell,
+                                    )
+                                )
                             else:
-                                students_number = 0
+                                starts = location_item.starts_from or semester.start_date
 
-                        if len(location) > 1:
-                            logger.info(f"Location: {location}")
+                                def convert_weeks_on_to_only_on(item: Item):
+                                    if item.on_weeks:
+                                        on = []
+                                        for week in item.on_weeks:
+                                            on_date = nearest_weekday(starts, weekday) + datetime.timedelta(
+                                                weeks=week - 1
+                                            )
+                                            on.append(on_date)
+                                        if item.on:
+                                            item.on.extend(on)
+                                        elif on:
+                                            item.on = on
+                                    if item.on:
+                                        item.on = sorted(set(item.on))
 
-                        for loc, on_, except_ in location:
-                            course_lessons.append(
-                                LessonWithExcelCellsDTO(
-                                    weekday=weekday if on_ is None else None,
-                                    start_time=start_time,
-                                    end_time=end_time,
+                                lesson_start_time = start_time
+                                lesson_end_time = end_time
+
+                                if location_item.starts_at:
+                                    _start_time = datetime.datetime.combine(starts, start_time)
+                                    _end_time = datetime.datetime.combine(starts, end_time)
+                                    duration = _end_time - _start_time
+                                    lesson_start_time = location_item.starts_at
+                                    lesson_end_time = (
+                                        datetime.datetime.combine(starts, lesson_start_time) + duration
+                                    ).time()
+                                if location_item.till:
+                                    lesson_end_time = location_item.till
+
+                                convert_weeks_on_to_only_on(location_item)
+
+                                main_lesson = LessonWithExcelCellsDTO(
+                                    lesson_name=subject_name,
+                                    weekday=weekday,
+                                    start_time=lesson_start_time,
+                                    end_time=lesson_end_time,
                                     group_name=group_name,
                                     teacher=(teacher if isinstance(teacher, str) else ""),
-                                    room=loc,
-                                    lesson_name=subject_name,
-                                    students_number=0,
+                                    room=location_item.location or location_str,
+                                    date_on=location_item.on,
+                                    date_except=location_item.except_,
+                                    date_from=location_item.starts_from,
+                                    students_number=students_number,
                                     excel_sheet_name=original_target_sheet_name,
                                     excel_range=cell,
-                                    date_on=on_,
-                                    date_except=except_,
                                 )
-                            )
+
+                                course_lessons.append(main_lesson)
+
+                                nested_on: list[Item] = []
+                                extra_nested: list[Item] = []
+                                if location_item.NEST:
+                                    for item in location_item.NEST:
+                                        convert_weeks_on_to_only_on(item)
+                                        if item.on:
+                                            nested_on.append(item)
+                                        else:
+                                            logger.info(f"Root Item: {location_item}, {item}")
+                                            extra_nested.append(item)
+
+                                if extra_nested:  # TODO: Handle '421 (316 FROM 31/10)' case
+                                    logger.warning(f"Extra nested is not implemented yet\nItem({location_item})")
+
+                                for item in nested_on:
+                                    assert item.on, f"Item {item} has no on"
+                                    if item.location:
+                                        main_lesson.date_except = (main_lesson.date_except or []) + item.on
+
+                                    nested_lesson = main_lesson.model_copy()
+                                    nested_lesson.date_on = item.on
+                                    nested_lesson.room = item.location or main_lesson.room
+                                    nested_lesson.start_time = item.starts_at or main_lesson.start_time
+                                    nested_lesson.end_time = item.till or main_lesson.end_time
+                                    course_lessons.append(nested_lesson)
 
                 merged_registry = defaultdict(list)  # merged range index X list of lessons
                 non_merged = []
@@ -551,7 +556,7 @@ class CoreCoursesParser:
                 for _lessons in merged_registry.values():
                     _lessons: list[LessonWithExcelCellsDTO]
                     groups = []
-                    students_number = []
+                    merged_students_number = []
                     excel_ranges = []
                     lesson1 = _lessons[0]
                     for lesson in _lessons:
@@ -560,12 +565,16 @@ class CoreCoursesParser:
                         elif lesson.group_name:
                             groups.append(lesson.group_name)
                         if lesson.students_number:
-                            students_number.append(lesson.students_number)
+                            merged_students_number.append(lesson.students_number)
                         if lesson.excel_range:
                             excel_ranges.append(lesson.excel_range)
-                        assert lesson.excel_sheet_name == lesson1.excel_sheet_name, "All lessons should be in the same sheet"
+                        assert lesson.excel_sheet_name == lesson1.excel_sheet_name, (
+                            "All lessons should be in the same sheet"
+                        )
                     lesson1.group_name = tuple(groups)
-                    lesson1.students_number = sum(students_number) if students_number else lesson1.students_number
+                    lesson1.students_number = (
+                        sum(merged_students_number) if merged_students_number else lesson1.students_number
+                    )
                     rows = {"".join(filter(str.isdigit, c)) for c in excel_ranges}
                     if len(rows) != 1:
                         raise ValueError("Cells are not on the same row")
