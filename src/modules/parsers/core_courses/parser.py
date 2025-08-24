@@ -4,7 +4,6 @@ import re
 from collections import defaultdict
 from itertools import pairwise
 from string import ascii_uppercase
-from zipfile import ZipFile
 
 import httpx
 import numpy as np
@@ -22,11 +21,7 @@ from src.modules.parsers.core_courses.location_parser import Item, parse_locatio
 from src.modules.parsers.processors.regex import prettify_string
 from src.modules.parsers.schemas import Lesson
 from src.modules.parsers.utils import (
-    get_merged_ranges,
-    get_sheet_by_id,
-    get_sheets,
     sanitize_sheet_name,
-    split_range_to_xy,
 )
 
 WEEKDAYS = [
@@ -82,12 +77,12 @@ class CoreCoursesParser:
         # ------- Read xlsx file into dataframes -------
         dfs = pd.read_excel(xlsx_file, engine="openpyxl", sheet_name=None, header=None)
         # ------- Clean up dataframes -------
-        dfs = {key.strip(): value for key, value in dfs.items()}
-        merged_ranges: dict = {key.strip(): None for key in dfs}
+        merged_ranges: dict[str, list[tuple[int, int, int, int]]] = defaultdict(list)
         for target_sheet_name in target_sheet_names:
             df = dfs[target_sheet_name]
             # -------- Select range --------
-            df = self.select_range(df, self.auto_detect_range(df, xlsx_file, target_sheet_name))
+            (min_row, min_col, max_row, max_col) = self.auto_detect_range(df, xlsx_file, target_sheet_name)
+            df = df.iloc[min_row : max_row + 1, min_col : max_col + 1]
             # -------- Fill merged cells with values --------
             merged_ranges[target_sheet_name] = self.merge_cells(df, xlsx_file, target_sheet_name)
             # -------- Assign excel cell to subject --------
@@ -157,51 +152,33 @@ class CoreCoursesParser:
                 for x in range(i, i + 3):
                     used_cells.add((x, j))
 
-    def merge_cells(self, df: pd.DataFrame, xlsx: io.BytesIO, target_sheet_name: str):
+    def merge_cells(
+        self, df: pd.DataFrame, xlsx: io.BytesIO, target_sheet_name: str
+    ) -> list[tuple[int, int, int, int]]:
         """
         Merge cells in dataframe
 
         :param df: Dataframe to process
         :param xlsx: xlsx file with data
         :param target_sheet_name: sheet to process
+        :return: list of merged ranges: (min_row, min_col, max_row, max_col)
         """
         xlsx.seek(0)
-        xlsx_zipfile = ZipFile(xlsx)
-        sheets = get_sheets(xlsx_zipfile)
-        target_sheet_id = None
-        for sheet_id, sheet_name in sheets.items():
-            if target_sheet_name in sheet_name:
-                target_sheet_id = sheet_id
-                break
-        assert target_sheet_id is not None
-        sheet = get_sheet_by_id(xlsx_zipfile, target_sheet_id)
-        merged_ranges = get_merged_ranges(sheet)
-
+        ws = openpyxl.load_workbook(xlsx)
+        sheet = ws[target_sheet_name]
+        merged_ranges = []
         # ------- Merge cells -------
-        for merged_range in merged_ranges:
-            (start_row, start_col), (end_row, end_col) = split_range_to_xy(merged_range)
-            # get value from top left cell
-            value = df.iloc[start_row, start_col]
-            # fill merged cells with value
-            df.iloc[start_row : end_row + 1, start_col:end_col] = value
+        for merged_range in sheet.merged_cells.ranges:
+            min_col, min_row, max_col, max_row = merged_range.bounds
+            min_col = min_col - 1
+            min_row = min_row - 1
+            max_col = max_col - 1
+            max_row = max_row - 1
+            value = df.iloc[min_row, min_col]
+
+            df.iloc[min_row : max_row + 1, min_col : max_col + 1] = value
+            merged_ranges.append((min_row, min_col, max_row, max_col))
         return merged_ranges
-
-    def select_range(self, df: pd.DataFrame, target_range: str) -> pd.DataFrame:
-        """
-        Select range from dataframe
-
-        :param df: dataframe to process
-        :type df: pd.DataFrame
-        :param target_range: range to select
-        :type target_range: str
-        :return: selected range
-        :rtype: pd.DataFrame
-        """
-        (start_row, start_col), (end_row, end_col) = split_range_to_xy(target_range)
-        return df.iloc[
-            start_row : end_row + 1,
-            start_col : end_col + 1,
-        ]
 
     def set_weekday_and_time_as_index(self, df: pd.DataFrame, column: int = 0) -> pd.DataFrame:
         """
@@ -344,7 +321,12 @@ class CoreCoursesParser:
         sheet = wb[sheet_name]
         return sheet.max_row
 
-    def auto_detect_range(self, sheet_df: pd.DataFrame, xlsx_file: io.BytesIO, sheet_name: str) -> str:
+    def auto_detect_range(
+        self, sheet_df: pd.DataFrame, xlsx_file: io.BytesIO, sheet_name: str
+    ) -> tuple[int, int, int, int]:
+        """
+        :return: tuple of (min_row, min_col, max_row, max_col)
+        """
         time_columns_index = self.get_time_columns(sheet_df)
         logger.info(f"Time columns: {[get_column_letter(col + 1) for col in time_columns_index]}")
         # -------- Get rightmost column index --------
@@ -353,7 +335,7 @@ class CoreCoursesParser:
         last_row_index = self.get_last_row_index(xlsx_file, sheet_name)
         target_range = f"A1:{get_column_letter(rightmost_column_index + 1)}{last_row_index}"
         logger.info(f"Target range: {target_range}")
-        return target_range
+        return (0, 0, last_row_index, rightmost_column_index)
 
     async def get_all_lessons(self, spreadsheet_id: str, target_sheet_names: list[str]) -> list[Lesson]:
         original_target_sheet_names = target_sheet_names
@@ -373,7 +355,7 @@ class CoreCoursesParser:
                 logger.warning(f"Sheet {target_sheet_name} not found in xlsx file")
                 continue
             sheet_df = dfs[target_sheet_name]
-            merged_ranges = [split_range_to_xy(merged_range) for merged_range in dfs_merged_ranges[target_sheet_name]]
+            merged_ranges = dfs_merged_ranges[target_sheet_name]
             # [(start_row, start_col), (end_row, end_col)]
 
             time_columns_index = self.get_time_columns(sheet_df)
@@ -545,11 +527,8 @@ class CoreCoursesParser:
                     cell_row, cell_col = coordinate_to_tuple(lesson.excel_range)
                     cell_row -= 1
                     cell_col -= 1
-                    for i, (
-                        (start_row, start_col),
-                        (end_row, end_col),
-                    ) in enumerate(merged_ranges):
-                        if (start_row <= cell_row <= end_row) and (start_col <= cell_col <= end_col):
+                    for i, (min_row, min_col, max_row, max_col) in enumerate(merged_ranges):
+                        if (min_row <= cell_row <= max_row) and (min_col <= cell_col <= max_col):
                             merged_registry[i].append(lesson)
                             break
                     else:  # non_merged
