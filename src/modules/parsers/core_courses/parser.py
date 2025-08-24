@@ -20,7 +20,7 @@ from src.logging_ import logger
 from src.modules.options.repository import options_repository
 from src.modules.parsers.core_courses.location_parser import Item, parse_location_string
 from src.modules.parsers.processors.regex import prettify_string
-from src.modules.parsers.schemas import LessonWithExcelCellsDTO
+from src.modules.parsers.schemas import Lesson
 from src.modules.parsers.utils import (
     get_merged_ranges,
     get_sheet_by_id,
@@ -355,9 +355,7 @@ class CoreCoursesParser:
         logger.info(f"Target range: {target_range}")
         return target_range
 
-    async def get_all_lessons(
-        self, spreadsheet_id: str, target_sheet_names: list[str]
-    ) -> list[LessonWithExcelCellsDTO]:
+    async def get_all_lessons(self, spreadsheet_id: str, target_sheet_names: list[str]) -> list[Lesson]:
         original_target_sheet_names = target_sheet_names
         sanitized_sheet_names = [sanitize_sheet_name(target_sheet_name) for target_sheet_name in target_sheet_names]
         semester = options_repository.get_semester()
@@ -393,7 +391,7 @@ class CoreCoursesParser:
                     weekday, (start_time, end_time) = timeslot
                     for column, cell_values_series in timeslot_df.items():
                         cell_values_series: pd.Series
-                        year, group = column
+                        course_name, group = column
                         group_name: str | tuple[str, ...]
                         students_number: int
                         if isinstance(group, str):
@@ -425,12 +423,15 @@ class CoreCoursesParser:
                                 teacher = None
                             if pd.isna(location):
                                 location = None
-                            if (
-                                location == "Elective courses on Physical Education"
-                                or location == "Elective course on Physical Education"
-                            ):
-                                subject = "Elective courses on Physical Education"
-                                location = None
+                            for v in (subject_name, course_name, group_name):
+                                if (
+                                    v == "Elective courses on Physical Education"
+                                    or location == "Elective course on Physical Education"
+                                ):
+                                    subject_name = "Elective courses on Physical Education"
+                                    location = None
+                                    teacher = None
+                                    break
 
                             if location:
                                 location_str = str(location)
@@ -443,13 +444,14 @@ class CoreCoursesParser:
 
                             if location_item is None:
                                 course_lessons.append(
-                                    LessonWithExcelCellsDTO(
+                                    Lesson(
                                         lesson_name=subject_name,
                                         weekday=weekday,
                                         start_time=start_time,
                                         end_time=end_time,
+                                        course_name=course_name,
                                         group_name=group_name,
-                                        teacher=(teacher if isinstance(teacher, str) else ""),
+                                        teacher=teacher,
                                         room=location_str,
                                         date_on=None,
                                         date_except=None,
@@ -492,13 +494,14 @@ class CoreCoursesParser:
 
                                 convert_weeks_on_to_only_on(location_item)
 
-                                main_lesson = LessonWithExcelCellsDTO(
+                                main_lesson = Lesson(
                                     lesson_name=subject_name,
                                     weekday=weekday,
                                     start_time=lesson_start_time,
                                     end_time=lesson_end_time,
+                                    course_name=course_name,
                                     group_name=group_name,
-                                    teacher=(teacher if isinstance(teacher, str) else ""),
+                                    teacher=teacher,
                                     room=location_item.location or location_str,
                                     date_on=location_item.on,
                                     date_except=location_item.except_,
@@ -554,7 +557,7 @@ class CoreCoursesParser:
 
                 merged = []
                 for _lessons in merged_registry.values():
-                    _lessons: list[LessonWithExcelCellsDTO]
+                    _lessons: list[Lesson]
                     groups = []
                     merged_students_number = []
                     excel_ranges = []

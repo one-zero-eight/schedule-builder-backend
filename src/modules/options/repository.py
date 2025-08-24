@@ -9,10 +9,18 @@ from src.custom_pydantic import CustomModel
 from src.logging_ import logger
 
 
+class Override(CustomModel):
+    groups: list[str] = []
+    courses: list[str] = []
+    start_date: datetime.date
+    end_date: datetime.date
+
+
 class SemesterOptions(CustomModel):
     name: str
     start_date: datetime.date
     end_date: datetime.date
+    override: list[Override] = []
 
 
 class Teacher(CustomModel):

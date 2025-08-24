@@ -6,7 +6,7 @@ import yaml
 from src.modules.bookings.client import RoomDTO
 from src.modules.collisions.collision_checker import CollisionChecker
 from src.modules.collisions.schemas import CapacityIssue, RoomIssue, TeacherIssue
-from src.modules.parsers.schemas import LessonWithExcelCellsDTO
+from src.modules.parsers.schemas import Lesson
 
 rooms_yaml = """
 rooms:
@@ -222,7 +222,7 @@ def collisions_checker() -> CollisionChecker:
         # Test case: Two lessons in same room at same time
         (
             [
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time=time(14, 20),
@@ -235,7 +235,7 @@ def collisions_checker() -> CollisionChecker:
                     date_on=None,
                     date_except=None,
                 ),
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time=time(14, 20),
@@ -254,7 +254,7 @@ def collisions_checker() -> CollisionChecker:
         # Test case: No room collision - different times
         (
             [
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson 1",
                     weekday="MONDAY",
                     start_time=time(17, 20),
@@ -267,7 +267,7 @@ def collisions_checker() -> CollisionChecker:
                     date_on=None,
                     date_except=None,
                 ),
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson 2",
                     weekday="MONDAY",
                     start_time=time(14, 20),
@@ -287,7 +287,7 @@ def collisions_checker() -> CollisionChecker:
 )
 def test_room_collisions(
     collisions_checker: CollisionChecker,
-    data: list[LessonWithExcelCellsDTO],
+    data: list[Lesson],
     expected_issues: int,
 ) -> None:
     issues = collisions_checker.check_for_room_issue(data)
@@ -306,7 +306,7 @@ def test_room_collisions(
         # Test case: Same teacher, overlapping times
         (
             [
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson A",
                     weekday="MONDAY",
                     start_time=time(1, 0, 0),
@@ -319,7 +319,7 @@ def test_room_collisions(
                     date_on=None,
                     date_except=None,
                 ),
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson B",
                     weekday="MONDAY",
                     start_time=time(1, 30, 0),
@@ -338,7 +338,7 @@ def test_room_collisions(
         # Test case: Same teacher, different days
         (
             [
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson A",
                     weekday="MONDAY",
                     start_time=time(1, 0, 0),
@@ -351,7 +351,7 @@ def test_room_collisions(
                     date_on=None,
                     date_except=None,
                 ),
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Lesson B",
                     weekday="TUESDAY",
                     start_time=time(1, 30, 0),
@@ -371,7 +371,7 @@ def test_room_collisions(
 )
 def test_teacher_collisions(
     collisions_checker: CollisionChecker,
-    timeslots: list[LessonWithExcelCellsDTO],
+    timeslots: list[Lesson],
     expected_issues: int,
 ) -> None:
     issues = collisions_checker.check_for_teacher_issue(timeslots)
@@ -389,7 +389,7 @@ def test_teacher_collisions(
         # Test case: Too many students for room capacity
         (
             [
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Large Lesson",
                     weekday="MONDAY",
                     start_time=time(14, 20),
@@ -408,7 +408,7 @@ def test_teacher_collisions(
         # Test case: Students fit in room
         (
             [
-                LessonWithExcelCellsDTO(
+                Lesson(
                     lesson_name="Small Lesson",
                     weekday="MONDAY",
                     start_time=time(14, 20),
@@ -428,7 +428,7 @@ def test_teacher_collisions(
 )
 def test_capacity_collisions(
     collisions_checker: CollisionChecker,
-    data: list[LessonWithExcelCellsDTO],
+    data: list[Lesson],
     expected_issues: int,
 ) -> None:
     issues = collisions_checker.check_for_capacity_issue(data)

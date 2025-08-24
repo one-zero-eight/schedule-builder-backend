@@ -5,7 +5,7 @@ from pydantic import Field
 
 from src.custom_pydantic import CustomModel
 from src.modules.bookings.client import BookingDTO
-from src.modules.parsers.schemas import LessonWithExcelCellsDTO
+from src.modules.parsers.schemas import Lesson
 
 
 class CollisionTypeEnum(StrEnum):
@@ -29,7 +29,7 @@ class CapacityIssue(CustomModel):
     needed_capacity: int
     "Needed capacity for the lesson (sum of all groups)"
 
-    lesson: LessonWithExcelCellsDTO
+    lesson: Lesson
 
 
 class RoomIssue(CustomModel):
@@ -42,7 +42,7 @@ class RoomIssue(CustomModel):
     room: str | tuple[str, ...]
     "Room name"
 
-    lessons: list[LessonWithExcelCellsDTO]
+    lessons: list[Lesson]
     "Lessons in the room at the same time"
 
 
@@ -56,7 +56,7 @@ class OutlookIssue(CustomModel):
     outlook_info: list[BookingDTO]
     "Outlook info about the booking in the room same time"
 
-    lesson: LessonWithExcelCellsDTO
+    lesson: Lesson
 
 
 class TeacherIssue(CustomModel):
@@ -69,9 +69,9 @@ class TeacherIssue(CustomModel):
     teacher: str
     "Teacher name"
 
-    teaching_lessons: list[LessonWithExcelCellsDTO]
+    teaching_lessons: list[Lesson]
     "Lessons of the teacher at the same time"
-    studying_lessons: list[LessonWithExcelCellsDTO]
+    studying_lessons: list[Lesson]
     "Lessons of the teacher as a student at the same time"
 
 
