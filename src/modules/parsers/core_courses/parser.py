@@ -542,24 +542,37 @@ class CoreCoursesParser:
                     excel_ranges = []
                     lesson1 = _lessons[0]
                     for lesson in _lessons:
+                        if lesson.group_name:
+                            if lesson.group_name not in groups and lesson.students_number:
+                                merged_students_number.append(lesson.students_number)
+                            if lesson.group_name not in groups and lesson.excel_range:
+                                excel_ranges.append(lesson.excel_range)
+                        else:
+                            if lesson.students_number:
+                                merged_students_number.append(lesson.students_number)
+                            if lesson.excel_range:
+                                excel_ranges.append(lesson.excel_range)
+
                         if isinstance(lesson.group_name, list | tuple):
                             groups.extend(lesson.group_name)
                         elif lesson.group_name:
                             groups.append(lesson.group_name)
-                        if lesson.students_number:
-                            merged_students_number.append(lesson.students_number)
-                        if lesson.excel_range:
-                            excel_ranges.append(lesson.excel_range)
+
                         assert lesson.excel_sheet_name == lesson1.excel_sheet_name, (
                             "All lessons should be in the same sheet"
                         )
+
+                    logger.info(groups)
+                    logger.info(excel_ranges)
+                    logger.info(merged_students_number)
+
                     lesson1.group_name = tuple(groups)
                     lesson1.students_number = (
                         sum(merged_students_number) if merged_students_number else lesson1.students_number
                     )
                     rows = {"".join(filter(str.isdigit, c)) for c in excel_ranges}
                     if len(rows) != 1:
-                        raise ValueError("Cells are not on the same row")
+                        raise ValueError(f"Cells are not on the same row: {excel_ranges}")
                     row = rows.pop()
                     col_numbers = sorted(
                         column_index_from_string("".join(filter(str.isalpha, c))) for c in excel_ranges
