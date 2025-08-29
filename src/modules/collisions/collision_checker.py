@@ -474,7 +474,7 @@ class CollisionChecker:
                     visited_lessons.add(id(lesson))
             for lesson in to_remove:
                 result.lessons.remove(lesson)
-            result.lessons = sorted(result.lessons, key=lambda x: (x.weekday, x.start_time, x.room))
+            result.lessons = sorted(result.lessons, key=lambda x: (x.weekday, x.start_time))
 
             # deduplicate if booking by id(booking)
             visited = set()
