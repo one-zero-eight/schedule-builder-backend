@@ -154,6 +154,8 @@ class CollisionChecker:
         """Remove suffixes like (lec), (tut) from the end of the string to compare outlook bookings with lessons"""
         name = name.lower().strip()
         for suffix in [
+            "доп",
+            "перенос",
             "(lec)",
             "(tut)",
             "(lab)",
@@ -164,8 +166,6 @@ class CollisionChecker:
             "(лаб)",
             "(лек + тут)",
             "(лек + лаб)",
-            "перенос",
-            "доп",
         ]:
             name = name.removesuffix(suffix).rstrip()
         return name
