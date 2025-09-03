@@ -207,9 +207,8 @@ class CoreCoursesParser:
 
         # ----- Process time ------ #
         # matched r"\d{1,2}:\d{2}-\d{1,2}:\d{2}" regex
-
-        matched = df_column[df_column.str.match(r"\d{1,2}:\d{2}-\d{1,2}:\d{2}")]
-
+        mask = df_column.astype(str).str.match(r"\d{1,2}:\d{2}-\d{1,2}:\d{2}") & df_column.notna()
+        matched = df_column[mask]
         for i, cell in matched.items():
             # "9:00-10:30" -> datetime.time(9, 0), datetime.time(10, 30)
             start, end = cell.split("-")
