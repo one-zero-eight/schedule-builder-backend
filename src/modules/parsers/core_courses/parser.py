@@ -20,9 +20,7 @@ from src.modules.options.repository import options_repository
 from src.modules.parsers.core_courses.location_parser import Item, parse_location_string
 from src.modules.parsers.processors.regex import prettify_string
 from src.modules.parsers.schemas import Lesson
-from src.modules.parsers.utils import (
-    sanitize_sheet_name,
-)
+from src.modules.parsers.utils import sanitize_sheet_name
 
 WEEKDAYS = [
     "MONDAY",
@@ -391,7 +389,13 @@ class CoreCoursesParser:
                         if pd.isna(cell_values_series).all():
                             continue
                         else:
-                            subject, teacher, location = cell_values_series.values
+                            try:
+                                subject, teacher, location = cell_values_series.values
+                            except ValueError:
+                                logger.warning(
+                                    f"Cell values: {cell_values_series.values} for column={column} and timeslot={timeslot}"
+                                )
+                                raise
                             if not isinstance(subject, str):
                                 logger.warning(f"Subject {subject} not found in xlsx file")
                                 logger.warning(f"Cell values: {cell_values_series.values}")
