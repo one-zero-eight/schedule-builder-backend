@@ -193,8 +193,6 @@ class CoreCoursesParser:
         df_column: pd.Series
         # drop column
         df.drop(df.columns[column], axis=1, inplace=True)
-        # fill nan values with previous value
-        df_column.ffill(inplace=True)
 
         # ----- Process weekday ------ #
         # get indexes of weekdays
