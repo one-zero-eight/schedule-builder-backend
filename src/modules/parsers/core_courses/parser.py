@@ -211,7 +211,10 @@ class CoreCoursesParser:
         matched: pd.Series = df_column[mask]
         # Fill nan values in two cells that right after time cell
         for x in matched.index:
-            df_column.iloc[[x, x + 1, x + 2]].ffill(inplace=True)
+            max_index = len(df_column) - 1
+            indices = [i for i in [x, x + 1, x + 2] if i <= max_index]
+            if len(indices) > 1:
+                df_column.iloc[indices].ffill(inplace=True)
 
         for i, cell in matched.items():
             # "9:00-10:30" -> datetime.time(9, 0), datetime.time(10, 30)
