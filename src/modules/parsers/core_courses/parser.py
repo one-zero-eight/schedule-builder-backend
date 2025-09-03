@@ -389,13 +389,10 @@ class CoreCoursesParser:
                         if pd.isna(cell_values_series).all():
                             continue
                         else:
-                            try:
-                                subject, teacher, location = cell_values_series.values
-                            except ValueError:
-                                logger.warning(
-                                    f"Cell values: {cell_values_series.values} for column={column} and timeslot={timeslot}"
-                                )
-                                raise
+                            subject = cell_values_series.values[0]
+                            teacher = cell_values_series.values[1] if len(cell_values_series.values) > 1 else None
+                            location = cell_values_series.values[2] if len(cell_values_series.values) > 2 else None
+
                             if not isinstance(subject, str):
                                 logger.warning(f"Subject {subject} not found in xlsx file")
                                 logger.warning(f"Cell values: {cell_values_series.values}")
