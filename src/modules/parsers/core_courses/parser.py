@@ -193,6 +193,8 @@ class CoreCoursesParser:
         df_column: pd.Series
         # drop column
         df.drop(df.columns[column], axis=1, inplace=True)
+        # fill nan values with previous value
+        df_column.ffill(inplace=True, limit=2)
 
         # ----- Process weekday ------ #
         # get indexes of weekdays
@@ -208,13 +210,7 @@ class CoreCoursesParser:
         # ----- Process time ------ #
         # matched r"\d{1,2}:\d{2}-\d{1,2}:\d{2}" regex
         mask = df_column.astype(str).str.match(r"\d{1,2}:\d{2}-\d{1,2}:\d{2}") & df_column.notna()
-        matched: pd.Series = df_column[mask]
-        # Fill nan values in two cells that right after time cell
-        for x in matched.index:
-            max_index = len(df_column) - 1
-            indices = [i for i in [x, x + 1, x + 2] if i <= max_index]
-            if len(indices) > 1:
-                df_column.iloc[indices].ffill(inplace=True)
+        matched = df_column[mask]
 
         for i, cell in matched.items():
             # "9:00-10:30" -> datetime.time(9, 0), datetime.time(10, 30)
