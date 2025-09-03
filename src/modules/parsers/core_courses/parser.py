@@ -195,6 +195,8 @@ class CoreCoursesParser:
         df.drop(df.columns[column], axis=1, inplace=True)
         # fill nan values with previous value
         df_column.ffill(inplace=True, limit=2)
+        with pd.option_context("display.max_rows", None, "display.max_columns", None):
+            logger.info(f"df_column: {df_column}")
 
         # ----- Process weekday ------ #
         # get indexes of weekdays
