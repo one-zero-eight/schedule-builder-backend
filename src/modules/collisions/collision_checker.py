@@ -81,8 +81,9 @@ class CollisionChecker:
         start_b: datetime.datetime,
         end_b: datetime.datetime,
     ) -> bool:
-        overlap_timedelta = min(end_a, end_b) - max(start_a, start_b)
-        return overlap_timedelta > datetime.timedelta(minutes=1)
+        if (start_a <= start_b <= end_a) or (start_b <= start_a <= end_b):
+            return True
+        return False
 
     @staticmethod
     def check_two_timeslots_collisions_by_time(
