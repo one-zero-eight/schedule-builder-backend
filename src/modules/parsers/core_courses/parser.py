@@ -208,7 +208,7 @@ class CoreCoursesParser:
         # ----- Process time ------ #
         # matched r"\d{1,2}:\d{2}-\d{1,2}:\d{2}" regex
         mask = df_column.astype(str).str.match(r"\d{1,2}:\d{2}-\d{1,2}:\d{2}") & df_column.notna()
-        matched = df_column[mask]
+        matched: pd.Series = df_column[mask]
         # Fill nan values in two cells that right after time cell
         for x in matched.index:
             df_column.iloc[[x, x + 1, x + 2]].ffill(inplace=True)
