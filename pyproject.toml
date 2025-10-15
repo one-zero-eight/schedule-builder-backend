@@ -1,11 +1,15 @@
 [project]
 name = "schedule-builder-backend"
 version = "0.1.0"
+description = ""
+authors = [{ name = "one-zero-eight" }]
+urls = { homepage = "https://t.me/one_zero_eight" }
 readme = "README.md"
 requires-python = ">=3.12"
+
 dependencies = [
     "asyncpg>=0.30.0",
-    "authlib>=1.6.0",
+    "authlib>=1.6.5",
     "colorlog>=6.9.0",
     "fastapi>=0.115.12",
     "numpy>=2.3.0",
@@ -33,15 +37,9 @@ dev = [
 
 [tool.ruff]
 line-length = 120
-lint.ignore = [
-    # wildcard imports are fine
-    "F403",
-    "F405",
-    "PLR",
-]
 lint.extend-select = ["I", "UP", "PL"]
-lint.extend-ignore = ["PLC0415"]
-target-version = "py312"
+lint.extend-ignore = ["PLC0415", "PLR"]
+target-version = "py313"
 
 [tool.coverage.run]
 omit = [

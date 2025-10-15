@@ -39,7 +39,7 @@ hidden from the user's view). The user may repeat scanning until all conflicts a
 
 ### Technologies
 
-- [Python 3.12+](https://www.python.org/downloads/) & [uv](https://astral.sh/uv/)
+- [Python 3.12+](https://www.python.org/downloads/) & [uv](https://docs.astral.sh/uv/)
 - [FastAPI](https://fastapi.tiangolo.com/)
 
 ## How to use?
