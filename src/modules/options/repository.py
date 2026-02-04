@@ -19,6 +19,7 @@ class SemesterOptions(CustomModel):
 
 class Teacher(CustomModel):
     name: str
+    russian_name: str | None = None
     email: str | None = None
     alias: str | None = None
     student_group: str | None = None  # e.g. "B4-CSE-05"
@@ -69,19 +70,23 @@ class OptionsRepository:
     def set_teachers_from_csv_text(self, csv_text: str) -> TeachersData:
         from io import StringIO
 
+        # Handle escaped sequences (literal \t and \n from some sources)
+        csv_text = csv_text.replace("\\t", "\t").replace("\\n", "\n")
         # remove all empty rows
         csv_text = "\n".join([line for line in csv_text.splitlines() if line.strip()])
 
         # Try tab separator first, fall back to comma
         sep = "\t" if "\t" in csv_text else ","
         df: pd.DataFrame = pd.read_csv(StringIO(csv_text), sep=sep)  # pyright: ignore[reportCallIssue]
+        logger.debug(f"CSV columns after read: {list(df.columns)}, rows: {len(df)}")
 
         # Normalize column names: strip whitespace and lowercase
         df.columns = df.columns.str.strip().str.lower()
 
         # Column aliases mapping -> canonical name
         column_aliases: dict[str, list[str]] = {
-            "name": ["name", "unnamed: 0", "фио", "имя"],
+            "name": ["name", "unnamed: 0"],
+            "russian_name": ["russian name", "фио", "имя", "преподаватель", "ф.и.о.", "ф.и.о"],
             "email": ["email", "e-mail", "почта", "mail"],
             "alias": ["alias", "telegram", "алиас", "телеграм"],
             "student_group": ["student group", "student?", "student ?", "группа", "group", "student"],
@@ -98,11 +103,11 @@ class OptionsRepository:
         df.rename(columns=rename_map, inplace=True)
 
         # Ensure all required columns exist (add missing as None)
-        for col in ["name", "alias", "email", "student_group"]:
+        for col in ["name", "russian_name", "alias", "email", "student_group"]:
             if col not in df.columns:
                 df[col] = None
 
-        df = df[["name", "alias", "email", "student_group"]]  # pyright: ignore[reportAssignmentType]
+        df = df[["name", "russian_name", "alias", "email", "student_group"]]  # pyright: ignore[reportAssignmentType]
         df.replace(to_replace=np.nan, value=None, inplace=True)
         df.replace(to_replace="-", value=None, inplace=True)
         df.loc[df["alias"] == "?", "alias"] = None
@@ -115,7 +120,8 @@ class OptionsRepository:
             if row["name"] is None or pd.isna(row["name"]):
                 continue
 
-            if not pd.isna(row["student_group"]) or not pd.isna(row["alias"]) or not pd.isna(row["email"]):
+            has_data = any(not pd.isna(row[col]) for col in ["russian_name", "student_group", "alias", "email"])
+            if has_data:
                 teachers_data.append(Teacher.model_validate(row))
 
         teachers_data = TeachersData(data=teachers_data)

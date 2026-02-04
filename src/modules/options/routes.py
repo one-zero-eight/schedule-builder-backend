@@ -30,21 +30,19 @@ async def set_teachers(
     """
     Upload teachers data from TSV (tab-separated values).
 
-    Expected columns:
-    - Name (or unnamed first column) - teacher's full name
-    - Alias - short name (empty or "-" or "?" for none)
+    Expected columns (case-insensitive):
+    - Name - teacher's full name in English
+    - Russian Name (or ФИО/Имя) - teacher's full name in Russian
+    - Alias (or Telegram) - short name or telegram handle
     - Email - email address
-    - Student Group (or 'Student?') - student group code if teacher is a student s(e.g. "B4-CSE-05").
-       Student Group format should be same as in spreadsheet: B24-CSE-05, M25-SE-02, etc.
-
+    - Student Group (or Student?) - student group code (e.g. "B24-CSE-05", "M25-SE-01")
 
     Example:
     ```
-    Name\tAlias\tEmail\tStudent Group
-    Иванов Иван Иванович\tIvanov I.\tivanov@example.com\t
-    Петров Петр Петрович\t-\tpetrov@example.com\tB4-CSE-05
+    Name\tRussian Name\tAlias\tEmail\tStudent Group
+    Ivan Ivanov\tИванов Иван Иванович\t@ivanov\tivanov@example.com\t
+    Petr Petrov\tПетров Петр Петрович\t-\tpetrov@example.com\tB24-CSE-05
     ```
-
     """
     data = options_repository.set_teachers_from_csv_text(csv_text)
     return data
