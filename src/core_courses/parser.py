@@ -51,7 +51,7 @@ class CoreCoursesParser:
         original_target_sheet_names: list[str],
         sheet_gids: dict[str, str],
         spreadsheet_id: str,
-    ) -> Generator[list[DataFrame], None, None]:
+    ) -> Generator[list[DataFrame]]:
         """
         Run pipeline and generate lists of GroupBy with CoreCourseCell(value=[subject, teacher, location], a1=excel_range) by sheet.
 

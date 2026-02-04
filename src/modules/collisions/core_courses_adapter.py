@@ -18,7 +18,7 @@ from .schemas import Lesson
 def use(
     processed_column: pd.Series,
     target: Target,
-) -> Generator[CoreCourseEvent, None, None]:
+) -> Generator[CoreCourseEvent]:
     """
     Generate events from processed cells
 
@@ -75,7 +75,7 @@ async def get_all_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
         for grouped_dfs_with_cells in grouped_dfs_with_cells_list:
             series_with_generators = grouped_dfs_with_cells.apply(use, target=target, sheet_gids=sheet_gids)
             for generator in series_with_generators:
-                generator: Generator[CoreCourseEvent, None, None]
+                generator: Generator[CoreCourseEvent]
 
                 for cell_event in generator:
                     if cell_event.subject in parser_config.ignored_subjects:

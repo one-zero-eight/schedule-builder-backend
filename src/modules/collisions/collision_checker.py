@@ -307,7 +307,7 @@ class CollisionChecker:
     async def check_for_outlook_issue(
         self, lessons: list[Lesson], targets: list[Target] | None = None
     ) -> list[OutlookIssue]:
-        def daterange(start_date: datetime.date, end_date: datetime.date) -> Generator[datetime.date, None, None]:
+        def daterange(start_date: datetime.date, end_date: datetime.date) -> Generator[datetime.date]:
             days = int((end_date - start_date).days)
             for n in range(days):
                 yield start_date + datetime.timedelta(n)
