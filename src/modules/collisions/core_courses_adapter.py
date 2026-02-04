@@ -168,7 +168,15 @@ async def get_all_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
         logger.info(f"After merging identical lessons, for {target.sheet_name} found {len(merged_lessons)} lessons")
         all_lessons.extend(merged_lessons)
 
-    all_lessons.sort(key=lambda x: (x.course_name, x.group_name, x.weekday, x.start_time))
+    def _sort_key(x: Lesson):
+        group = x.group_name
+        if group is None:
+            group = ()
+        elif isinstance(group, str):
+            group = (group,)
+        return (x.course_name or "", group, x.weekday or "", x.start_time)
+
+    all_lessons.sort(key=_sort_key)
     return all_lessons
 
 
