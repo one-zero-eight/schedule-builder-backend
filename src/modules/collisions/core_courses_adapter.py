@@ -25,7 +25,6 @@ def use(
     :param processed_column: series with processed cells (CoreCourseCell),
         multiindex with (weekday, timeslot) and (course, group) as name
     :param target: target to generate events for (needed for start and end dates)
-    :param sheet_gids: sheet name -> gid mapping
     :return: generator of events
     """
     # -------- Iterate over processed cells --------
@@ -75,7 +74,7 @@ async def get_all_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
         non_merged_events: list[CoreCourseEvent] = []
 
         for grouped_dfs_with_cells in grouped_dfs_with_cells_list:
-            series_with_generators = grouped_dfs_with_cells.apply(use, target=target, sheet_gids=sheet_gids)
+            series_with_generators = grouped_dfs_with_cells.apply(use, target=target)
             for generator in series_with_generators:
                 generator: Generator[CoreCourseEvent]
 
