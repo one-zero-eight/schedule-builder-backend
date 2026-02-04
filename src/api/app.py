@@ -84,6 +84,6 @@ from src.modules.options.routes import router as router_options  # noqa: E402
 
 # Import routers above and include them below [do not edit this comment]
 app.include_router(router_collisions)
-app.include_router(router_bookings)
 app.include_router(router_options)
+app.include_router(router_bookings)
 # ^

@@ -3,6 +3,7 @@ from collections import defaultdict
 from collections.abc import Generator
 from enum import Enum
 
+from src.core_courses.config import Target
 from src.custom_pydantic import CustomModel
 from src.logging_ import logger
 from src.modules.bookings.client import BookingDTO, RoomDTO, booking_client
@@ -10,12 +11,12 @@ from src.modules.collisions.schemas import (
     CapacityIssue,
     CollisionTypeEnum,
     Issue,
+    Lesson,
     OutlookIssue,
     RoomIssue,
     TeacherIssue,
 )
-from src.modules.options.repository import Teacher, options_repository
-from src.modules.parsers.schemas import Lesson
+from src.modules.options.repository import Teacher
 from src.utcnow import utcnow
 
 from .graph import UndirectedGraph
@@ -137,20 +138,6 @@ class CollisionChecker:
                 return "ONLINE" == lessor_or_room.room or "ОНЛАЙН" == lessor_or_room.room
 
     @staticmethod
-    def _are_lessons_identical(lesson1: Lesson, lesson2: Lesson) -> bool:
-        """Check if two lessons are identical (excluding Excel cell location)"""
-        return (
-            lesson1.lesson_name == lesson2.lesson_name
-            and lesson1.weekday == lesson2.weekday
-            and lesson1.start_time == lesson2.start_time
-            and lesson1.end_time == lesson2.end_time
-            and lesson1.room == lesson2.room
-            and lesson1.teacher == lesson2.teacher
-            and lesson1.date_on == lesson2.date_on
-            and lesson1.date_except == lesson2.date_except
-        )
-
-    @staticmethod
     def _remove_suffix(name: str):
         """Remove suffixes like (lec), (tut) from the end of the string to compare outlook bookings with lessons"""
         name = name.lower().strip()
@@ -208,10 +195,6 @@ class CollisionChecker:
                         continue
 
                     if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
-                        # Skip identical lessons (same lesson appearing in different Excel cells)
-                        if self._are_lessons_identical(lesson1, lesson2):
-                            logger.debug(f"Skipping identical lessons: {lesson1.lesson_name}")
-                            continue
                         graph.add_edge(ind1, ind2)
                         collision_room_map[(min(ind1, ind2), max(ind1, ind2))] = room
 
@@ -270,20 +253,6 @@ class CollisionChecker:
                 for j in range(i + 1, len(occupation_lessons)):
                     lesson2 = occupation_lessons[j]
                     if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
-                        if self._are_lessons_identical(lesson1, lesson2):
-                            logger.debug(f"Skipping identical lessons: {lesson1.lesson_name}")
-                            continue
-                        if lesson1 is lesson2:
-                            logger.debug(f"Skipping identical lessons (same id): {lesson1.lesson_name}")
-                            continue
-                        if (
-                            lesson1.excel_range
-                            and lesson2.excel_range
-                            and lesson1.excel_range == lesson2.excel_range
-                            and lesson1.excel_sheet_name == lesson2.excel_sheet_name
-                        ):
-                            logger.debug(f"Skipping identical lessons (same excel range): {lesson1.lesson_name}")
-                            continue
                         graph.add_edge(i, j)
 
             connected_components = graph.get_connected_components()
@@ -316,8 +285,14 @@ class CollisionChecker:
             if self.is_online_slot(lesson) or lesson.room is None or isinstance(lesson.room, tuple):
                 continue
             capacity = self.room_to_capacity.get(lesson.room)
-            check_capacity = capacity or 30  # Unspecified capacity is 30
-            if check_capacity < lesson.students_number:
+            if capacity is None:
+                logger.warning(f"Room {lesson.room} has no capacity")
+                continue
+            if lesson.students_number is None:
+                logger.info(f"Lesson {lesson.lesson_name} has no students number")
+                continue
+
+            if capacity < lesson.students_number:
                 result.append(
                     CapacityIssue(
                         collision_type=CollisionTypeEnum.CAPACITY,
@@ -329,28 +304,33 @@ class CollisionChecker:
                 )
         return result
 
-    def daterange(self, start_date: datetime.date, end_date: datetime.date) -> Generator[datetime.date, None, None]:
-        days = int((end_date - start_date).days)
-        for n in range(days):
-            yield start_date + datetime.timedelta(n)
+    async def check_for_outlook_issue(
+        self, lessons: list[Lesson], targets: list[Target] | None = None
+    ) -> list[OutlookIssue]:
+        def daterange(start_date: datetime.date, end_date: datetime.date) -> Generator[datetime.date, None, None]:
+            days = int((end_date - start_date).days)
+            for n in range(days):
+                yield start_date + datetime.timedelta(n)
 
-    async def check_for_outlook_issue(self, lessons: list[Lesson]) -> list[OutlookIssue]:
         tz = datetime.timezone(datetime.timedelta(hours=3))
         today = datetime.datetime.now(tz).date()
 
         if not lessons:
             return []
 
-        semester = options_repository.get_semester()
+        targets_list = targets or []
+        targets_by_sheet: dict[str, Target] = {target.sheet_name: target for target in targets_list}
 
-        if not semester:
+        if not targets_list:
             min_needed_time = datetime.datetime.combine(today, datetime.time.min)
             max_needed_time = datetime.datetime.combine(today + datetime.timedelta(days=30), datetime.time.max)
         else:
-            min_needed_time = datetime.datetime.combine(min(semester.start_date, today), datetime.time.min)
-            max_needed_time = datetime.datetime.combine(
-                max(semester.end_date, today + datetime.timedelta(days=30)), datetime.time.max
-            )
+            all_start_dates = [target.start_date for target in targets_list]
+            all_end_dates = [target.end_date for target in targets_list]
+            min_start_date = min(*all_start_dates, today)
+            max_end_date = max(*all_end_dates, today + datetime.timedelta(days=30))
+            min_needed_time = datetime.datetime.combine(min_start_date, datetime.time.min)
+            max_needed_time = datetime.datetime.combine(max_end_date, datetime.time.max)
         # Limit max_needed_time to 61 days from min_needed_time
         max_needed_time = min(max_needed_time, min_needed_time + datetime.timedelta(days=61))
 
@@ -386,21 +366,30 @@ class CollisionChecker:
                 continue
 
             dates_to_check = []
-            starts = semester.start_date if semester else today
-            ends = semester.end_date if semester else today + datetime.timedelta(days=30)
+            target = targets_by_sheet.get(lesson.google_sheet_name)
+            if target:
+                starts = target.start_date
+                ends = target.end_date
 
-            for override in semester.override if semester else []:
-                if lesson.group_name in override.groups or lesson.course_name in override.courses:
-                    starts = override.start_date
-                    ends = override.end_date
-                    break
+                for override in target.override:
+                    if lesson.group_name in override.groups or lesson.course_name in override.courses:
+                        starts = (
+                            override.start_date.date()
+                            if isinstance(override.start_date, datetime.datetime)
+                            else override.start_date
+                        )
+                        ends = override.end_date
+                        break
+            else:
+                starts = today
+                ends = today + datetime.timedelta(days=30)
 
             if lesson.date_from:
                 starts = lesson.date_from
 
-            daterange = self.daterange(starts, ends)
+            daterange_generator = daterange(starts, ends)
 
-            for check_date in daterange:
+            for check_date in daterange_generator:
                 if lesson.weekday:
                     if check_date.weekday() == Weekdays.get_weekday(lesson.weekday):
                         if lesson.date_except is None or check_date not in lesson.date_except:
@@ -493,43 +482,16 @@ class CollisionChecker:
         result = list(results.values())
         return result
 
-    def merge_identical_lessons(self, lessons: list[Lesson]) -> list[Lesson]:
-        graph = UndirectedGraph(len(lessons))
-        for i, lesson1 in enumerate(lessons):
-            for j in range(i + 1, len(lessons)):
-                lesson2 = lessons[j]
-                if self._are_lessons_identical(lesson1, lesson2):
-                    graph.add_edge(i, j)
-        connected_components = graph.get_connected_components()
-        result = []
-        for component in connected_components:
-            component_lessons = [lessons[i] for i in component]
-            if len(component_lessons) > 1:
-                excel_ranges = [lesson.excel_range or "" for lesson in component_lessons]
-                groups = []
-                for lesson in component_lessons:
-                    groups.extend(lesson.group_name if isinstance(lesson.group_name, tuple) else [lesson.group_name])
-                students_number = sum(lesson.students_number for lesson in component_lessons)
-                lesson = component_lessons[0].model_copy()
-                lesson.excel_range = ";".join(excel_ranges)
-                lesson.group_name = tuple(sorted(groups))
-                lesson.students_number = students_number
-                result.append(lesson)
-            else:
-                result.append(component_lessons[0])
-        return result
-
     async def get_collisions(
         self,
         lessons: list[Lesson],
+        targets: list[Target] | None = None,
         check_room_collisions: bool = True,
         check_teacher_collisions: bool = True,
         check_space_collisions: bool = True,
         check_outlook_collisions: bool = True,
     ) -> list[Issue]:
         logger.info(f"{len(lessons)} lessons")
-        lessons = self.merge_identical_lessons(lessons)
-        logger.info(f"{len(lessons)} lessons after merging identical lessons")
         issues: list[Issue] = []
 
         if check_room_collisions:
@@ -545,7 +507,7 @@ class CollisionChecker:
             logger.info(f"Found {len(_)} capacity issues")
             issues.extend(_)
         if check_outlook_collisions:
-            _ = await self.check_for_outlook_issue(lessons)
+            _ = await self.check_for_outlook_issue(lessons, targets=targets or [])
             logger.info(f"Found {len(_)} outlook issues")
             issues.extend(_)
 

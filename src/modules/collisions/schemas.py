@@ -1,11 +1,11 @@
+import datetime
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from src.custom_pydantic import CustomModel
 from src.modules.bookings.client import BookingDTO
-from src.modules.parsers.schemas import Lesson
 
 
 class CollisionTypeEnum(StrEnum):
@@ -13,6 +13,58 @@ class CollisionTypeEnum(StrEnum):
     TEACHER = "teacher"
     CAPACITY = "capacity"
     OUTLOOK = "outlook"
+
+
+class Lesson(CustomModel):
+    # > Main lesson info
+    lesson_name: str
+    "Name of the lesson"
+    weekday: str | None = None
+    "Weekday of a lesson"
+    start_time: datetime.time
+    "Start time of lesson"
+    end_time: datetime.time
+    "End time of lesson"
+    room: str | tuple[str, ...] | None = None
+    "Room for lesson, None - TBA, if list - multiple rooms simultaneously"
+    teacher: str | None = None
+    "Teacher on lesson"
+    # <
+
+    # > Course and group info
+    course_name: str | None = None
+    "Name of the course"
+    group_name: str | tuple[str, ...] | None = None
+    "Name of the group or list of groups"
+    students_number: int | None = None
+    "Number of students in the group"
+    # <
+
+    # > Location Parser extras
+    date_on: list[datetime.date] | None = None
+    "Specific dates with lessons"
+    date_except: list[datetime.date] | None = None
+    "Specific dates when there is no lessons"
+    date_from: datetime.date | None = None
+    "Date from which the lesson starts"
+    # <
+
+    # > Google Spreadsheet info
+    spreadsheet_id: str
+    "Spreadsheet ID"
+    google_sheet_gid: str
+    "Google Spreadsheet ID of the sheet"
+    google_sheet_name: str
+    "Sheet name to which the lesson belongs in Google Spreadsheet"
+    a1_range: str | None = None
+    "Range of the lesson: may be multiple cells, for example 'A1:A10'"
+    # <
+
+    @model_validator(mode="after")
+    def validate_date(self) -> Self:
+        if not self.start_time < self.end_time:
+            raise ValueError("Start time has to be less than end time")
+        return self
 
 
 class CapacityIssue(CustomModel):

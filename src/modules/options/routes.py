@@ -28,9 +28,9 @@ async def set_teachers(
     csv_text: str = Body(
         media_type="text/tab-separated-values",
     ),
-) -> int:
+) -> TeachersData:
     data = options_repository.set_teachers_from_csv_text(csv_text)
-    return len(data.data)
+    return data
 
 
 @router.get("/teachers")
