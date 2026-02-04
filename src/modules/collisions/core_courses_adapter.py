@@ -60,7 +60,9 @@ async def get_all_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
     xlsx_file = await fetch_xlsx_spreadsheet(spreadsheet_id=parser_config.spreadsheet_id)
     original_target_sheet_names = [target.sheet_name for target in parser_config.targets]
     sheet_gids = await get_sheet_gids(parser_config.spreadsheet_id)
-    pipeline_result = parser.pipeline(xlsx_file, original_target_sheet_names, sheet_gids, parser_config.spreadsheet_id)
+    pipeline_result = list(
+        parser.pipeline(xlsx_file, original_target_sheet_names, sheet_gids, parser_config.spreadsheet_id)
+    )
     dfs_merged_ranges = parser.last_dfs_merged_ranges
     assert dfs_merged_ranges is not None
 
