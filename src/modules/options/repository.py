@@ -72,23 +72,42 @@ class OptionsRepository:
         # remove all empty rows
         csv_text = "\n".join([line for line in csv_text.splitlines() if line.strip()])
 
-        df: pd.DataFrame = pd.read_csv(StringIO(csv_text), sep="\t")  # pyright: ignore[reportCallIssue]
+        # Try tab separator first, fall back to comma
+        sep = "\t" if "\t" in csv_text else ","
+        df: pd.DataFrame = pd.read_csv(StringIO(csv_text), sep=sep)  # pyright: ignore[reportCallIssue]
 
-        # Normalize column names to lowercase
-        df.columns = df.columns.str.lower()
-        # Detect name column: "name" or "unnamed: 0"
-        name_col = "name" if "name" in df.columns else "unnamed: 0"
-        df.rename(
-            columns={name_col: "name", "email": "email", "alias": "alias", "student group": "student_group"},
-            inplace=True,
-        )
+        # Normalize column names: strip whitespace and lowercase
+        df.columns = df.columns.str.strip().str.lower()
+
+        # Column aliases mapping -> canonical name
+        column_aliases: dict[str, list[str]] = {
+            "name": ["name", "unnamed: 0", "фио", "имя"],
+            "email": ["email", "e-mail", "почта", "mail"],
+            "alias": ["alias", "telegram", "алиас", "телеграм"],
+            "student_group": ["student group", "student?", "student ?", "группа", "group", "student"],
+        }
+
+        # Build rename mapping
+        rename_map: dict[str, str] = {}
+        for canonical, aliases in column_aliases.items():
+            for alias in aliases:
+                if alias in df.columns:
+                    rename_map[alias] = canonical
+                    break
+
+        df.rename(columns=rename_map, inplace=True)
+
+        # Ensure all required columns exist (add missing as None)
+        for col in ["name", "alias", "email", "student_group"]:
+            if col not in df.columns:
+                df[col] = None
+
         df = df[["name", "alias", "email", "student_group"]]  # pyright: ignore[reportAssignmentType]
         df.replace(to_replace=np.nan, value=None, inplace=True)
         df.replace(to_replace="-", value=None, inplace=True)
         df.loc[df["alias"] == "?", "alias"] = None
         # strip all strings
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-        # remove nan values in name column
         logger.info(f"Loaded teachers from CSV:\n{df.head(5)}")
         records = df.to_dict(orient="records")
         teachers_data = []
