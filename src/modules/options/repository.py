@@ -21,7 +21,7 @@ class Teacher(CustomModel):
     name: str
     email: str | None = None
     alias: str | None = None
-    student: str | None = None
+    student_group: str | None = None  # e.g. "B4-CSE-05"
 
 
 class TeachersData(CustomModel):
@@ -72,21 +72,19 @@ class OptionsRepository:
         # remove all empty rows
         csv_text = "\n".join([line for line in csv_text.splitlines() if line.strip()])
 
-        df: pd.DataFrame = pd.read_csv(  # pyright: ignore[reportCallIssue]
-            StringIO(csv_text),
-            sep="\t",
-            usecols=["Unnamed: 0", "Email", "Alias", "Student?"],  # pyright: ignore[reportArgumentType]
-        )
+        df: pd.DataFrame = pd.read_csv(StringIO(csv_text), sep="\t")  # pyright: ignore[reportCallIssue]
+
+        # Normalize column names to lowercase
+        df.columns = df.columns.str.lower()
+        # Detect name column: "name" or "unnamed: 0"
+        name_col = "name" if "name" in df.columns else "unnamed: 0"
         df.rename(
-            columns={"Unnamed: 0": "name", "Email": "email", "Alias": "alias", "Student?": "student"}, inplace=True
+            columns={name_col: "name", "email": "email", "alias": "alias", "student group": "student_group"},
+            inplace=True,
         )
-        df.set_index("name", inplace=True)
-        df.reset_index(inplace=True)
+        df = df[["name", "alias", "email", "student_group"]]  # pyright: ignore[reportAssignmentType]
         df.replace(to_replace=np.nan, value=None, inplace=True)
         df.replace(to_replace="-", value=None, inplace=True)
-        _where = df["student"].str.contains("по ТД").fillna(False)
-        df.loc[_where, "student"] = None
-        df.loc[df["student"] == "1", "student"] = None
         df.loc[df["alias"] == "?", "alias"] = None
         # strip all strings
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
@@ -98,7 +96,7 @@ class OptionsRepository:
             if row["name"] is None or pd.isna(row["name"]):
                 continue
 
-            if not pd.isna(row["student"]) or not pd.isna(row["alias"]) or not pd.isna(row["email"]):
+            if not pd.isna(row["student_group"]) or not pd.isna(row["alias"]) or not pd.isna(row["email"]):
                 teachers_data.append(Teacher.model_validate(row))
 
         teachers_data = TeachersData(data=teachers_data)
