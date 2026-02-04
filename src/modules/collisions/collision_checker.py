@@ -48,10 +48,11 @@ class CollisionChecker:
         self.teachers = teachers or []
         self.rooms = rooms or []
 
+        # Map student_group -> teachers who are students in that group
         self.group_to_studying_teachers: dict[str, list[Teacher]] = defaultdict(list)
         for teacher in self.teachers:
-            if teacher.alias is not None:
-                self.group_to_studying_teachers[teacher.alias].append(teacher)
+            if teacher.student_group:
+                self.group_to_studying_teachers[teacher.student_group].append(teacher)
         self.room_to_capacity: dict[str, int | None] = dict()
         for room in self.rooms:
             self.room_to_capacity[room.id] = room.capacity
@@ -231,16 +232,16 @@ class CollisionChecker:
 
         for lesson in lessons:
             if lesson.teacher:
-                occupancies[lesson.teacher].teaching_lessons.append(lesson)
+                teacher_key = lesson.teacher.lower().strip()
+                occupancies[teacher_key].teaching_lessons.append(lesson)
 
         for lesson in lessons:
             if lesson.group_name:
                 group_names = lesson.group_name if isinstance(lesson.group_name, tuple) else (lesson.group_name,)
-
                 for group_name in group_names:
-                    group_students = self.group_to_studying_teachers.get(group_name, [])
-                    if lesson.teacher in group_students:
-                        occupancies[lesson.teacher].studying_lessons.append(lesson)
+                    for teacher_obj in self.group_to_studying_teachers.get(group_name, []):
+                        teacher_key = teacher_obj.name.lower().strip()
+                        occupancies[teacher_key].studying_lessons.append(lesson)
 
         teacher_issues = []
 
