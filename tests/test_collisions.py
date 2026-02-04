@@ -6,6 +6,7 @@ import yaml
 from src.modules.bookings.client import RoomDTO
 from src.modules.collisions.collision_checker import CollisionChecker
 from src.modules.collisions.schemas import CapacityIssue, Lesson, RoomIssue, TeacherIssue
+from src.modules.options.repository import Teacher
 
 rooms_yaml = """
 rooms:
@@ -468,3 +469,226 @@ def test_capacity_collisions(
         assert isinstance(issue, CapacityIssue)
         assert issue.collision_type == "capacity"
         assert issue.needed_capacity > (issue.room_capacity or 0)
+
+
+class TestTeacherStudentCollisions:
+    """Tests for teacher-student collision detection (teachers who are also students)."""
+
+    @pytest.fixture
+    def checker_with_student_teachers(self) -> CollisionChecker:
+        """Checker with teachers who have student_group set."""
+        teachers = [
+            Teacher(name="Ivan Petrov", russian_name="Иван Петров", student_group="B4-CSE-05"),
+            Teacher(name="Anna Smith", student_group="B4-DS-01"),
+        ]
+        return CollisionChecker(
+            token="test_token",
+            teachers=teachers,
+            rooms=[RoomDTO.model_validate(room) for room in rooms],
+        )
+
+    def test_teaching_vs_studying_collision(self, checker_with_student_teachers: CollisionChecker) -> None:
+        """Teacher teaches one group while their own group has a lesson at the same time."""
+        lessons = [
+            Lesson(
+                lesson_name="Math",
+                weekday="MONDAY",
+                start_time=time(10, 0),
+                end_time=time(11, 30),
+                room="301",
+                teacher="Ivan Petrov",
+                group_name="B4-CSE-01",
+                students_number=20,
+                a1_range="A1:A1",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+            Lesson(
+                lesson_name="Physics",
+                weekday="MONDAY",
+                start_time=time(10, 30),
+                end_time=time(12, 0),
+                room="302",
+                teacher="Other Teacher",
+                group_name="B4-CSE-05",  # Ivan's student group
+                students_number=20,
+                a1_range="A2:A2",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+        ]
+        issues = checker_with_student_teachers.check_for_teacher_issue(lessons)
+        assert len(issues) == 1
+        issue = issues[0]
+        assert issue.teacher == "ivan petrov"
+        assert len(issue.teaching_lessons) == 1
+        assert len(issue.studying_lessons) == 1
+        assert issue.teaching_lessons[0].lesson_name == "Math"
+        assert issue.studying_lessons[0].lesson_name == "Physics"
+
+    def test_studying_vs_studying_collision(self, checker_with_student_teachers: CollisionChecker) -> None:
+        """Teacher's student group has two lessons at the same time."""
+        lessons = [
+            Lesson(
+                lesson_name="Physics",
+                weekday="MONDAY",
+                start_time=time(10, 0),
+                end_time=time(11, 30),
+                room="301",
+                teacher="Teacher A",
+                group_name="B4-CSE-05",  # Ivan's student group
+                students_number=20,
+                a1_range="A1:A1",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+            Lesson(
+                lesson_name="Chemistry",
+                weekday="MONDAY",
+                start_time=time(10, 30),
+                end_time=time(12, 0),
+                room="302",
+                teacher="Teacher B",
+                group_name="B4-CSE-05",  # Same group - Ivan must attend both
+                students_number=20,
+                a1_range="A2:A2",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+        ]
+        issues = checker_with_student_teachers.check_for_teacher_issue(lessons)
+        assert len(issues) == 1
+        issue = issues[0]
+        assert issue.teacher == "ivan petrov"
+        assert len(issue.teaching_lessons) == 0
+        assert len(issue.studying_lessons) == 2
+
+    def test_no_collision_different_times(self, checker_with_student_teachers: CollisionChecker) -> None:
+        """No collision when teaching and studying lessons don't overlap."""
+        lessons = [
+            Lesson(
+                lesson_name="Math",
+                weekday="MONDAY",
+                start_time=time(10, 0),
+                end_time=time(11, 30),
+                room="301",
+                teacher="Ivan Petrov",
+                group_name="B4-CSE-01",
+                students_number=20,
+                a1_range="A1:A1",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+            Lesson(
+                lesson_name="Physics",
+                weekday="MONDAY",
+                start_time=time(14, 0),
+                end_time=time(15, 30),
+                room="302",
+                teacher="Other Teacher",
+                group_name="B4-CSE-05",  # Ivan's student group but different time
+                students_number=20,
+                a1_range="A2:A2",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+        ]
+        issues = checker_with_student_teachers.check_for_teacher_issue(lessons)
+        assert len(issues) == 0
+
+    def test_teacher_name_case_insensitive(self, checker_with_student_teachers: CollisionChecker) -> None:
+        """Teacher name matching should be case insensitive."""
+        lessons = [
+            Lesson(
+                lesson_name="Math",
+                weekday="MONDAY",
+                start_time=time(10, 0),
+                end_time=time(11, 30),
+                room="301",
+                teacher="IVAN PETROV",  # Different case
+                group_name="B4-CSE-01",
+                students_number=20,
+                a1_range="A1:A1",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+            Lesson(
+                lesson_name="Physics",
+                weekday="MONDAY",
+                start_time=time(10, 30),
+                end_time=time(12, 0),
+                room="302",
+                teacher="Other Teacher",
+                group_name="B4-CSE-05",
+                students_number=20,
+                a1_range="A2:A2",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+        ]
+        issues = checker_with_student_teachers.check_for_teacher_issue(lessons)
+        assert len(issues) == 1
+
+    def test_multiple_groups_in_lesson(self, checker_with_student_teachers: CollisionChecker) -> None:
+        """Lesson with multiple groups should detect teacher-student in any group."""
+        lessons = [
+            Lesson(
+                lesson_name="Math",
+                weekday="MONDAY",
+                start_time=time(10, 0),
+                end_time=time(11, 30),
+                room="301",
+                teacher="Ivan Petrov",
+                group_name="B4-CSE-01",
+                students_number=20,
+                a1_range="A1:A1",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+            Lesson(
+                lesson_name="Lecture",
+                weekday="MONDAY",
+                start_time=time(10, 30),
+                end_time=time(12, 0),
+                room="105",
+                teacher="Professor",
+                group_name=("B4-CSE-04", "B4-CSE-05", "B4-CSE-06"),  # Ivan's group is in this tuple
+                students_number=60,
+                a1_range="A2:A2",
+                spreadsheet_id="test",
+                google_sheet_gid="test",
+                google_sheet_name="test",
+                date_on=None,
+                date_except=None,
+            ),
+        ]
+        issues = checker_with_student_teachers.check_for_teacher_issue(lessons)
+        assert len(issues) == 1
+        assert issues[0].teacher == "ivan petrov"
