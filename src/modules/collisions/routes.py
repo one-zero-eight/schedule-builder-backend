@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from src.api.dependencies import VerifyTokenDep
 from src.core_courses.config import CoreCoursesConfig, Tag
 from src.custom_pydantic import CustomModel
+from src.logging_ import logger
 from src.modules.bookings.client import booking_client
 from src.modules.collisions.collision_checker import CollisionChecker
 from src.modules.collisions.core_courses_adapter import get_all_lessons
@@ -30,12 +31,13 @@ async def check_timetable_collisions(
     user_and_token: VerifyTokenDep,
     params: CheckParameters,
 ) -> CheckResults:
+    logger.info(f"Checking timetable collisions with options: {params}")
     user, token = user_and_token
 
     semester_options = options_repository.get_semester()
     if not semester_options or not semester_options.core_courses_spreadsheet_id:
         raise ValueError("core_courses_spreadsheet_id must be set in semester options")
-
+    logger.info(f"Semester options: {semester_options}")
     targets = semester_options.core_courses_targets
     spreadsheet_id = semester_options.core_courses_spreadsheet_id
 

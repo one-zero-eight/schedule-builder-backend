@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import date, time
 
 import pytest
 import yaml
@@ -391,6 +391,44 @@ def test_room_collisions(
             ],
             0,  # No collision - different days
         ),
+        # ONLY ON: same lesson, main (weekday + date_except) + nested (date_on) — no teacher conflict
+        (
+            [
+                Lesson(
+                    lesson_name="Основы и методология программирования",
+                    weekday="THURSDAY",
+                    start_time=time(17, 40),
+                    end_time=time(19, 10),
+                    room="321",
+                    teacher="Егор Дмитриев",
+                    group_name="B25-AI360-01",
+                    students_number=30,
+                    a1_range="A1:A1",
+                    spreadsheet_id="test_spreadsheet",
+                    google_sheet_gid="test_gid",
+                    google_sheet_name="test_sheet",
+                    date_on=None,
+                    date_except=[date(2025, 1, 23), date(2025, 1, 30)],
+                ),
+                Lesson(
+                    lesson_name="Основы и методология программирования",
+                    weekday="THURSDAY",
+                    start_time=time(17, 40),
+                    end_time=time(19, 10),
+                    room="307",
+                    teacher="Егор Дмитриев",
+                    group_name="B25-AI360-01",
+                    students_number=30,
+                    a1_range="A2:A2",
+                    spreadsheet_id="test_spreadsheet",
+                    google_sheet_gid="test_gid",
+                    google_sheet_name="test_sheet",
+                    date_on=[date(2025, 1, 23), date(2025, 1, 30)],
+                    date_except=None,
+                ),
+            ],
+            0,  # No collision — ONLY ON: nested dates are in main's date_except
+        ),
     ],
 )
 def test_teacher_collisions(
@@ -692,3 +730,136 @@ class TestTeacherStudentCollisions:
         issues = checker_with_student_teachers.check_for_teacher_issue(lessons)
         assert len(issues) == 1
         assert issues[0].teacher == "ivan petrov"
+
+
+def test_start_at_till_same_logical_lesson_no_room_or_teacher_conflict(
+    collisions_checker: CollisionChecker,
+) -> None:
+    """START AT + following TILL same subject/room/teacher with overlapping time = one lesson, no conflict."""
+    lessons = [
+        Lesson(
+            lesson_name="Research seminar",
+            weekday="MONDAY",
+            start_time=time(17, 0),
+            end_time=time(18, 30),
+            room="460",
+            teacher="Bader Rasheed",
+            group_name=("Group 1",),
+            students_number=20,
+            a1_range="A1:A1",
+            spreadsheet_id="test",
+            google_sheet_gid="test",
+            google_sheet_name="test",
+            date_on=None,
+            date_except=None,
+        ),
+        Lesson(
+            lesson_name="Research seminar",
+            weekday="MONDAY",
+            start_time=time(17, 20),
+            end_time=time(20, 0),
+            room="460",
+            teacher="Bader Rasheed",
+            group_name=("Group 1",),
+            students_number=20,
+            a1_range="A2:A2",
+            spreadsheet_id="test",
+            google_sheet_gid="test",
+            google_sheet_name="test",
+            date_on=None,
+            date_except=None,
+        ),
+    ]
+    room_issues = collisions_checker.check_for_room_issue(lessons)
+    teacher_issues = collisions_checker.check_for_teacher_issue(lessons)
+    assert len(room_issues) == 0
+    assert len(teacher_issues) == 0
+
+
+def test_start_at_till_cto_toolkit_two_instructors_no_conflict(
+    collisions_checker: CollisionChecker,
+) -> None:
+    """Same subject, same room, same teachers (e.g. CTO Toolkit 301 STARTS AT 15:00 / 301 TILL 16:30) = one lesson."""
+    lessons = [
+        Lesson(
+            lesson_name="CTO Toolkit",
+            weekday="TUESDAY",
+            start_time=time(15, 0),
+            end_time=time(15, 50),
+            room="301",
+            teacher="Alexey Mustafin / Dmitriy Kamyshnikov",
+            group_name=("Group 1",),
+            students_number=25,
+            a1_range="A1:A1",
+            spreadsheet_id="test",
+            google_sheet_gid="test",
+            google_sheet_name="test",
+            date_on=None,
+            date_except=None,
+        ),
+        Lesson(
+            lesson_name="CTO Toolkit",
+            weekday="TUESDAY",
+            start_time=time(15, 30),
+            end_time=time(16, 30),
+            room="301",
+            teacher="Alexey Mustafin / Dmitriy Kamyshnikov",
+            group_name=("Group 1",),
+            students_number=25,
+            a1_range="A2:A2",
+            spreadsheet_id="test",
+            google_sheet_gid="test",
+            google_sheet_name="test",
+            date_on=None,
+            date_except=None,
+        ),
+    ]
+    room_issues = collisions_checker.check_for_room_issue(lessons)
+    teacher_issues = collisions_checker.check_for_teacher_issue(lessons)
+    assert len(room_issues) == 0
+    assert len(teacher_issues) == 0
+
+
+class TestOnlyOnTimeCollision:
+    """ONLY ON: main lesson (weekday + date_except) and nested (date_on) must not collide by time."""
+
+    def _lesson(
+        self,
+        *,
+        weekday: str = "THURSDAY",
+        room: str = "321",
+        date_on: list[date] | None = None,
+        date_except: list[date] | None = None,
+    ) -> Lesson:
+        return Lesson(
+            lesson_name="Programming",
+            weekday=weekday,
+            start_time=time(17, 40),
+            end_time=time(19, 10),
+            room=room,
+            teacher="Егор Дмитриев",
+            group_name="B25-AI360-01",
+            students_number=30,
+            a1_range="A1:A1",
+            spreadsheet_id="test",
+            google_sheet_gid="test",
+            google_sheet_name="test",
+            date_on=date_on,
+            date_except=date_except,
+        )
+
+    def test_only_on_main_vs_nested_no_collision(self) -> None:
+        """Main (weekday + date_except) vs nested (date_on = those dates) → no collision."""
+        only_on_dates = [date(2025, 1, 23), date(2025, 1, 30)]  # Thursdays
+        main = self._lesson(room="321", date_except=only_on_dates)
+        nested = self._lesson(room="307", date_on=only_on_dates)
+        assert CollisionChecker.check_two_timeslots_collisions_by_time(main, nested) is False
+        assert CollisionChecker.check_two_timeslots_collisions_by_time(nested, main) is False
+
+    def test_only_on_overlapping_dates_collision(self) -> None:
+        """If date_on not fully in date_except, time overlap counts as collision."""
+        # 2025-01-23 and 2025-01-30 are Thursdays
+        main = self._lesson(room="321", date_except=[date(2025, 1, 23)])
+        nested = self._lesson(room="307", date_on=[date(2025, 1, 23), date(2025, 1, 30)])
+        assert CollisionChecker.check_two_timeslots_collisions_by_time(main, nested) is True
+        assert CollisionChecker.check_two_timeslots_collisions_by_time(nested, main) is True

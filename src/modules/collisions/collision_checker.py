@@ -115,7 +115,8 @@ class CollisionChecker:
 
         if slot2.date_on:
             slot1, slot2 = slot2, slot1
-        if slot2.date_except and slot1.date_on in slot2.date_except:
+        # ONLY ON: main lesson has date_except, nested has date_on; they don't overlap
+        if slot2.date_except and slot1.date_on and set(slot1.date_on) <= set(slot2.date_except):
             return False
 
         assert slot1.date_on
@@ -127,6 +128,25 @@ class CollisionChecker:
         return CollisionChecker.check_times_intersect(
             slot1.start_time, slot1.end_time, slot2.start_time, slot2.end_time
         )
+
+    @staticmethod
+    def _rooms_set(lesson: Lesson) -> set[str]:
+        if lesson.room is None:
+            return set()
+        return set(lesson.room if isinstance(lesson.room, tuple) else [lesson.room])
+
+    @staticmethod
+    def _is_same_logical_lesson(lesson1: Lesson, lesson2: Lesson) -> bool:
+        """Same subject + same room + same teacher + overlapping time = one lesson (e.g. START AT + TILL split)."""
+        if lesson1.lesson_name.strip().lower() != lesson2.lesson_name.strip().lower():
+            return False
+        if CollisionChecker._rooms_set(lesson1) != CollisionChecker._rooms_set(lesson2):
+            return False
+        t1 = (lesson1.teacher or "").strip().lower()
+        t2 = (lesson2.teacher or "").strip().lower()
+        if t1 != t2:
+            return False
+        return CollisionChecker.check_two_timeslots_collisions_by_time(lesson1, lesson2)
 
     @staticmethod
     def is_online_slot(lessor_or_room: Lesson | str) -> bool:
@@ -195,6 +215,9 @@ class CollisionChecker:
                     if lesson1 is lesson2:
                         continue
 
+                    if self._is_same_logical_lesson(lesson1, lesson2):
+                        continue
+
                     if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
                         graph.add_edge(ind1, ind2)
                         collision_room_map[(min(ind1, ind2), max(ind1, ind2))] = room
@@ -253,6 +276,8 @@ class CollisionChecker:
             for i, lesson1 in enumerate(occupation_lessons):
                 for j in range(i + 1, len(occupation_lessons)):
                     lesson2 = occupation_lessons[j]
+                    if self._is_same_logical_lesson(lesson1, lesson2):
+                        continue
                     if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
                         graph.add_edge(i, j)
 
