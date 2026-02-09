@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,17 @@ from src.electives.config import Target as ElectiveTarget
 from src.logging_ import logger
 
 
+class VerySameLessonId(CustomModel):
+    type: Literal["core_course", "elective"] | None = None
+    "Source type of the lesson"
+    title: str
+    "Lesson name to match"
+    instructor: str | None = None
+    "Instructor name to match (optional)"
+    groups: list[str] = []
+    "Groups to match (optional, any overlap counts)"
+
+
 class SemesterOptions(CustomModel):
     name: str
     core_courses_spreadsheet_id: str | None = None
@@ -19,6 +31,9 @@ class SemesterOptions(CustomModel):
     electives_spreadsheet_id: str | None = None
     electives_targets: list[ElectiveTarget] = []
     electives: list[Elective] = []
+
+    very_same_lessons: list[list[VerySameLessonId]] = []
+    "Groups of lessons that are actually the same lesson (e.g. Russian/English names)"
 
 
 class Teacher(CustomModel):

@@ -17,7 +17,7 @@ from src.modules.collisions.schemas import (
     RoomIssue,
     TeacherIssue,
 )
-from src.modules.options.repository import Teacher
+from src.modules.options.repository import Teacher, VerySameLessonId
 from src.utcnow import utcnow
 
 from .graph import UndirectedGraph
@@ -44,10 +44,12 @@ class CollisionChecker:
         token: str,
         teachers: list[Teacher] | None = None,
         rooms: list[RoomDTO] | None = None,
+        very_same_lessons: list[list[VerySameLessonId]] | None = None,
     ) -> None:
         self.token = token
         self.teachers = teachers or []
         self.rooms = rooms or []
+        self.very_same_lessons: list[list[VerySameLessonId]] = very_same_lessons or []
 
         # Map student_group -> teachers who are students in that group
         self.group_to_studying_teachers: dict[str, list[Teacher]] = defaultdict(list)
@@ -150,6 +152,45 @@ class CollisionChecker:
         return CollisionChecker.check_two_timeslots_collisions_by_time(lesson1, lesson2)
 
     @staticmethod
+    def _lesson_matches_identifier(lesson: Lesson, identifier: VerySameLessonId) -> bool:
+        """Check if a Lesson matches a VerySameLessonId identifier."""
+        if identifier.type and lesson.source_type and identifier.type != lesson.source_type:
+            return False
+        if lesson.lesson_name.strip().lower() != identifier.title.strip().lower():
+            return False
+        if identifier.instructor:
+            if not lesson.teacher or lesson.teacher.strip().lower() != identifier.instructor.strip().lower():
+                return False
+        if identifier.groups:
+            lesson_groups: set[str] = set()
+            if lesson.group_name:
+                if isinstance(lesson.group_name, tuple):
+                    lesson_groups = set(lesson.group_name)
+                else:
+                    lesson_groups = {lesson.group_name}
+            if not lesson_groups & set(identifier.groups):
+                return False
+        return True
+
+    def are_very_same_lessons(self, lesson1: Lesson, lesson2: Lesson) -> bool:
+        """Check if two lessons belong to the same very_same_lessons group.
+        Should only be called when there is a time segment intersection."""
+        for group in self.very_same_lessons:
+            matched_ids: set[int] = set()
+            for i, identifier in enumerate(group):
+                if self._lesson_matches_identifier(lesson1, identifier):
+                    matched_ids.add(i)
+                if self._lesson_matches_identifier(lesson2, identifier):
+                    matched_ids.add(i)
+            # Both lessons match different identifiers within the same group
+            if len(matched_ids) >= 2:
+                id1_match = any(self._lesson_matches_identifier(lesson1, group[i]) for i in matched_ids)
+                id2_match = any(self._lesson_matches_identifier(lesson2, group[i]) for i in matched_ids)
+                if id1_match and id2_match:
+                    return True
+        return False
+
+    @staticmethod
     def is_online_slot(lessor_or_room: Lesson | str) -> bool:
         if isinstance(lessor_or_room, str):
             return "ONLINE" == lessor_or_room or "ОНЛАЙН" == lessor_or_room
@@ -220,6 +261,8 @@ class CollisionChecker:
                         continue
 
                     if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
+                        if self.are_very_same_lessons(lesson1, lesson2):
+                            continue
                         graph.add_edge(ind1, ind2)
                         collision_room_map[(min(ind1, ind2), max(ind1, ind2))] = room
 
@@ -280,6 +323,8 @@ class CollisionChecker:
                     if self._is_same_logical_lesson(lesson1, lesson2):
                         continue
                     if self.check_two_timeslots_collisions_by_time(lesson1, lesson2):
+                        if self.are_very_same_lessons(lesson1, lesson2):
+                            continue
                         graph.add_edge(i, j)
 
             connected_components = graph.get_connected_components()

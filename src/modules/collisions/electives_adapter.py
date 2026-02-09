@@ -63,6 +63,7 @@ def _event_to_lesson(event: ElectiveEvent) -> Lesson | None:
         group_name=event.group,
         teacher=teacher,
         room=event.location,
+        source_type="elective",
         date_on=[event.start.date()] if event.start else None,
         date_except=None,
         students_number=None,

@@ -6,7 +6,7 @@ import yaml
 from src.modules.bookings.client import RoomDTO
 from src.modules.collisions.collision_checker import CollisionChecker
 from src.modules.collisions.schemas import CapacityIssue, Lesson, RoomIssue, TeacherIssue
-from src.modules.options.repository import Teacher
+from src.modules.options.repository import Teacher, VerySameLessonId
 
 rooms_yaml = """
 rooms:
@@ -863,3 +863,318 @@ class TestOnlyOnTimeCollision:
         nested = self._lesson(room="307", date_on=[date(2025, 1, 23), date(2025, 1, 30)])
         assert CollisionChecker.check_two_timeslots_collisions_by_time(main, nested) is True
         assert CollisionChecker.check_two_timeslots_collisions_by_time(nested, main) is True
+
+
+# ── very_same_lessons tests ───────────────────────────────────────────
+
+
+def _make_lesson(
+    name: str = "Lesson",
+    weekday: str = "MONDAY",
+    start: tuple[int, int] = (10, 40),
+    end: tuple[int, int] = (12, 10),
+    room: str = "105",
+    teacher: str | None = None,
+    group: str | tuple[str, ...] | None = None,
+    source_type: str | None = None,
+) -> Lesson:
+    return Lesson(
+        lesson_name=name,
+        weekday=weekday,
+        start_time=time(*start),
+        end_time=time(*end),
+        room=room,
+        teacher=teacher,
+        group_name=group,
+        source_type=source_type,
+        students_number=20,
+        a1_range="A1",
+        spreadsheet_id="test",
+        google_sheet_gid="test",
+        google_sheet_name="test",
+        date_on=None,
+        date_except=None,
+    )
+
+
+class TestVerySameLessons:
+    """Tests for very_same_lessons collision suppression."""
+
+    THEO_MECH_GROUP = [
+        VerySameLessonId(
+            type="core_course",
+            title="Theoretical Mechanics",
+            instructor="Alexandr Maloletov",
+            groups=["B24-RO-01"],
+        ),
+        VerySameLessonId(
+            type="core_course",
+            title="Теоретическая механика",
+            instructor="Александр Малолетов",
+            groups=["B24-MFAI-01", "B24-MFAI-02", "B24-MFAI-03", "B24-MFAI-04", "B24-RO15-01"],
+        ),
+    ]
+
+    ROBOTICS_GROUP = [
+        VerySameLessonId(
+            type="core_course",
+            title="Fundamentals of Robotics (lec)",
+            instructor="Albert Demian",
+            groups=["B24-RO-01"],
+        ),
+        VerySameLessonId(
+            type="elective",
+            title="ор",
+        ),
+    ]
+
+    def _checker(self, very_same: list[list[VerySameLessonId]] | None = None) -> CollisionChecker:
+        return CollisionChecker(
+            token="test",
+            teachers=[],
+            rooms=[RoomDTO.model_validate(room) for room in rooms],
+            very_same_lessons=very_same or [self.THEO_MECH_GROUP],
+        )
+
+    # ── are_very_same_lessons unit tests ──
+
+    def test_matching_pair_detected(self) -> None:
+        checker = self._checker()
+        l1 = _make_lesson(
+            name="Theoretical Mechanics",
+            teacher="Alexandr Maloletov",
+            group="B24-RO-01",
+            source_type="core_course",
+        )
+        l2 = _make_lesson(
+            name="Теоретическая механика",
+            teacher="Александр Малолетов",
+            group=("B24-MFAI-01", "B24-MFAI-02"),
+            source_type="core_course",
+        )
+        assert checker.are_very_same_lessons(l1, l2) is True
+
+    def test_same_identifier_not_very_same(self) -> None:
+        """Two lessons matching the SAME identifier within a group are NOT very-same (they're duplicates, not cross-matches)."""
+        checker = self._checker()
+        l1 = _make_lesson(
+            name="Theoretical Mechanics",
+            teacher="Alexandr Maloletov",
+            group="B24-RO-01",
+            source_type="core_course",
+        )
+        l2 = _make_lesson(
+            name="Theoretical Mechanics",
+            teacher="Alexandr Maloletov",
+            group="B24-RO-01",
+            source_type="core_course",
+        )
+        assert checker.are_very_same_lessons(l1, l2) is False
+
+    def test_no_match_when_no_groups_configured(self) -> None:
+        checker = CollisionChecker(token="test", very_same_lessons=[])
+        l1 = _make_lesson(name="Theoretical Mechanics", teacher="Alexandr Maloletov", group="B24-RO-01")
+        l2 = _make_lesson(name="Теоретическая механика", teacher="Александр Малолетов", group="B24-MFAI-01")
+        assert checker.are_very_same_lessons(l1, l2) is False
+
+    def test_wrong_group_no_match(self) -> None:
+        """If lesson groups don't match any identifier groups, no very-same."""
+        checker = self._checker()
+        l1 = _make_lesson(
+            name="Theoretical Mechanics",
+            teacher="Alexandr Maloletov",
+            group="WRONG-GROUP",
+            source_type="core_course",
+        )
+        l2 = _make_lesson(
+            name="Теоретическая механика",
+            teacher="Александр Малолетов",
+            group="B24-MFAI-01",
+            source_type="core_course",
+        )
+        assert checker.are_very_same_lessons(l1, l2) is False
+
+    def test_wrong_source_type_no_match(self) -> None:
+        checker = self._checker()
+        l1 = _make_lesson(
+            name="Theoretical Mechanics",
+            teacher="Alexandr Maloletov",
+            group="B24-RO-01",
+            source_type="elective",  # wrong type
+        )
+        l2 = _make_lesson(
+            name="Теоретическая механика",
+            teacher="Александр Малолетов",
+            group="B24-MFAI-01",
+            source_type="core_course",
+        )
+        assert checker.are_very_same_lessons(l1, l2) is False
+
+    def test_cross_type_core_course_and_elective(self) -> None:
+        """Robotics group: core_course vs elective."""
+        checker = self._checker([self.ROBOTICS_GROUP])
+        l1 = _make_lesson(
+            name="Fundamentals of Robotics (lec)",
+            teacher="Albert Demian",
+            group="B24-RO-01",
+            source_type="core_course",
+        )
+        l2 = _make_lesson(
+            name="ор",
+            source_type="elective",
+        )
+        assert checker.are_very_same_lessons(l1, l2) is True
+
+    def test_case_insensitive_title(self) -> None:
+        checker = self._checker()
+        l1 = _make_lesson(
+            name="theoretical mechanics",
+            teacher="Alexandr Maloletov",
+            group="B24-RO-01",
+            source_type="core_course",
+        )
+        l2 = _make_lesson(
+            name="ТЕОРЕТИЧЕСКАЯ МЕХАНИКА",
+            teacher="Александр Малолетов",
+            group="B24-MFAI-01",
+            source_type="core_course",
+        )
+        assert checker.are_very_same_lessons(l1, l2) is True
+
+    def test_multiple_groups_second_matches(self) -> None:
+        """Lesson from second configured group still matches."""
+        checker = self._checker([self.THEO_MECH_GROUP, self.ROBOTICS_GROUP])
+        l1 = _make_lesson(
+            name="Fundamentals of Robotics (lec)",
+            teacher="Albert Demian",
+            group="B24-RO-01",
+            source_type="core_course",
+        )
+        l2 = _make_lesson(name="ор", source_type="elective")
+        assert checker.are_very_same_lessons(l1, l2) is True
+
+    # ── integration: room collision suppressed ──
+
+    def test_room_collision_suppressed_for_very_same(self) -> None:
+        """Two very-same lessons in the same room at the same time should NOT raise a room issue."""
+        checker = self._checker()
+        lessons = [
+            _make_lesson(
+                name="Theoretical Mechanics",
+                teacher="Alexandr Maloletov",
+                group="B24-RO-01",
+                source_type="core_course",
+                room="105",
+            ),
+            _make_lesson(
+                name="Теоретическая механика",
+                teacher="Александр Малолетов",
+                group=("B24-MFAI-01", "B24-MFAI-02"),
+                source_type="core_course",
+                room="105",
+            ),
+        ]
+        issues = checker.check_for_room_issue(lessons)
+        assert len(issues) == 0
+
+    def test_room_collision_not_suppressed_without_config(self) -> None:
+        """Same lessons but without very_same_lessons config → room collision raised."""
+        checker = CollisionChecker(
+            token="test",
+            rooms=[RoomDTO.model_validate(room) for room in rooms],
+            very_same_lessons=[],
+        )
+        lessons = [
+            _make_lesson(
+                name="Theoretical Mechanics",
+                teacher="Alexandr Maloletov",
+                group="B24-RO-01",
+                source_type="core_course",
+                room="105",
+            ),
+            _make_lesson(
+                name="Теоретическая механика",
+                teacher="Александр Малолетов",
+                group=("B24-MFAI-01", "B24-MFAI-02"),
+                source_type="core_course",
+                room="105",
+            ),
+        ]
+        issues = checker.check_for_room_issue(lessons)
+        assert len(issues) == 1
+
+    def test_room_collision_still_raised_for_unrelated_lessons(self) -> None:
+        """Non-very-same lessons in same room at same time still collide."""
+        checker = self._checker()
+        lessons = [
+            _make_lesson(name="Math", teacher="Teacher A", room="105"),
+            _make_lesson(name="Physics", teacher="Teacher B", room="105"),
+        ]
+        issues = checker.check_for_room_issue(lessons)
+        assert len(issues) == 1
+
+    # ── integration: teacher collision suppressed ──
+
+    def test_teacher_collision_suppressed_for_very_same(self) -> None:
+        """Very-same lessons with the same teacher (different names) should NOT raise a teacher issue."""
+        checker = self._checker()
+        lessons = [
+            _make_lesson(
+                name="Theoretical Mechanics",
+                teacher="Alexandr Maloletov",
+                group="B24-RO-01",
+                source_type="core_course",
+                room="105",
+            ),
+            _make_lesson(
+                name="Теоретическая механика",
+                teacher="Александр Малолетов",
+                group=("B24-MFAI-01", "B24-MFAI-02"),
+                source_type="core_course",
+                room="307",
+            ),
+        ]
+        # Different teacher names → won't even group under same teacher key,
+        # but let's verify no issues arise from group-based detection either.
+        issues = checker.check_for_teacher_issue(lessons)
+        assert len(issues) == 0
+
+    def test_teacher_collision_suppressed_same_teacher_key(self) -> None:
+        """Very-same lessons where teacher name IS the same (same key) should also be suppressed."""
+        group = [
+            VerySameLessonId(type="core_course", title="Lesson EN", instructor="Ivan"),
+            VerySameLessonId(type="core_course", title="Lesson RU", instructor="Ivan"),
+        ]
+        checker = self._checker([group])
+        lessons = [
+            _make_lesson(name="Lesson EN", teacher="Ivan", group="G1", source_type="core_course", room="301"),
+            _make_lesson(name="Lesson RU", teacher="Ivan", group="G2", source_type="core_course", room="302"),
+        ]
+        issues = checker.check_for_teacher_issue(lessons)
+        assert len(issues) == 0
+
+    def test_no_time_overlap_no_suppression_needed(self) -> None:
+        """Very-same lessons at different times don't collide anyway — no issue."""
+        checker = self._checker()
+        lessons = [
+            _make_lesson(
+                name="Theoretical Mechanics",
+                teacher="Alexandr Maloletov",
+                group="B24-RO-01",
+                source_type="core_course",
+                room="105",
+                start=(9, 0),
+                end=(10, 30),
+            ),
+            _make_lesson(
+                name="Теоретическая механика",
+                teacher="Александр Малолетов",
+                group=("B24-MFAI-01",),
+                source_type="core_course",
+                room="105",
+                start=(14, 0),
+                end=(15, 30),
+            ),
+        ]
+        issues = checker.check_for_room_issue(lessons)
+        assert len(issues) == 0

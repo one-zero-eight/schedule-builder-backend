@@ -29,6 +29,8 @@ class Lesson(CustomModel):
     "Room for lesson, None - TBA, if list - multiple rooms simultaneously"
     teacher: str | None = None
     "Teacher on lesson"
+    source_type: Literal["core_course", "elective"] | None = None
+    "Whether the lesson comes from core courses or electives"
     # <
 
     # > Course and group info

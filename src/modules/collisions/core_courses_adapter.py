@@ -196,6 +196,7 @@ def _event_to_lesson(
         group_name=group_name if group_name is not None else cell_event.group,
         teacher=cell_event.teacher,
         room=cell_event.location,
+        source_type="core_course",
         date_on=None,
         date_except=None,
         students_number=students_number if students_number is not None else cell_event.group_student_number,

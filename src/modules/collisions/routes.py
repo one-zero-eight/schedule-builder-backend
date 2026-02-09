@@ -79,6 +79,7 @@ async def check_timetable_collisions(user_and_token: VerifyTokenDep, params: Che
         token=token,
         rooms=await booking_client.get_rooms(token),
         teachers=teachers,
+        very_same_lessons=semester_options.very_same_lessons,
     )
 
     issues = await collisions_use_case.get_collisions(
