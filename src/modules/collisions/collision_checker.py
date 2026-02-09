@@ -3,8 +3,9 @@ from collections import defaultdict
 from collections.abc import Generator
 from enum import Enum
 
-from src.core_courses.config import Target
+from src.core_courses.config import Target as CoreCourseTarget
 from src.custom_pydantic import CustomModel
+from src.electives.config import Target as ElectiveTarget
 from src.logging_ import logger
 from src.modules.bookings.client import BookingDTO, RoomDTO, booking_client
 from src.modules.collisions.schemas import (
@@ -331,7 +332,7 @@ class CollisionChecker:
         return result
 
     async def check_for_outlook_issue(
-        self, lessons: list[Lesson], targets: list[Target] | None = None
+        self, lessons: list[Lesson], targets: list[CoreCourseTarget | ElectiveTarget] | None = None
     ) -> list[OutlookIssue]:
         def daterange(start_date: datetime.date, end_date: datetime.date) -> Generator[datetime.date]:
             days = int((end_date - start_date).days)
@@ -344,8 +345,8 @@ class CollisionChecker:
         if not lessons:
             return []
 
-        targets_list = targets or []
-        targets_by_sheet: dict[str, Target] = {target.sheet_name: target for target in targets_list}
+        targets_list = [t for t in (targets or []) if isinstance(t, CoreCourseTarget)]
+        targets_by_sheet: dict[str, CoreCourseTarget] = {target.sheet_name: target for target in targets_list}
 
         if not targets_list:
             min_needed_time = datetime.datetime.combine(today, datetime.time.min)
@@ -511,7 +512,7 @@ class CollisionChecker:
     async def get_collisions(
         self,
         lessons: list[Lesson],
-        targets: list[Target] | None = None,
+        targets: list[CoreCourseTarget | ElectiveTarget] | None = None,
         check_room_collisions: bool = True,
         check_teacher_collisions: bool = True,
         check_space_collisions: bool = True,

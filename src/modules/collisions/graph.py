@@ -6,10 +6,7 @@ T = TypeVar("T")
 
 class UndirectedGraph:
     def __init__(self, vertices_number: int = 0) -> None:
-        if vertices_number > 0:
-            self.create_graph(vertices_number)
-        else:
-            self.graph = defaultdict(list)
+        self.create_graph(vertices_number)
 
     def create_graph(self, vertices_number: int) -> None:
         self.vertices_number = vertices_number

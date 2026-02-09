@@ -6,6 +6,8 @@ import pandas as pd
 
 from src.core_courses.config import Target
 from src.custom_pydantic import CustomModel
+from src.electives.config import Elective
+from src.electives.config import Target as ElectiveTarget
 from src.logging_ import logger
 
 
@@ -15,6 +17,8 @@ class SemesterOptions(CustomModel):
     core_courses_targets: list[Target] = []
 
     electives_spreadsheet_id: str | None = None
+    electives_targets: list[ElectiveTarget] = []
+    electives: list[Elective] = []
 
 
 class Teacher(CustomModel):

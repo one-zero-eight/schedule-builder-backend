@@ -54,7 +54,7 @@ def use(
         yield event
 
 
-async def get_all_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
+async def get_all_core_courses_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
     parser = CoreCoursesParser()
     xlsx_file = await fetch_xlsx_spreadsheet(spreadsheet_id=parser_config.spreadsheet_id)
     original_target_sheet_names = [target.sheet_name for target in parser_config.targets]
