@@ -20,13 +20,13 @@ def fastapi_app() -> FastAPI:
 @pytest_asyncio.fixture(scope="function")
 async def fastapi_test_client(
     fastapi_app: FastAPI,
-) -> AsyncGenerator[AsyncClient, None]:
+) -> AsyncGenerator[AsyncClient]:
     async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
         yield client
 
 
 @pytest_asyncio.fixture(scope="function")
-async def authenticated_client(fastapi_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
+async def authenticated_client(fastapi_app: FastAPI) -> AsyncGenerator[AsyncClient]:
     async def fake_verify_token_dep() -> tuple[UserTokenData, str] | None:
         return UserTokenData(innohassle_id="123", email="test@test.com"), "test_token"
 
