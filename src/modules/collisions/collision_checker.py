@@ -193,12 +193,13 @@ class CollisionChecker:
     @staticmethod
     def is_online_slot(lessor_or_room: Lesson | str) -> bool:
         if isinstance(lessor_or_room, str):
-            return "ONLINE" == lessor_or_room or "ОНЛАЙН" == lessor_or_room
+            return lessor_or_room.upper() in ("ONLINE", "ОНЛАЙН")
         elif isinstance(lessor_or_room, Lesson):
             if lessor_or_room.room is None:
                 return False
-            else:
-                return "ONLINE" == lessor_or_room.room or "ОНЛАЙН" == lessor_or_room.room
+            if isinstance(lessor_or_room.room, tuple):
+                return all(r.upper() in ("ONLINE", "ОНЛАЙН") for r in lessor_or_room.room)
+            return lessor_or_room.room.upper() in ("ONLINE", "ОНЛАЙН")
 
     @staticmethod
     def _remove_suffix(name: str):
