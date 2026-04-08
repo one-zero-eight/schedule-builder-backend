@@ -476,12 +476,14 @@ class CollisionChecker:
 
                 intersected_bookings = list(
                     filter(
-                        lambda booking: booking.room_id in filtered_rooms
-                        and self.check_datetimes_intersect(
-                            booking.start_time,
-                            booking.end_time,
-                            lesson_start,
-                            lesson_end,
+                        lambda booking: (
+                            booking.room_id in filtered_rooms
+                            and self.check_datetimes_intersect(
+                                booking.start_time,
+                                booking.end_time,
+                                lesson_start,
+                                lesson_end,
+                            )
                         ),
                         all_bookings,
                     )
