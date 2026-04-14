@@ -19,6 +19,10 @@ class Lesson(CustomModel):
     # > Main lesson info
     lesson_name: str
     "Name of the lesson"
+    lesson_class_type: Literal["lec", "tut", "lab", "лек", "тут", "лаб"] | str | None = None
+    "Type of the lesson"
+    source_type: Literal["core_course", "elective"] | None = None
+    "Whether the lesson comes from core courses or electives"
     weekday: str | None = None
     "Weekday of a lesson"
     start_time: datetime.time
@@ -29,8 +33,6 @@ class Lesson(CustomModel):
     "Room for lesson, None - TBA, if list - multiple rooms simultaneously"
     teacher: str | None = None
     "Teacher on lesson"
-    source_type: Literal["core_course", "elective"] | None = None
-    "Whether the lesson comes from core courses or electives"
     # <
 
     # > Course and group info

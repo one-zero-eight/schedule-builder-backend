@@ -137,11 +137,6 @@ async def get_all_core_courses_lessons(parser_config: CoreCoursesConfig) -> list
                 elif cell_event.group:
                     groups.append(cell_event.group)
 
-            logger.info(groups)
-            logger.info(merged_range_a1_range)
-            logger.info(excel_ranges)
-            logger.info(merged_students_number)
-
             if cell_event.location_item is None:
                 lessons_from_merged.append(
                     _event_to_lesson(
@@ -189,6 +184,7 @@ def _event_to_lesson(
 ) -> Lesson:
     return Lesson(
         lesson_name=cell_event.subject,
+        lesson_class_type=cell_event.class_type,
         weekday=WEEKDAYS[cell_event.weekday],
         start_time=cell_event.start_time,
         end_time=cell_event.end_time,
@@ -248,6 +244,7 @@ def _process_location_item(
 
     main_lesson = Lesson(
         lesson_name=cell_event.subject,
+        lesson_class_type=cell_event.class_type,
         weekday=WEEKDAYS[cell_event.weekday],
         start_time=lesson_start_time,
         end_time=lesson_end_time,
