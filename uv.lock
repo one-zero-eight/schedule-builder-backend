@@ -936,31 +936,31 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "asyncpg", specifier = ">=0.30.0" },
-    { name = "colorlog", specifier = ">=6.9.0" },
-    { name = "fastapi", specifier = ">=0.115.12" },
-    { name = "fastapi-swagger", specifier = ">=0.2.19" },
-    { name = "gunicorn", specifier = ">=23.0.0" },
+    { name = "asyncpg", specifier = ">=0.31.0" },
+    { name = "colorlog", specifier = ">=6.10.1" },
+    { name = "fastapi", specifier = ">=0.136.1" },
+    { name = "fastapi-swagger", specifier = ">=0.4.49" },
+    { name = "gunicorn", specifier = ">=26.0.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "joserfc", specifier = ">=1.6.5" },
-    { name = "numpy", specifier = ">=2.3.0" },
+    { name = "numpy", specifier = ">=2.4.4" },
     { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "pandas", specifier = ">=2.3.0" },
-    { name = "pydantic", extras = ["email"], specifier = ">=2.11.5" },
-    { name = "pydantic-settings", specifier = ">=2.9.1" },
-    { name = "python-multipart", specifier = ">=0.0.20" },
-    { name = "pytz", specifier = ">=2025.2" },
-    { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "uvicorn", specifier = ">=0.34.2" },
+    { name = "pandas", specifier = ">=3.0.2" },
+    { name = "pydantic", extras = ["email"], specifier = ">=2.13.4" },
+    { name = "pydantic-settings", specifier = ">=2.14.0" },
+    { name = "python-multipart", specifier = ">=0.0.27" },
+    { name = "pytz", specifier = ">=2026.2" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "uvicorn", specifier = ">=0.46.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "prek", specifier = ">=0.3.8" },
-    { name = "pytest", specifier = ">=8.4.0" },
-    { name = "pytest-asyncio", specifier = ">=1.1.0" },
-    { name = "pytest-cov", specifier = ">=6.2.1" },
-    { name = "ruff", specifier = ">=0.12.2" },
+    { name = "prek", specifier = ">=0.3.13" },
+    { name = "pytest", specifier = ">=9.0.3" },
+    { name = "pytest-asyncio", specifier = ">=1.3.0" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "ruff", specifier = ">=0.15.12" },
 ]
 
 [[package]]
