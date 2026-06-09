@@ -2,59 +2,19 @@ import datetime
 from collections import defaultdict
 from collections.abc import Generator
 
-import pandas as pd
 from openpyxl.utils import coordinate_to_tuple, get_column_letter
 
-from src.core_courses.cell_to_event import CoreCourseEvent, convert_cell_to_event
+from src.core_courses.cell_to_event import CoreCourseEvent
 from src.core_courses.config import CoreCoursesConfig, Target
 from src.core_courses.location_parser import Item
-from src.core_courses.parser import CoreCourseCell, CoreCoursesParser
+from src.core_courses.parser import CoreCoursesParser, use
 from src.logging_ import logger
 from src.utils import WEEKDAYS, fetch_xlsx_spreadsheet, get_sheet_gids, nearest_weekday, sanitize_sheet_name
 
-from .schemas import Lesson
+from .schemas import CoreCourseComponent, GroupedCoreCourse, Lesson
 
 
-def use(
-    processed_column: pd.Series,
-    target: Target,
-) -> Generator[CoreCourseEvent]:
-    """
-    Generate events from processed cells
-
-    :param processed_column: series with processed cells (CoreCourseCell),
-        multiindex with (weekday, timeslot) and (course, group) as name
-    :param target: target to generate events for (needed for start and end dates)
-    :return: generator of events
-    """
-    # -------- Iterate over processed cells --------
-    (course, group) = processed_column.name
-    course: str
-    group: str
-
-    for (weekday, timeslot), cell in processed_column.items():
-        cell: CoreCourseCell | None
-        if cell is None:
-            continue
-        weekday: str
-        timeslot: tuple[datetime.time, datetime.time]
-
-        event = convert_cell_to_event(
-            cell=cell,
-            weekday=weekday,
-            timeslot=timeslot,
-            course=course,
-            group=group,
-            target=target,
-        )
-
-        if event is None:
-            continue
-
-        yield event
-
-
-async def get_all_core_courses_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
+async def _collect_core_courses_lessons(parser_config: CoreCoursesConfig) -> list[Lesson]:
     parser = CoreCoursesParser()
     xlsx_file = await fetch_xlsx_spreadsheet(spreadsheet_id=parser_config.spreadsheet_id)
     original_target_sheet_names = [target.sheet_name for target in parser_config.targets]
@@ -74,7 +34,11 @@ async def get_all_core_courses_lessons(parser_config: CoreCoursesConfig) -> list
         non_merged_events: list[CoreCourseEvent] = []
 
         for grouped_dfs_with_cells in grouped_dfs_with_cells_list:
-            series_with_generators = grouped_dfs_with_cells.apply(use, target=target)
+            series_with_generators = grouped_dfs_with_cells.apply(
+                use,
+                target=target,
+                dont_care_location_string=parser_config.dont_care_location_string,
+            )
             for generator in series_with_generators:
                 generator: Generator[CoreCourseEvent]
 
@@ -175,6 +139,194 @@ async def get_all_core_courses_lessons(parser_config: CoreCoursesConfig) -> list
     return all_lessons
 
 
+async def get_grouped_core_courses_lessons(parser_config: CoreCoursesConfig) -> list[GroupedCoreCourse]:
+    flat_lessons = await _collect_core_courses_lessons(parser_config)
+    term_dates = {target.sheet_name: (target.start_date, target.end_date) for target in parser_config.targets}
+    grouped = group_core_course_lessons(flat_lessons, term_dates=term_dates)
+    logger.info(f"Grouped core course lessons: {len(flat_lessons)} -> {len(grouped)}")
+    return grouped
+
+
+def _modifiers_for_output(item: Item | None) -> Item | None:
+    """Omit modifiers when the location string is just a room (no temporal/nested rules)."""
+    if item is None:
+        return None
+    has_extra = bool(
+        item.starts_from
+        or item.ends_on
+        or item.starts_at
+        or item.till
+        or item.on_weeks
+        or item.on
+        or item.except_
+        or item.NEST
+    )
+    if not has_extra:
+        return None
+    return item
+
+
+def _item_for_lesson_dates(lesson: Lesson) -> Item | None:
+    """Build modifier Item for a component, including per-row date overrides from parsing."""
+    if lesson.modifiers is not None:
+        item = lesson.modifiers.model_copy(deep=True)
+        if lesson.date_on is not None:
+            item.on = lesson.date_on
+        if lesson.date_except is not None:
+            item.except_ = lesson.date_except
+        if lesson.date_from is not None:
+            item.starts_from = lesson.date_from
+        return item
+    if lesson.date_on or lesson.date_except or lesson.date_from:
+        location = lesson.room if isinstance(lesson.room, str) else None
+        return Item(
+            location=location,
+            on=lesson.date_on,
+            except_=lesson.date_except,
+            starts_from=lesson.date_from,
+        )
+    return None
+
+
+def _lesson_dates_from_modifiers(
+    item: Item | None,
+) -> tuple[list[datetime.date] | None, list[datetime.date] | None, datetime.date | None]:
+    if item is None:
+        return None, None, None
+    return item.on, item.except_, item.starts_from
+
+
+def _modifiers_for_component(lesson: Lesson) -> Item | None:
+    return _modifiers_for_output(_item_for_lesson_dates(lesson))
+
+
+def _as_audience_list(group_name: str | tuple[str, ...] | list[str] | None) -> list[str]:
+    if group_name is None:
+        return []
+    if isinstance(group_name, str):
+        return [group_name]
+    return list(group_name)
+
+
+def _audience_to_group_name(audience: list[str]) -> str | tuple[str, ...] | None:
+    if not audience:
+        return None
+    if len(audience) == 1:
+        return audience[0]
+    return tuple(audience)
+
+
+def _component_sort_key(component: CoreCourseComponent) -> tuple:
+    group = tuple(component.audience)
+    type_rank = {"lec": 0, "лек": 0, "tut": 1, "тут": 1, "lab": 2, "лаб": 2}.get(str(component.type or "").lower(), 99)
+    return (type_rank, component.weekday or "", component.start_time, group)
+
+
+def _lesson_to_component(lesson: Lesson) -> CoreCourseComponent:
+    return CoreCourseComponent(
+        type=lesson.lesson_class_type,
+        weekday=lesson.weekday,
+        start_time=lesson.start_time,
+        end_time=lesson.end_time,
+        room=lesson.room,
+        instructor=lesson.teacher,
+        audience=_as_audience_list(lesson.group_name),
+        students_number=lesson.students_number,
+        modifiers=_modifiers_for_component(lesson),
+        a1_range=lesson.a1_range,
+    )
+
+
+def grouped_core_course_to_json(course: GroupedCoreCourse) -> dict:
+    data = course.model_dump(mode="json")
+    for component in data.get("components", []):
+        if component.get("modifiers") is None:
+            component.pop("modifiers", None)
+        for key in ("date_on", "date_except", "date_from"):
+            component.pop(key, None)
+    return data
+
+
+def group_core_course_lessons(
+    lessons: list[Lesson],
+    *,
+    term_dates: dict[str, tuple[datetime.date, datetime.date]],
+) -> list[GroupedCoreCourse]:
+    by_key: dict[tuple, list[Lesson]] = defaultdict(list)
+    for lesson in lessons:
+        start_date, end_date = term_dates.get(lesson.google_sheet_name, (None, None))
+        key = (
+            lesson.course_name or "",
+            lesson.lesson_name,
+            lesson.spreadsheet_id,
+            lesson.google_sheet_gid,
+            lesson.google_sheet_name,
+            start_date,
+            end_date,
+        )
+        by_key[key].append(lesson)
+
+    grouped: list[GroupedCoreCourse] = []
+    for (cohort, subject, spreadsheet_id, google_sheet_gid, google_sheet_name, start_date, end_date), bucket in sorted(
+        by_key.items(), key=lambda item: (item[0][0], item[0][1], item[0][4])
+    ):
+        components = sorted((_lesson_to_component(lesson) for lesson in bucket), key=_component_sort_key)
+        grouped.append(
+            GroupedCoreCourse(
+                cohort=cohort or None,
+                subject=subject,
+                spreadsheet_id=spreadsheet_id,
+                google_sheet_gid=google_sheet_gid,
+                google_sheet_name=google_sheet_name,
+                start_date=start_date,
+                end_date=end_date,
+                components=components,
+            )
+        )
+    return grouped
+
+
+def expand_grouped_core_course_lessons(grouped: list[GroupedCoreCourse]) -> list[Lesson]:
+    flat: list[Lesson] = []
+    for course in grouped:
+        for component in course.components:
+            date_on, date_except, date_from = _lesson_dates_from_modifiers(component.modifiers)
+            flat.append(
+                Lesson(
+                    lesson_name=course.subject,
+                    lesson_class_type=component.type,
+                    weekday=component.weekday,
+                    start_time=component.start_time,
+                    end_time=component.end_time,
+                    course_name=course.cohort,
+                    group_name=_audience_to_group_name(component.audience),
+                    teacher=component.instructor,
+                    room=component.room,
+                    source_type="core_course",
+                    date_on=date_on,
+                    date_except=date_except,
+                    date_from=date_from,
+                    modifiers=component.modifiers,
+                    students_number=component.students_number,
+                    spreadsheet_id=course.spreadsheet_id,
+                    google_sheet_gid=course.google_sheet_gid,
+                    google_sheet_name=course.google_sheet_name,
+                    a1_range=component.a1_range,
+                )
+            )
+
+    def _sort_key(x: Lesson):
+        group = x.group_name
+        if group is None:
+            group = ()
+        elif isinstance(group, str):
+            group = (group,)
+        return (x.course_name or "", group, x.weekday or "", x.start_time)
+
+    flat.sort(key=_sort_key)
+    return flat
+
+
 def _event_to_lesson(
     cell_event: CoreCourseEvent,
     *,
@@ -200,7 +352,40 @@ def _event_to_lesson(
         google_sheet_gid=cell_event.google_sheet_gid,
         google_sheet_name=cell_event.google_sheet_name,
         a1_range=a1_range if a1_range is not None else cell_event.a1,
+        modifiers=cell_event.location_item,
     )
+
+
+def _expand_nested_location_lessons(lessons: list[Lesson]) -> list[Lesson]:
+    """Expand lessons with nested location modifiers for collision checks (flat ONLY ON rows)."""
+    result: list[Lesson] = []
+    for lesson in lessons:
+        item = lesson.modifiers
+        if not item or not item.NEST:
+            result.append(lesson)
+            continue
+        nested_on = [nested for nested in item.NEST if nested.on]
+        if not nested_on:
+            result.append(lesson)
+            continue
+
+        main = lesson.model_copy()
+        main.date_except = list(main.date_except or [])
+        for nested in nested_on:
+            if nested.location and nested.on:
+                main.date_except = sorted(set(main.date_except) | set(nested.on))
+        if not main.date_except:
+            main.date_except = None
+        result.append(main)
+
+        for nested in nested_on:
+            override = lesson.model_copy()
+            override.date_on = nested.on
+            override.room = nested.location or lesson.room
+            override.start_time = nested.starts_at or lesson.start_time
+            override.end_time = nested.till or lesson.end_time
+            result.append(override)
+    return result
 
 
 def _process_location_item(
@@ -242,55 +427,40 @@ def _process_location_item(
 
     convert_weeks_on_to_only_on(location_item)
 
-    main_lesson = Lesson(
-        lesson_name=cell_event.subject,
-        lesson_class_type=cell_event.class_type,
-        weekday=WEEKDAYS[cell_event.weekday],
-        start_time=lesson_start_time,
-        end_time=lesson_end_time,
-        course_name=cell_event.course,
-        group_name=group_name if group_name is not None else cell_event.group,
-        teacher=cell_event.teacher,
-        room=location_item.location or cell_event.location,
-        date_on=location_item.on,
-        date_except=location_item.except_,
-        date_from=location_item.starts_from,
-        students_number=students_number if students_number is not None else cell_event.group_student_number,
-        spreadsheet_id=cell_event.spreadsheet_id,
-        google_sheet_gid=cell_event.google_sheet_gid,
-        google_sheet_name=cell_event.google_sheet_name,
-        a1_range=a1_range if a1_range is not None else cell_event.a1,
-    )
+    def build_lesson() -> Lesson:
+        return Lesson(
+            lesson_name=cell_event.subject,
+            lesson_class_type=cell_event.class_type,
+            weekday=WEEKDAYS[cell_event.weekday],
+            start_time=lesson_start_time,
+            end_time=lesson_end_time,
+            course_name=cell_event.course,
+            group_name=group_name if group_name is not None else cell_event.group,
+            teacher=cell_event.teacher,
+            room=location_item.location or cell_event.location,
+            date_on=location_item.on,
+            date_except=location_item.except_,
+            date_from=location_item.starts_from,
+            students_number=students_number if students_number is not None else cell_event.group_student_number,
+            spreadsheet_id=cell_event.spreadsheet_id,
+            google_sheet_gid=cell_event.google_sheet_gid,
+            google_sheet_name=cell_event.google_sheet_name,
+            a1_range=a1_range if a1_range is not None else cell_event.a1,
+            modifiers=cell_event.location_item,
+        )
 
-    lessons: list[Lesson] = [main_lesson]
-
-    nested_on: list[Item] = []
-    extra_nested: list[Item] = []
     if location_item.NEST:
-        for item in location_item.NEST:
-            convert_weeks_on_to_only_on(item)
-            if item.on:
-                nested_on.append(item)
-            else:
-                logger.info(f"Root Item: {location_item}, {item}")
-                extra_nested.append(item)
+        extra_nested: list[Item] = []
+        for nested in location_item.NEST:
+            convert_weeks_on_to_only_on(nested)
+            if not nested.on:
+                logger.info(f"Root Item: {location_item}, {nested}")
+                extra_nested.append(nested)
+        if extra_nested:  # TODO: Handle '421 (316 FROM 31/10)' case
+            logger.warning(f"Extra nested is not implemented yet\nItem({location_item})")
+        return [build_lesson()]
 
-    if extra_nested:  # TODO: Handle '421 (316 FROM 31/10)' case
-        logger.warning(f"Extra nested is not implemented yet\nItem({location_item})")
-
-    for item in nested_on:
-        assert item.on, f"Item {item} has no on"
-        if item.location:
-            main_lesson.date_except = (main_lesson.date_except or []) + item.on
-
-        nested_lesson = main_lesson.model_copy()
-        nested_lesson.date_on = item.on
-        nested_lesson.room = item.location or main_lesson.room
-        nested_lesson.start_time = item.starts_at or main_lesson.start_time
-        nested_lesson.end_time = item.till or main_lesson.end_time
-        lessons.append(nested_lesson)
-
-    return lessons
+    return [build_lesson()]
 
 
 def _are_lessons_identical(lesson1: Lesson, lesson2: Lesson) -> bool:

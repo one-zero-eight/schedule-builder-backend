@@ -3,13 +3,13 @@ VERSION = "0.1.0"
 
 # Info for OpenAPI specification
 TITLE = "InNoHassle Schedule Builder API"
-SUMMARY = "Build and manage academic schedules with collision detection at Innopolis University."
+SUMMARY = "Build and manage academic schedules at Innopolis University."
 DESCRIPTION = """
 ### About this project
 
 This is the API for Schedule Builder project in InNoHassle ecosystem developed by [one-zero-eight](https://t.me/one_zero_eight) community.
 
-Using this API you can build academic schedules, manage room bookings, and detect schedule collisions at Innopolis University.
+Using this API you can build academic schedules and manage room bookings at Innopolis University.
 
 Backend is developed using FastAPI framework on Python.
 

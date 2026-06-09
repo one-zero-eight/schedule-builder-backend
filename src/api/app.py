@@ -59,6 +59,15 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return PlainTextResponse(error_str, status_code=422)
 
 
+@app.exception_handler(Exception)
+async def parser_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, StarletteHTTPException):
+        return await custom_http_exception_handler(request, exc)
+    if "/parser/" not in request.url.path:
+        logger.exception("Unhandled exception")
+    return PlainTextResponse("Internal Server Error", status_code=500)
+
+
 @app.exception_handler(StarletteHTTPException)
 async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
     """
@@ -79,13 +88,13 @@ app.add_middleware(
 )
 
 from src.modules.bookings.routes import router as router_bookings  # noqa: E402
-from src.modules.collisions.routes import router as router_collisions  # noqa: E402
-from src.modules.options.routes import router as router_options  # noqa: E402
 from src.modules.parser.routes import router as router_parser  # noqa: E402
+from src.modules.schedule.routes import router as router_schedule  # noqa: E402
+from src.modules.schedule_config.routes import router as router_schedule_config  # noqa: E402
 
 # Import routers above and include them below [do not edit this comment]
-app.include_router(router_collisions)
-app.include_router(router_options)
 app.include_router(router_bookings)
 app.include_router(router_parser)
+app.include_router(router_schedule)
+app.include_router(router_schedule_config)
 # ^

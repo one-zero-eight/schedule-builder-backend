@@ -1,6 +1,6 @@
 *.xlsx
 *.xlsx#
-data/options.json
+data/schedule-config/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

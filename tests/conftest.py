@@ -87,7 +87,5 @@ def mock_booking_client():
     with (
         patch("src.modules.bookings.client.booking_client", mock_client),
         patch("src.modules.bookings.routes.booking_client", mock_client),
-        patch("src.modules.collisions.collision_checker.booking_client", mock_client),
-        patch("src.modules.collisions.routes.booking_client", mock_client),
     ):
         yield mock_client

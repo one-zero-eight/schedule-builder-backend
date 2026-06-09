@@ -10,6 +10,7 @@ import re
 from collections import defaultdict
 from collections.abc import Generator
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
 import numpy as np
 import openpyxl
@@ -21,6 +22,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from src.logging_ import logger
 
 from ..utils import WEEKDAYS, prettify_string, sanitize_sheet_name
+from .config import Target
+
+if TYPE_CHECKING:
+    from .cell_to_event import CoreCourseEvent
 
 
 class CoreCourseCell(BaseModel):
@@ -60,29 +65,14 @@ class CoreCoursesParser:
         ```python
         pipeline_result = parser.pipeline(xlsx, sheet_names, sheet_gids, spreadsheet_id)
 
-        def use(processed_column: pd.Series, some_variable: str):
-            \"\"\"
-            :param processed_column: series with processed cells (CoreCourseCell),
-                multiindex with (weekday, timeslot) and (course, group) as name
-            \"\"\"
-            (course, group) = processed_column.name
-            course: str
-            group: str
-
-            for (weekday, timeslot), cell in processed_column.items():
-                cell: CoreCourseCell | None
-                if cell is None:
-                    continue
-                weekday: str
-                timeslot: tuple[datetime.time, datetime.time]
-                yield cell # Do what you want with cell
+        from src.core_courses.parser import use
 
         all_cells = []
         some_variable = "hello there"
 
         for sheet_name, grouped_dfs_with_cells_list in zip(sheet_names, pipeline_result):
             for grouped_dfs_with_cells in grouped_dfs_with_cells_list:
-                series_with_generators = grouped_dfs_with_cells.apply(use, some_variable=some_variable)
+                series_with_generators = grouped_dfs_with_cells.apply(use, target=target)
                 for generator in series_with_generators:
                     generator: Generator[CoreCourseCell, None, None]
                     all_cells.extend(generator)
@@ -110,7 +100,6 @@ class CoreCoursesParser:
             sheet_df = dfs[target_sheet_name]
             google_sheet_name = sanitized_sheet_name_x_google_sheet_name.get(target_sheet_name)
             google_sheet_gid = sheet_gids.get(google_sheet_name) if google_sheet_name else None
-
             time_columns_index = self.get_time_columns(sheet_df)
             logger.info(f"Sheet Time columns: {[get_column_letter(col + 1) for col in time_columns_index]}")
             rightmost_column_index = self.get_rightmost_column_index(xlsx_file, target_sheet_name, time_columns_index)
@@ -153,7 +142,8 @@ class CoreCoursesParser:
         :rtype: dict[str, pd.DataFrame]
         """
         # ---- Read xlsx file into dataframes ----
-        dfs = pd.read_excel(xlsx_file, engine="openpyxl", sheet_name=None, header=None)
+        # pandas 3 infers str columns; parser assigns time tuples into the time column (object in pandas 2)
+        dfs = pd.read_excel(xlsx_file, engine="openpyxl", sheet_name=None, header=None, dtype=object)
         # ---- Clean up dataframes ----
         merged_ranges: dict[str, list[tuple[int, int, int, int]]] = defaultdict(list)
         for target_sheet_name in target_sheet_names:
@@ -169,6 +159,8 @@ class CoreCoursesParser:
             df = df.replace(r"^\s*$", np.nan, regex=True)
             # ---- Strip, translate and remove trailing spaces ----
             df = df.map(prettify_string)
+            # pandas 3: DataFrame.map on strings infers StringDtype; parser stores time tuples in cells
+            df = df.astype(object)
             # ---- Update dataframe ----
             dfs[target_sheet_name] = df
 
@@ -248,6 +240,9 @@ class CoreCoursesParser:
                 v = df.iloc[i, j]
                 if isinstance(v, str):
                     v = v.strip()
+
+                if isinstance(v, int) or isinstance(v, float):
+                    continue  # Quick fix, assuming that class name cannot be number
 
                 if not v or pd.isna(v) or v in WEEKDAYS or check_value_is_time(v):
                     continue
@@ -359,6 +354,8 @@ class CoreCoursesParser:
         # fill nan values with previous value
         with pd.option_context("future.no_silent_downcasting", True):
             df_header = df_header.ffill(axis=1)
+        # pandas 3: NaN in column MultiIndex breaks groupby on row index levels
+        df_header = df_header.fillna("")
         multiindex = pd.MultiIndex.from_arrays(df_header.values, names=["course", "group"])
         df.columns = multiindex
 
@@ -421,3 +418,38 @@ class CoreCoursesParser:
             split_df = df.iloc[:, start:end].copy()
             split_dfs.append(split_df)
         return split_dfs
+
+
+def use(
+    processed_column: pd.Series,
+    target: Target,
+    *,
+    dont_care_location_string: bool = False,
+) -> Generator["CoreCourseEvent"]:
+    from .cell_to_event import convert_cell_to_event
+
+    (course, group) = processed_column.name
+    course: str
+    group: str
+
+    for (weekday, timeslot), cell in processed_column.items():
+        cell: CoreCourseCell | None
+        if cell is None:
+            continue
+        weekday: str
+        timeslot: tuple[datetime.time, datetime.time]
+
+        event = convert_cell_to_event(
+            cell=cell,
+            weekday=weekday,
+            timeslot=timeslot,
+            course=course,
+            group=group,
+            target=target,
+            dont_care_location_string=dont_care_location_string,
+        )
+
+        if event is None:
+            continue
+
+        yield event

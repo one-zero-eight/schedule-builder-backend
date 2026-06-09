@@ -10,7 +10,7 @@ async def test_app_is_running(fastapi_test_client: AsyncClient) -> None:
 
 @pytest.mark.asyncio
 async def test_auth_failed(fastapi_test_client: AsyncClient) -> None:
-    response = await fastapi_test_client.get("/options/")
+    response = await fastapi_test_client.post("/parser/parse-location-string", params={"location_string": "107"})
     assert response.status_code == 401
     assert response.headers["WWW-Authenticate"] == "Bearer"
 
@@ -19,24 +19,11 @@ async def test_auth_failed(fastapi_test_client: AsyncClient) -> None:
 async def test_auth_success(
     authenticated_client: AsyncClient,
 ) -> None:
-    response = await authenticated_client.get(url="/options/")
-    assert response.status_code == 200
-
-
-@pytest.mark.asyncio
-async def test_check_collisions(
-    authenticated_client: AsyncClient,
-    mock_booking_client,
-) -> None:
-    """Basic test to verify the collisions endpoint exists and returns proper format."""
-    response = await authenticated_client.get(
-        url="/collisions/check",
-        params={"google_spreadsheet_id": "1amQqvE0rfU92pfMsMnUKA-lTGjlcJ-Sv5UcPpGnxW4w", "target_sheet_name": "SUMMER"},
+    response = await authenticated_client.post(
+        url="/parser/parse-location-string",
+        params={"location_string": "107"},
     )
-
-    # We expect this to fail with 401 (no auth) or other error,
-    # but not 404 (endpoint not found)
-    assert response.status_code != 404
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio

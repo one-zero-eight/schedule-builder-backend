@@ -54,6 +54,17 @@ properties:
     $ref: '#/$defs/Booking'
     default:
       api_url: https://api.innohassle.ru/room-booking/staging-v0/
+  moderator_emails:
+    description: Innopolis emails allowed to access moderator-only endpoints
+    items:
+      type: string
+    title: Moderator Emails
+    type: array
+  schedule_config_dir:
+    default: data/schedule-config
+    description: Directory with persisted schedule-assistant configuration resources
+    title: Schedule Config Dir
+    type: string
 required:
 - accounts
 title: Settings

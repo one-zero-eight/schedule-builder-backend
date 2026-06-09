@@ -20,10 +20,10 @@ from pydantic import BaseModel
 from src.logging_ import logger
 
 from ..utils import prettify_string, sanitize_sheet_name
-from .cell_to_event import ElectiveEvent
 from .config import Elective
 
 BRACKETS_PATTERN = re.compile(r"\((.*?)\)")
+IGNORED_CELL_VALUES = frozenset({"проект", "бжд", "а", "тсп", "физ"})
 
 
 class ElectiveCell(BaseModel):
@@ -40,6 +40,9 @@ class ElectiveCell(BaseModel):
 
     def __repr__(self):
         return "\n".join(self.value)
+
+
+from .cell_to_event import ElectiveEvent  # noqa: E402
 
 
 class Separation(BaseModel):
@@ -79,11 +82,12 @@ class ElectiveParser:
             sheet_df = dfs[target_sheet_name]
             google_sheet_name = sanitized_sheet_name_x_google_sheet_name.get(target_sheet_name)
             google_sheet_gid = sheet_gids.get(google_sheet_name, "") if google_sheet_name else ""
+            sheet_label = google_sheet_name or original_target_sheet_name
 
             by_weeks = self.split_df_by_weeks(sheet_df)
             index = {}
-            for sheet_df in by_weeks:
-                index.update(sheet_df.index.tolist())
+            for week_df in by_weeks:
+                index.update(week_df.index.tolist())
             big_df = pd.DataFrame(index=index)
             big_df = pd.concat([big_df, *by_weeks], axis=1)
             big_df.dropna(axis=1, how="all", inplace=True)
@@ -93,7 +97,7 @@ class ElectiveParser:
                     big_df,
                     electives,
                     spreadsheet_id=spreadsheet_id,
-                    google_sheet_name=google_sheet_name or original_target_sheet_name,
+                    google_sheet_name=sheet_label,
                     google_sheet_gid=google_sheet_gid,
                 )
             )
@@ -116,7 +120,7 @@ class ElectiveParser:
         :rtype: dict[str, pd.DataFrame]
         """
         # ------- Read xlsx file into dataframes -------
-        dfs = pd.read_excel(xlsx_file, engine="openpyxl", sheet_name=None, header=None)
+        dfs = pd.read_excel(xlsx_file, engine="openpyxl", sheet_name=None, header=None, dtype=object)
 
         # ------- Clean up dataframes -------
         for target_sheet_name in target_sheet_names:
@@ -137,6 +141,7 @@ class ElectiveParser:
             df = df.dropna(how="all")
             # -------- Strip, translate and remove trailing spaces --------
             df = df.map(prettify_string)
+            df = df.astype(object)
             # -------- Update dataframe --------
             dfs[target_sheet_name] = df
 
@@ -371,6 +376,9 @@ class ElectiveParser:
             if isinstance(line, str) and "$" in line:
                 line, a1 = line.rsplit("$", maxsplit=1)
                 line = line.strip()
+
+            if line.casefold() in IGNORED_CELL_VALUES:
+                return None
 
             # First: split by newlines
             lines = [line_part.strip() for line_part in line.split("\n") if line_part.strip()]

@@ -36,6 +36,10 @@ class Settings(SettingBaseModel):
     "InNoHassle Accounts integration settings"
     booking: Booking = Booking()
     "Booking API integration settings"
+    moderator_emails: list[str] = Field(default_factory=list)
+    "Innopolis emails allowed to access moderator-only endpoints"
+    schedule_config_dir: str = "data/schedule-config"
+    "Directory with persisted schedule-assistant configuration resources"
 
     @classmethod
     def from_yaml(cls, path: Path) -> "Settings":

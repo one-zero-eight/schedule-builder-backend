@@ -1,5 +1,3 @@
-import json
-
 import yaml
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import Response
@@ -9,10 +7,21 @@ from src.api.dependencies import VerifyTokenDep
 from src.core_courses.config import CoreCoursesConfig
 from src.core_courses.location_parser import Item, parse_location_string
 from src.electives.config import ElectivesParserConfig
-from src.modules.collisions.core_courses_adapter import get_all_core_courses_lessons
-from src.modules.collisions.electives_adapter import get_all_electives_lessons
+from src.modules.parser.core_courses_adapter import (
+    get_grouped_core_courses_lessons,
+    grouped_core_course_to_json,
+)
+from src.modules.parser.electives_adapter import get_grouped_elective_lessons, grouped_elective_to_json
 
 router = APIRouter(prefix="/parser", tags=["Parser"])
+
+
+def _omit_none_values(value):
+    if isinstance(value, dict):
+        return {key: _omit_none_values(nested) for key, nested in value.items() if nested is not None}
+    if isinstance(value, list):
+        return [_omit_none_values(item) for item in value]
+    return value
 
 
 class ParseLocationStringResponse(BaseModel):
@@ -47,19 +56,19 @@ async def parse_core_courses_route(
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=e.errors()) from e
 
-    lessons = await get_all_core_courses_lessons(parser_config)
-    as_json = [lesson.model_dump(mode="json") for lesson in lessons]
-    targets = {t.sheet_name: t for t in parser_config.targets}
-    for lesson in as_json:
-        target = targets[lesson["google_sheet_name"]]
-        lesson["start_date"] = target.start_date.isoformat()
-        lesson["end_date"] = target.end_date.isoformat()
+    grouped = await get_grouped_core_courses_lessons(parser_config)
+    payload = [_omit_none_values(grouped_core_course_to_json(course)) for course in grouped]
 
-    content = json.dumps(as_json, indent=2, ensure_ascii=False)
+    content = yaml.dump(
+        payload,
+        allow_unicode=True,
+        default_flow_style=False,
+        sort_keys=False,
+    )
     return Response(
         content=content,
-        media_type="application/json",
-        headers={"Content-Disposition": 'attachment; filename="core-courses-lessons.json"'},
+        media_type="text/yaml",
+        headers={"Content-Disposition": 'attachment; filename="core-courses-lessons.yaml"'},
     )
 
 
@@ -75,12 +84,17 @@ async def parse_electives_route(_user_and_token: VerifyTokenDep, input: str = Bo
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=e.errors()) from e
 
-    lessons = await get_all_electives_lessons(parser_config)
-    as_json = [lesson.model_dump(mode="json") for lesson in lessons]
+    electives = await get_grouped_elective_lessons(parser_config)
+    payload = [_omit_none_values(grouped_elective_to_json(elective)) for elective in electives]
 
-    content = json.dumps(as_json, indent=2, ensure_ascii=False)
+    content = yaml.dump(
+        payload,
+        allow_unicode=True,
+        default_flow_style=False,
+        sort_keys=False,
+    )
     return Response(
         content=content,
-        media_type="application/json",
-        headers={"Content-Disposition": 'attachment; filename="electives-lessons.json"'},
+        media_type="text/yaml",
+        headers={"Content-Disposition": 'attachment; filename="electives-lessons.yaml"'},
     )
