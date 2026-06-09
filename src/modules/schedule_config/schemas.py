@@ -1,30 +1,17 @@
 from __future__ import annotations
 
 import datetime
-from enum import StrEnum
 from pathlib import Path
 from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.weekday import Weekday
+
 
 class SettingBaseModel(BaseModel):
     model_config = ConfigDict(use_attribute_docstrings=True, extra="forbid", populate_by_name=True)
-
-
-class Weekday(StrEnum):
-    MONDAY = "MONDAY"
-    TUESDAY = "TUESDAY"
-    WEDNESDAY = "WEDNESDAY"
-    THURSDAY = "THURSDAY"
-    FRIDAY = "FRIDAY"
-    SATURDAY = "SATURDAY"
-    SUNDAY = "SUNDAY"
-
-    @property
-    def index(self) -> int:
-        return list(Weekday).index(self)
 
 
 class TermTimeSlot(SettingBaseModel):

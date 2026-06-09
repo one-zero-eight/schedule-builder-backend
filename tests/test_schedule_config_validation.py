@@ -59,6 +59,23 @@ def test_validate_sections_rejects_duplicate_group_codes() -> None:
     assert any("Duplicate students_groups code" in error for error in errors)
 
 
+def test_validate_courses_rejects_duplicate_names() -> None:
+    ctx = ValidationContext(
+        sections=SectionsConfig(),
+        rooms=RoomConfig(),
+        instructors=InstructorConfig(),
+        courses=CoursesConfig(),
+    )
+    courses = CoursesConfig(
+        courses=[
+            CourseConfig(name="Algorithms", components=[]),
+            CourseConfig(name="algorithms", components=[]),
+        ],
+    )
+    errors = validate_courses(courses, ctx)
+    assert any("Duplicate course name" in error for error in errors)
+
+
 def test_validate_courses_rejects_unknown_student_group() -> None:
     ctx = ValidationContext(
         sections=SectionsConfig(

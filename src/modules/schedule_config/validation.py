@@ -299,6 +299,9 @@ def validate_courses(config: CoursesConfig, ctx: ValidationContext) -> list[str]
     instructor_ids = collect_instructor_ids(ctx.instructors)
     room_ids = collect_room_ids(ctx.rooms)
 
+    course_names = [course.name for course in config.courses]
+    errors.extend(f"Duplicate course name: {name!r}" for name in find_duplicates(course_names))
+
     for course_index, course in enumerate(config.courses):
         component_count = len(course.components)
         for component_index, component in enumerate(course.components):

@@ -88,12 +88,14 @@ app.add_middleware(
 )
 
 from src.modules.bookings.routes import router as router_bookings  # noqa: E402
+from src.modules.issues.routes import router as router_issues  # noqa: E402
 from src.modules.parser.routes import router as router_parser  # noqa: E402
 from src.modules.schedule.routes import router as router_schedule  # noqa: E402
 from src.modules.schedule_config.routes import router as router_schedule_config  # noqa: E402
 
 # Import routers above and include them below [do not edit this comment]
 app.include_router(router_bookings)
+app.include_router(router_issues)
 app.include_router(router_parser)
 app.include_router(router_schedule)
 app.include_router(router_schedule_config)

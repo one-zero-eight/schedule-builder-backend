@@ -22,6 +22,12 @@ class BookingDTO(CustomModel):
     "Start time of booking"
     end_time: datetime.datetime = Field(validation_alias="end")
     "End time of booking"
+    categories: list[str] | None = None
+    "Outlook categories on the calendar item"
+    recurrence: str | None = None
+    "EWS recurrence XML for recurring masters"
+    outlook_booking_id: str | None = None
+    "ID of outlook booking in service account calendar. Only set if we can manage the booking."
 
 
 class RoomDTO(CustomModel):
@@ -86,6 +92,22 @@ class BookingClient:
             response = await client.get(urljoin(self.url, "rooms/"), params={"include_red": True})
             response.raise_for_status()
             return [RoomDTO.model_validate(entry) for entry in response.json()]
+
+    async def get_auto_bookings(
+        self,
+        token: str,
+        start: datetime.datetime,
+        end: datetime.datetime,
+    ) -> list[BookingDTO]:
+        async with httpx.AsyncClient(headers={"Authorization": f"Bearer {token}"}) as client:
+            response = await client.get(
+                urljoin(self.url, "bmp/auto-bookings/"),
+                params={"start": start.isoformat(), "end": end.isoformat()},
+                timeout=60,
+            )
+            response.raise_for_status()
+            data = response.json()
+            return [BookingDTO.model_validate(entry) for entry in data]
 
 
 booking_client: BookingClient = BookingClient(url=settings.booking.api_url)

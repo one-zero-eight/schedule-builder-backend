@@ -25,9 +25,10 @@ from enum import StrEnum
 
 import httpx
 
+from src.weekday import WEEKDAYS, weekday_index
+
 TIMEZONE = "Europe/Moscow"
 MOSCOW_TZ = datetime.timezone(datetime.timedelta(hours=3), name="Europe/Moscow")
-WEEKDAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 
 
 async def fetch_xlsx_spreadsheet(spreadsheet_id: str) -> io.BytesIO:
@@ -85,7 +86,11 @@ def nearest_weekday(date: datetime.date, day: int | str) -> datetime.date:
     :rtype: datetime.date
     """
     if isinstance(day, str):
-        day = ["mo", "tu", "we", "th", "fr", "sa", "su"].index(day[:2].lower())
+        normalized = day.upper().strip()
+        if normalized in WEEKDAYS:
+            day = weekday_index(normalized)
+        else:
+            day = ["mo", "tu", "we", "th", "fr", "sa", "su"].index(day[:2].lower())
 
     days = (day - date.weekday() + 7) % 7
     return date + datetime.timedelta(days=days)

@@ -18,6 +18,7 @@ from openpyxl.utils import get_column_letter
 from pydantic import BaseModel
 
 from src.logging_ import logger
+from src.weekday import WEEKDAYS
 
 from ..utils import prettify_string, sanitize_sheet_name
 from .config import Elective
@@ -188,14 +189,12 @@ class ElectiveParser:
         :return: tuple of (min_row, min_col, max_row, max_col)
         """
 
-        weekdays = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
-
         # find all columns named as weekday by checking the first row
         first_row = sheet_df.iloc[0]
         weekday_columns_index = [
-            i for i, value in enumerate(first_row) if isinstance(value, str) and value.upper().strip() in weekdays
+            i for i, value in enumerate(first_row) if isinstance(value, str) and value.upper().strip() in WEEKDAYS
         ]
-        assert len(weekday_columns_index) == len(weekdays), "Weekday columns not found"
+        assert len(weekday_columns_index) == len(WEEKDAYS), "Weekday columns not found"
         rightmost_column_index = max(weekday_columns_index)
         leftmost_column_index = min(weekday_columns_index) - 1
         logger.info(f"Rightmost column index: {get_column_letter(rightmost_column_index + 1)}")
