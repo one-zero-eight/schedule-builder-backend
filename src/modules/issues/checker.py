@@ -41,7 +41,6 @@ class BookingSnapshot:
 class IssueChecker:
     def __init__(
         self,
-        token: str,
         *,
         courses: CoursesConfig,
         sections: SectionsConfig,
@@ -50,7 +49,6 @@ class IssueChecker:
         group_to_studying_teachers: dict[str, list[str]] | None = None,
         valid_room_ids: set[str] | None = None,
     ) -> None:
-        self.token = token
         self.courses = courses
         self.sections = sections
         self.term = term
@@ -387,14 +385,12 @@ class IssueChecker:
         max_needed_time = datetime.datetime.combine(end_date, datetime.time.max).replace(tzinfo=tz)
 
         existing_bookings = await booking_client.get_all_bookings(
-            token=self.token,
             start=min_needed_time,
             end=max_needed_time,
         )
         auto_bookings = [
             booking_as_dict(booking)
             for booking in await booking_client.get_auto_bookings(
-                token=self.token,
                 start=min_needed_time,
                 end=max_needed_time,
             )

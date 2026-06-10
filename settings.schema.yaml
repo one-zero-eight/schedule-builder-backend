@@ -28,6 +28,14 @@ $defs:
         description: URL of the Booking API
         title: Api Url
         type: string
+      api_key:
+        description: Shared secret for accessing the room-booking API as a service
+        format: password
+        title: Api Key
+        type: string
+        writeOnly: true
+    required:
+    - api_key
     title: Booking
     type: object
 additionalProperties: false
@@ -52,8 +60,6 @@ properties:
     $ref: '#/$defs/Accounts'
   booking:
     $ref: '#/$defs/Booking'
-    default:
-      api_url: https://api.innohassle.ru/room-booking/staging-v0/
   moderator_emails:
     description: Innopolis emails allowed to access moderator-only endpoints
     items:
@@ -67,5 +73,6 @@ properties:
     type: string
 required:
 - accounts
+- booking
 title: Settings
 type: object

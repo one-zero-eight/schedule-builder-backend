@@ -34,6 +34,10 @@ dev = [
     "pytest-cov>=7.1.0",
     "prek>=0.3.13",
 ]
+solver = [
+    "ortools>=9.14.6206",
+    "tqdm>=4.67.1",
+]
 
 [tool.ruff]
 line-length = 120

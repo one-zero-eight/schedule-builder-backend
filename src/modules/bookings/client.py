@@ -50,17 +50,17 @@ class RoomDTO(CustomModel):
 
 
 class BookingClient:
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, api_key: str) -> None:
         self.url = url
+        self._headers = {"Authorization": f"Bearer {api_key}"}
 
     async def get_room_bookings(
         self,
-        token: str,
         room_id: str,
         start: datetime.datetime,
         end: datetime.datetime,
-    ) -> list[BookingDTO]:  # TODO: Rewrite functions to use same endpoint once updated booking is in production
-        async with httpx.AsyncClient(headers={"Authorization": f"Bearer {token}"}) as client:
+    ) -> list[BookingDTO]:
+        async with httpx.AsyncClient(headers=self._headers) as client:
             safe_room_id = quote(room_id, safe="")
             full_url = urljoin(self.url, f"room/{safe_room_id}/bookings")
             response = await client.get(
@@ -73,11 +73,10 @@ class BookingClient:
 
     async def get_all_bookings(
         self,
-        token: str,
         start: datetime.datetime,
         end: datetime.datetime,
     ) -> list[BookingDTO]:
-        async with httpx.AsyncClient(headers={"Authorization": f"Bearer {token}"}) as client:
+        async with httpx.AsyncClient(headers=self._headers) as client:
             response = await client.get(
                 urljoin(self.url, "bookings/"),
                 params={"start": start.isoformat(), "end": end.isoformat(), "include_red": True},
@@ -87,19 +86,18 @@ class BookingClient:
             data = response.json()
             return [BookingDTO.model_validate(entry) for entry in data]
 
-    async def get_rooms(self, token: str) -> list[RoomDTO]:
-        async with httpx.AsyncClient(headers={"Authorization": f"Bearer {token}"}) as client:
+    async def get_rooms(self) -> list[RoomDTO]:
+        async with httpx.AsyncClient(headers=self._headers) as client:
             response = await client.get(urljoin(self.url, "rooms/"), params={"include_red": True})
             response.raise_for_status()
             return [RoomDTO.model_validate(entry) for entry in response.json()]
 
     async def get_auto_bookings(
         self,
-        token: str,
         start: datetime.datetime,
         end: datetime.datetime,
     ) -> list[BookingDTO]:
-        async with httpx.AsyncClient(headers={"Authorization": f"Bearer {token}"}) as client:
+        async with httpx.AsyncClient(headers=self._headers) as client:
             response = await client.get(
                 urljoin(self.url, "bmp/auto-bookings/"),
                 params={"start": start.isoformat(), "end": end.isoformat()},
@@ -110,4 +108,7 @@ class BookingClient:
             return [BookingDTO.model_validate(entry) for entry in data]
 
 
-booking_client: BookingClient = BookingClient(url=settings.booking.api_url)
+booking_client: BookingClient = BookingClient(
+    url=settings.booking.api_url,
+    api_key=settings.booking.api_key.get_secret_value(),
+)

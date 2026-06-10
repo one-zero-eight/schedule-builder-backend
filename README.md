@@ -70,6 +70,18 @@ them and take actions in the table.
 6. Open the following link the browser: http://localhost:8012.
    > The API will be reloaded when you edit the code.
 
+### Solver CLI (moved from schedule-assistant)
+
+Install solver dependencies and run CP-SAT against a YAML config that matches `ScheduleConfig` API schemas:
+
+```bash
+uv sync --group solver
+uv run --group solver python scripts/solve.py path/to/config.yaml --no-progress
+uv run --group solver python scripts/metrics.py --config path/to/config.yaml
+```
+
+Artifacts are written under `results/<timestamp>_<term>/output.yaml` (same layout as the old `schedule-assistant` CLI).
+
 > [!IMPORTANT]
 > For endpoints requiring authorization, click "Authorize" button in Swagger UI!
 

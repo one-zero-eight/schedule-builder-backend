@@ -19,7 +19,6 @@ from src.modules.schedule_config.schemas import (
 
 def _checker(courses: CoursesConfig) -> IssueChecker:
     return IssueChecker(
-        "test_token",
         courses=courses,
         sections=SectionsConfig(students_groups=[StudentsGroups(code="G1", kind="core", estimated_size=10)]),
         term=TermConfig(

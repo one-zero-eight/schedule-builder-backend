@@ -33,7 +33,7 @@ def _require_term() -> TermConfig:
         raise
 
 
-async def check_schedule_issues(token: str, params: CheckParameters) -> CheckResults:
+async def check_schedule_issues(params: CheckParameters) -> CheckResults:
     term = _require_term()
     sections = schedule_config_repository.get_sections()
     courses = schedule_config_repository.get_courses()
@@ -41,12 +41,11 @@ async def check_schedule_issues(token: str, params: CheckParameters) -> CheckRes
     config_rooms = schedule_config_repository.get_rooms()
 
     meetings = meetings_from_schedule_config(courses, sections)
-    booking_rooms = await booking_client.get_rooms(token)
+    booking_rooms = await booking_client.get_rooms()
     room_capacities = _merge_room_capacities(config_rooms, booking_rooms)
     valid_room_ids = set(room_capacities)
 
     checker = IssueChecker(
-        token,
         courses=courses,
         sections=sections,
         term=term,

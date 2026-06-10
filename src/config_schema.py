@@ -22,6 +22,8 @@ class Booking(SettingBaseModel):
 
     api_url: str = "https://api.innohassle.ru/room-booking/staging-v0/"
     "URL of the Booking API"
+    api_key: SecretStr
+    "Shared secret for accessing the room-booking API as a service"
 
 
 class Settings(SettingBaseModel):
@@ -34,7 +36,7 @@ class Settings(SettingBaseModel):
     "Allowed origins for CORS: from which domains requests to the API are allowed. Specify as a regex: `https://.*.innohassle.ru`"
     accounts: Accounts
     "InNoHassle Accounts integration settings"
-    booking: Booking = Booking()
+    booking: Booking
     "Booking API integration settings"
     moderator_emails: list[str] = Field(default_factory=list)
     "Innopolis emails allowed to access moderator-only endpoints"

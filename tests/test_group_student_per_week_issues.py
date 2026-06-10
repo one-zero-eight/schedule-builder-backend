@@ -61,7 +61,6 @@ def _weekly_meeting(
 @pytest.fixture
 def issue_checker() -> IssueChecker:
     return IssueChecker(
-        "test_token",
         courses=CoursesConfig(),
         sections=SectionsConfig(),
         term=_minimal_term(),
@@ -126,7 +125,6 @@ def test_student_issue_when_shared_student_overlaps() -> None:
         ],
     )
     checker = IssueChecker(
-        "test_token",
         courses=CoursesConfig(),
         sections=sections,
         term=_minimal_term(),
@@ -254,7 +252,6 @@ def test_no_per_week_issue_when_count_matches() -> None:
 @pytest.mark.asyncio
 async def test_booking_load_fails_fast() -> None:
     checker = IssueChecker(
-        "test_token",
         courses=CoursesConfig(),
         sections=SectionsConfig(),
         term=_minimal_term(),

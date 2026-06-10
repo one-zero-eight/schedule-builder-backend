@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from src.modules.issues.issue_text import attach_issue_text
 from src.modules.issues.meetings import _group_codes_for_session, _source_kind
 from src.modules.issues.schemas import IssueTypeEnum, PerWeekIssue

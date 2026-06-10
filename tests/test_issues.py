@@ -78,7 +78,6 @@ def _weekly_meeting(
 @pytest.fixture
 def issue_checker() -> IssueChecker:
     return IssueChecker(
-        "test_token",
         courses=_minimal_courses(),
         sections=_minimal_sections(),
         term=_minimal_term(),

@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -280,7 +278,7 @@ class ScheduleConfig(SettingBaseModel):
     "All courses to schedule"
 
     @classmethod
-    def from_yaml(cls, path: Path) -> ScheduleConfig:
+    def from_yaml(cls, path: Path) -> Self:
         with open(path, encoding="utf-8") as f:
             yaml_config = yaml.safe_load(f)
         return cls.model_validate(yaml_config)
