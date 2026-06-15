@@ -1,18 +1,26 @@
+import datetime
 from collections.abc import Iterable
 from dataclasses import dataclass
 
 from src.modules.schedule_config.schemas import (
     ComponentSessionSeries,
+    CourseConfig,
     CoursesConfig,
     InstructorConfig,
+    InstructorSlotPreferenceLevel,
     RoomConfig,
     SectionsConfig,
     SessionOccurrence,
+    StudentsGroups,
     TermConfig,
     WeeklyPatternSlot,
 )
 
-VIRTUAL_ROOM_IDS = frozenset({"online", "Online", "ONLINE"})
+VIRTUAL_ROOM_ID = "ONLINE"
+
+
+def _is_virtual_room_id(room_id: str) -> bool:
+    return room_id == VIRTUAL_ROOM_ID
 
 
 @dataclass(frozen=True)
@@ -156,7 +164,7 @@ def _is_known_group_token(token: str, group_codes: set[str], selector_map: dict[
 
 
 def _is_known_room_id(room_id: str, room_ids: set[str]) -> bool:
-    return room_id in room_ids or room_id in VIRTUAL_ROOM_IDS
+    return room_id in room_ids or _is_virtual_room_id(room_id)
 
 
 def _validate_occurrence_times(path: str, occurrence: SessionOccurrence, errors: list[str]) -> None:
@@ -192,20 +200,68 @@ def validate_rooms(config: RoomConfig, *, courses: CoursesConfig) -> list[str]:
 def validate_rooms_update(old: RoomConfig, new: RoomConfig, *, courses: CoursesConfig) -> list[str]:
     errors = validate_rooms(new, courses=courses)
     removed_ids = collect_room_ids(old) - collect_room_ids(new)
-    referenced_ids = collect_course_references(courses).room_ids - VIRTUAL_ROOM_IDS
+    referenced_ids = {
+        room_id for room_id in collect_course_references(courses).room_ids if not _is_virtual_room_id(room_id)
+    }
     for room_id in sorted(removed_ids):
         if room_id in referenced_ids:
             errors.append(f"Cannot remove room {room_id!r}: still referenced in courses")
     return errors
 
 
-def validate_instructors(config: InstructorConfig) -> list[str]:
+def _validate_instructor_slot_preferences(
+    instructor: InstructorConfig.Instructor,
+    term: TermConfig,
+    *,
+    path_prefix: str = "slot_preferences",
+) -> list[str]:
+    errors: list[str] = []
+    teaching_day_names = set(teaching_days_from_term_config(term))
+    slot_starts = {slot.start_time for slot in term.time_slots}
+    seen: set[tuple[str, datetime.time]] = set()
+    for index, entry in enumerate(instructor.slot_preferences):
+        prefix = f"{path_prefix}[{index}]"
+        day_name = entry.weekday.value
+        if day_name not in teaching_day_names:
+            errors.append(f"{prefix}.weekday {day_name!r} is not in term.days")
+        if entry.start_time not in slot_starts:
+            errors.append(f"{prefix}.start_time {entry.start_time!r} does not match any term.time_slots start_time")
+        key = (day_name, entry.start_time)
+        if key in seen:
+            errors.append(f"{prefix}: duplicate weekday+start_time ({day_name!r}, {entry.start_time!r})")
+        seen.add(key)
+        if entry.level == InstructorSlotPreferenceLevel.NEUTRAL:
+            errors.append(f"{prefix}.level should be omitted instead of neutral")
+    return errors
+
+
+def teaching_days_from_term_config(term: TermConfig) -> list[str]:
+    configured_days = list(dict.fromkeys(term.days))
+    if not configured_days:
+        return []
+    start_day = term.starting_day
+    if start_day not in configured_days:
+        return [day.value for day in configured_days]
+    start_idx = configured_days.index(start_day)
+    ordered = configured_days[start_idx:] + configured_days[:start_idx]
+    return [day.value for day in ordered]
+
+
+def validate_instructors(config: InstructorConfig, *, term: TermConfig | None = None) -> list[str]:
     errors: list[str] = []
     instructor_ids = [instructor.id for instructor in config.instructors]
     errors.extend(f"Duplicate instructor id: {instructor_id!r}" for instructor_id in find_duplicates(instructor_ids))
     for index, instructor in enumerate(config.instructors):
         if not instructor.id.strip():
             errors.append(f"instructors[{index}].id must not be empty")
+        if term is not None:
+            errors.extend(
+                _validate_instructor_slot_preferences(
+                    instructor,
+                    term,
+                    path_prefix=f"instructors[{index}].slot_preferences",
+                )
+            )
     return errors
 
 
@@ -214,8 +270,9 @@ def validate_instructors_update(
     new: InstructorConfig,
     *,
     courses: CoursesConfig,
+    term: TermConfig | None = None,
 ) -> list[str]:
-    errors = validate_instructors(new)
+    errors = validate_instructors(new, term=term)
     removed_ids = collect_instructor_ids(old) - collect_instructor_ids(new)
     referenced_ids = collect_course_references(courses).instructor_ids
     for instructor_id in sorted(removed_ids):
@@ -374,6 +431,66 @@ def validate_courses(config: CoursesConfig, ctx: ValidationContext) -> list[str]
                                         )
 
     return errors
+
+
+def validate_term_config(term: TermConfig, ctx: ValidationContext) -> list[str]:
+    errors = validate_term(term)
+    errors.extend(
+        validate_sections(
+            SectionsConfig(sections=term.sections, students_groups=ctx.sections.students_groups),
+        )
+    )
+    return errors
+
+
+def validate_course(course: CourseConfig, ctx: ValidationContext, *, exclude_name: str | None = None) -> list[str]:
+    other_courses = [item for item in ctx.courses.courses if item.name != exclude_name]
+    return validate_courses(CoursesConfig(courses=[*other_courses, course]), ctx)
+
+
+def validate_instructor(
+    instructor: InstructorConfig.Instructor,
+    instructors: InstructorConfig,
+    *,
+    term: TermConfig | None = None,
+) -> list[str]:
+    return validate_instructors(InstructorConfig(instructors=[*instructors.instructors, instructor]), term=term)
+
+
+def validate_room(room: RoomConfig.Room, rooms: RoomConfig, *, courses: CoursesConfig) -> list[str]:
+    return validate_rooms(RoomConfig(rooms=[*rooms.rooms, room]), courses=courses)
+
+
+def validate_student_group(
+    group: StudentsGroups,
+    ctx: ValidationContext,
+    *,
+    exclude_code: str | None = None,
+) -> list[str]:
+    other_groups = [item for item in ctx.sections.students_groups if item.code != exclude_code]
+    return validate_sections(SectionsConfig(sections=ctx.sections.sections, students_groups=[*other_groups, group]))
+
+
+def validate_room_delete(room_id: str, ctx: ValidationContext) -> list[str]:
+    referenced_ids = {item for item in collect_course_references(ctx.courses).room_ids if not _is_virtual_room_id(item)}
+    if room_id in referenced_ids:
+        return [f"Cannot remove room {room_id!r}: still referenced in courses"]
+    return []
+
+
+def validate_student_group_delete(code: str, ctx: ValidationContext) -> list[str]:
+    old = SectionsConfig(sections=ctx.sections.sections, students_groups=ctx.sections.students_groups)
+    new = SectionsConfig(
+        sections=ctx.sections.sections,
+        students_groups=[group for group in ctx.sections.students_groups if group.code != code],
+    )
+    return validate_sections_update(old, new, courses=ctx.courses)
+
+
+def validate_instructor_delete(instructor_id: str, ctx: ValidationContext) -> list[str]:
+    old = ctx.instructors
+    new = InstructorConfig(instructors=[item for item in ctx.instructors.instructors if item.id != instructor_id])
+    return validate_instructors_update(old, new, courses=ctx.courses)
 
 
 def validate_resource_update(

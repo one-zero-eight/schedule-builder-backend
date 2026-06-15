@@ -106,7 +106,7 @@ class IssueChecker:
     def is_online_room(room: str | None) -> bool:
         if room is None:
             return False
-        return room.upper() in ("ONLINE", "ОНЛАЙН")
+        return room == "ONLINE"
 
     def check_for_room_issue(self, meetings: list[ScheduledMeeting]) -> list[RoomIssue]:
         room_to_slots: dict[str, list[tuple[int, ScheduledMeeting]]] = defaultdict(list)
@@ -527,5 +527,5 @@ class IssueChecker:
             logger.info(f"Found {len(outlook_issues)} outlook issues")
             issues.extend(outlook_issues)
 
-        logger.info(f"Found {len(issues)} issues")
+        logger.info(f"Found {len(issues)} checker issues")
         return issues

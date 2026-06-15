@@ -24,7 +24,7 @@ $defs:
     description: Booking API integration settings
     properties:
       api_url:
-        default: https://api.innohassle.ru/room-booking/staging-v0/
+        default: https://api.innohassle.ru/room-booking/v0/
         description: URL of the Booking API
         title: Api Url
         type: string
@@ -66,10 +66,10 @@ properties:
       type: string
     title: Moderator Emails
     type: array
-  schedule_config_dir:
-    default: data/schedule-config
-    description: Directory with persisted schedule-assistant configuration resources
-    title: Schedule Config Dir
+  database_url:
+    default: sqlite:///data/schedule-builder.db
+    description: SQLAlchemy database URL for persisted schedule configuration
+    title: Database Url
     type: string
 required:
 - accounts

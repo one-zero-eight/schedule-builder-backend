@@ -14,9 +14,9 @@ ConfigResource = Literal["term", "sections", "courses", "rooms", "instructors"]
 TModel = TypeVar("TModel", bound=BaseModel)
 
 
-class ResourceMeta(BaseModel):
+class ConfigMeta(BaseModel):
     revision: int = 0
-    "Monotonic revision of the current resource state"
+    "Monotonic revision of the schedule config state"
 
 
 class ConfigChangeEvent(BaseModel):
@@ -24,26 +24,26 @@ class ConfigChangeEvent(BaseModel):
 
     id: str
     "Unique event id"
-    resource: ConfigResource
-    "Updated schedule-config resource"
     revision: int
-    "Resource revision after this event"
+    "Config revision after this event"
+    resources: list[ConfigResource]
+    "Updated schedule-config resources in this event"
     saved_at: str
     "UTC timestamp in ISO format"
     saved_by: str
     "Moderator email"
     patch: list[dict[str, Any]]
-    "RFC 6902 JSON Patch operations"
+    "RFC 6902 JSON Patch operations on the assembled config"
     snapshot: str
-    "Gzipped snapshot path relative to the resource history directory"
+    "Gzipped snapshot path relative to the history directory"
 
 
 class ConfigChangeEventSummary(BaseModel):
     model_config = ConfigDict(use_attribute_docstrings=True)
 
     id: str
-    resource: ConfigResource
     revision: int
+    resources: list[ConfigResource]
     saved_at: str
     saved_by: str
     change_count: int
@@ -54,17 +54,14 @@ class ConfigEventLog:
     def __init__(self, history_dir: Path) -> None:
         self.history_dir = history_dir
 
-    def _resource_dir(self, resource: ConfigResource) -> Path:
-        return self.history_dir / resource
+    def _meta_path(self) -> Path:
+        return self.history_dir / "meta.json"
 
-    def _meta_path(self, resource: ConfigResource) -> Path:
-        return self._resource_dir(resource) / "meta.json"
+    def _events_path(self) -> Path:
+        return self.history_dir / "events.jsonl"
 
-    def _events_path(self, resource: ConfigResource) -> Path:
-        return self._resource_dir(resource) / "events.jsonl"
-
-    def _snapshots_dir(self, resource: ConfigResource) -> Path:
-        return self._resource_dir(resource) / "snapshots"
+    def _snapshots_dir(self) -> Path:
+        return self.history_dir / "snapshots"
 
     def _snapshot_name(self, event_id: str) -> str:
         return f"{event_id}.json.gz"
@@ -72,22 +69,21 @@ class ConfigEventLog:
     def _snapshot_relative_path(self, event_id: str) -> str:
         return f"snapshots/{self._snapshot_name(event_id)}"
 
-    def get_revision(self, resource: ConfigResource) -> int:
-        meta_path = self._meta_path(resource)
+    def get_revision(self) -> int:
+        meta_path = self._meta_path()
         if not meta_path.is_file():
             return 0
-        return ResourceMeta.model_validate_json(meta_path.read_text(encoding="utf-8")).revision
+        return ConfigMeta.model_validate_json(meta_path.read_text(encoding="utf-8")).revision
 
-    def set_revision(self, resource: ConfigResource, revision: int) -> None:
-        resource_dir = self._resource_dir(resource)
-        resource_dir.mkdir(parents=True, exist_ok=True)
-        meta_path = self._meta_path(resource)
+    def set_revision(self, revision: int) -> None:
+        self.history_dir.mkdir(parents=True, exist_ok=True)
+        meta_path = self._meta_path()
         tmp_path = meta_path.with_suffix(".tmp")
-        tmp_path.write_text(ResourceMeta(revision=revision).model_dump_json(), encoding="utf-8")
+        tmp_path.write_text(ConfigMeta(revision=revision).model_dump_json(), encoding="utf-8")
         tmp_path.replace(meta_path)
 
-    def save_snapshot(self, resource: ConfigResource, event_id: str, payload: dict[str, Any]) -> str:
-        snapshots_dir = self._snapshots_dir(resource)
+    def save_snapshot(self, event_id: str, payload: dict[str, Any]) -> str:
+        snapshots_dir = self._snapshots_dir()
         snapshots_dir.mkdir(parents=True, exist_ok=True)
         snapshot_path = snapshots_dir / self._snapshot_name(event_id)
         tmp_path = snapshot_path.with_suffix(snapshot_path.suffix + ".tmp")
@@ -96,9 +92,9 @@ class ConfigEventLog:
         tmp_path.replace(snapshot_path)
         return self._snapshot_relative_path(event_id)
 
-    def load_snapshot(self, resource: ConfigResource, event_id: str, model_type: type[TModel]) -> TModel:
-        event = self.get_event(resource, event_id)
-        snapshot_path = self._resource_dir(resource) / event.snapshot
+    def load_snapshot(self, event_id: str, model_type: type[TModel]) -> TModel:
+        event = self.get_event(event_id)
+        snapshot_path = self.history_dir / event.snapshot
         if not snapshot_path.is_file():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -110,10 +106,10 @@ class ConfigEventLog:
 
     def append(
         self,
-        resource: ConfigResource,
         *,
         event_id: str,
         revision: int,
+        resources: list[ConfigResource],
         saved_by: str,
         patch: list[dict[str, Any]],
         snapshot: str,
@@ -123,22 +119,22 @@ class ConfigEventLog:
 
         event = ConfigChangeEvent(
             id=event_id,
-            resource=resource,
             revision=revision,
+            resources=resources,
             saved_at=utcnow().isoformat(),
             saved_by=saved_by,
             patch=patch,
             snapshot=snapshot,
         )
-        events_path = self._events_path(resource)
+        events_path = self._events_path()
         events_path.parent.mkdir(parents=True, exist_ok=True)
         with open(events_path, "a", encoding="utf-8") as f:
             f.write(event.model_dump_json())
             f.write("\n")
         return event
 
-    def list_events(self, resource: ConfigResource) -> list[ConfigChangeEventSummary]:
-        events_path = self._events_path(resource)
+    def list_events(self) -> list[ConfigChangeEventSummary]:
+        events_path = self._events_path()
         if not events_path.is_file():
             return []
 
@@ -152,8 +148,8 @@ class ConfigEventLog:
                 summaries.append(
                     ConfigChangeEventSummary(
                         id=event.id,
-                        resource=event.resource,
                         revision=event.revision,
+                        resources=event.resources,
                         saved_at=event.saved_at,
                         saved_by=event.saved_by,
                         change_count=len(event.patch),
@@ -162,8 +158,8 @@ class ConfigEventLog:
         summaries.reverse()
         return summaries
 
-    def get_event(self, resource: ConfigResource, event_id: str) -> ConfigChangeEvent:
-        events_path = self._events_path(resource)
+    def get_event(self, event_id: str) -> ConfigChangeEvent:
+        events_path = self._events_path()
         if not events_path.is_file():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

@@ -19,7 +19,7 @@ from src.modules.schedule_config.schemas import (
 
 @pytest.fixture
 def schedule_data_repo(tmp_path, monkeypatch: pytest.MonkeyPatch) -> ScheduleConfigRepository:
-    repo = ScheduleConfigRepository(tmp_path / "schedule-config")
+    repo = ScheduleConfigRepository(f"sqlite:///{tmp_path / 'schedule-config.db'}")
     monkeypatch.setattr("src.modules.schedule_config.repository.schedule_config_repository", repo)
     monkeypatch.setattr("src.modules.schedule.service.schedule_config_repository", repo)
     return repo
@@ -35,7 +35,6 @@ def _seed_config(repo: ScheduleConfigRepository, *, student_email: str = "test@t
             ),
         ),
         saved_by="mod@innopolis.university",
-        if_match=0,
     )
     repo.set_sections(
         SectionsConfig(
@@ -55,7 +54,6 @@ def _seed_config(repo: ScheduleConfigRepository, *, student_email: str = "test@t
             ],
         ),
         saved_by="mod@innopolis.university",
-        if_match=0,
     )
     repo.set_instructors(
         InstructorConfig(
@@ -73,7 +71,6 @@ def _seed_config(repo: ScheduleConfigRepository, *, student_email: str = "test@t
             ],
         ),
         saved_by="mod@innopolis.university",
-        if_match=0,
     )
     repo.set_courses(
         CoursesConfig(
@@ -93,14 +90,14 @@ def _seed_config(repo: ScheduleConfigRepository, *, student_email: str = "test@t
                                             date=datetime.date(2026, 6, 8),
                                             start_time=datetime.time(14, 20),
                                             end_time=datetime.time(15, 50),
-                                            room="Online",
+                                            room="ONLINE",
                                             instructor="teacher@innopolis.ru",
                                         ),
                                         SessionOccurrence(
                                             date=datetime.date(2026, 6, 15),
                                             start_time=datetime.time(14, 20),
                                             end_time=datetime.time(15, 50),
-                                            room="Online",
+                                            room="ONLINE",
                                             instructor="other@innopolis.ru",
                                         ),
                                     ],
@@ -135,7 +132,6 @@ def _seed_config(repo: ScheduleConfigRepository, *, student_email: str = "test@t
             ],
         ),
         saved_by="mod@innopolis.university",
-        if_match=0,
     )
 
 

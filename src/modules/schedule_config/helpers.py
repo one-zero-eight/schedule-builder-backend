@@ -3,7 +3,7 @@ from src.modules.schedule_config.validation import build_selector_map, expand_gr
 
 
 def resolve_selector_map(cfg: ScheduleConfig) -> dict[str, set[str]]:
-    sections = SectionsConfig(sections=cfg.sections, students_groups=cfg.students_groups)
+    sections = SectionsConfig(sections=cfg.term.sections, students_groups=cfg.students_groups)
     return build_selector_map(sections)
 
 

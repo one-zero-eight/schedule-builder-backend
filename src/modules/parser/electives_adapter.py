@@ -55,9 +55,11 @@ def _normalize_group_name(group_name: str | tuple[str, ...] | None) -> tuple[str
 
 def _elective_audience(lesson: Lesson) -> list[str]:
     groups = _as_audience_list(lesson.group_name)
+    alias = (lesson.course_name or "").strip()
+    if alias and groups:
+        return [alias, *groups]
     if groups:
         return groups
-    alias = (lesson.course_name or "").strip()
     if alias:
         return [alias]
     return []
@@ -131,6 +133,7 @@ def group_elective_lessons(lessons: list[Lesson]) -> list[GroupedElective]:
         grouped.append(
             GroupedElective(
                 subject=template.lesson_name,
+                alias=(template.course_name or "").strip() or None,
                 instructor=template.teacher,
                 audience=_elective_audience(template),
                 spreadsheet_id=template.spreadsheet_id,

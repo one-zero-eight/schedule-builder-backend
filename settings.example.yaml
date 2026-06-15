@@ -11,4 +11,4 @@ booking:
 
 moderator_emails: []
 
-schedule_config_dir: data/schedule-config
+database_url: sqlite:///data/schedule-builder.db

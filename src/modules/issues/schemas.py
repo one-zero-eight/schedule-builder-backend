@@ -57,6 +57,8 @@ class IssueTypeEnum(StrEnum):
     GROUP = "group"
     STUDENT = "student"
     PER_WEEK = "per_week"
+    INSTRUCTOR_BANNED_SLOT = "instructor_banned_slot"
+    INSTRUCTOR_PREFERENCE = "instructor_preference"
 
 
 class CapacityIssue(CustomModel):
@@ -168,6 +170,31 @@ class PerWeekIssue(CustomModel):
     actual_per_week: int
 
 
+class InstructorBannedSlotIssue(CustomModel):
+    """Занятие назначено преподавателю в запрещённую ячейку сетки weekday+slot."""
+
+    issue_type: Literal[IssueTypeEnum.INSTRUCTOR_BANNED_SLOT]
+
+    text: str = ""
+    instructor_id: str
+    weekday: Weekday
+    start_time: datetime.time
+    meeting: ScheduledMeeting
+
+
+class InstructorPreferenceIssue(CustomModel):
+    """Занятие назначено преподавателю в нежелательную (discouraged) ячейку сетки."""
+
+    issue_type: Literal[IssueTypeEnum.INSTRUCTOR_PREFERENCE]
+
+    text: str = ""
+    instructor_id: str
+    weekday: Weekday
+    start_time: datetime.time
+    penalty_weight: int
+    meeting: ScheduledMeeting
+
+
 type Issue = Annotated[
     CapacityIssue
     | RoomIssue
@@ -178,7 +205,9 @@ type Issue = Annotated[
     | UnbookedIssue
     | GroupIssue
     | StudentIssue
-    | PerWeekIssue,
+    | PerWeekIssue
+    | InstructorBannedSlotIssue
+    | InstructorPreferenceIssue,
     Field(discriminator="issue_type"),
 ]
 
@@ -194,6 +223,7 @@ class CheckParameters(CustomModel):
     check_unplaced: bool = True
     check_per_week: bool = True
     check_instructor_id: bool = True
+    check_instructor_preference: bool = True
 
 
 class CheckResults(CustomModel):

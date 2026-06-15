@@ -25,6 +25,10 @@ from src.modules.schedule_config.schemas import (  # noqa: E402
     WeeklyPatternSlot,
 )
 from src.modules.solver.helpers import teaching_days  # noqa: E402
+from src.modules.solver.instructor_preferences import (  # noqa: E402
+    meeting_instructor_ids,
+    resolve_preference_grids_from_config,
+)
 from src.modules.solver.schemas import SolveResult, SolveStats  # noqa: E402
 from src.weekday import Weekday  # noqa: E402
 
@@ -143,6 +147,8 @@ def prepare_model(
     show_progress: bool,
     weekend_day_indices: frozenset[int] = frozenset(),
     late_slot_indices: frozenset[int] = frozenset(),
+    instructor_banned_cells: dict[str, set[tuple[int, int]]] | None = None,
+    instructor_discouraged_weights: dict[str, dict[tuple[int, int], int]] | None = None,
 ) -> tuple[PreparedModel | None, str | None]:
     """Build the CP-SAT model.
 
@@ -156,6 +162,8 @@ def prepare_model(
     (e.g. no room fits a meeting's expected enrollment).
     """
     model = cp_model.CpModel()
+    instructor_banned_cells = instructor_banned_cells or {}
+    instructor_discouraged_weights = instructor_discouraged_weights or {}
 
     # --- Output var arrays (indexed by meeting position) ---------------------
     day_vars: list[cp_model.IntVar] = []
@@ -366,6 +374,17 @@ def prepare_model(
     for room_idx in tqdm(range(len(room_ids)), desc="Room constraints", disable=not show_progress):
         if len(room_intervals[room_idx]) > 1:
             model.add_no_overlap(room_intervals[room_idx])
+
+    def _meeting_on_day_slot(m_idx: int, day_idx: int, slot_idx: int) -> cp_model.IntVar:
+        on_cell = model.new_bool_var(f"on_cell_{m_idx}_{day_idx}_{slot_idx}")
+        on_day = day_bool_by_meeting[m_idx][day_idx]
+        slot_eq = model.new_bool_var(f"slot_eq_{m_idx}_{day_idx}_{slot_idx}")
+        model.add(local_start_vars[m_idx] == slot_idx).only_enforce_if(slot_eq)
+        model.add(local_start_vars[m_idx] != slot_idx).only_enforce_if(slot_eq.Not())
+        model.add(on_cell <= on_day)
+        model.add(on_cell <= slot_eq)
+        model.add(on_cell >= on_day + slot_eq - 1)
+        return on_cell
 
     # ===============================================================
     # Instructor assignment.
@@ -727,9 +746,8 @@ def prepare_model(
     for m_idx, m in enumerate(meetings):
         opts = m.instructor_options
         if len(opts) == 1:
-            # Single option: every listed instructor always teaches it.
             for inst in opts[0]:
-                inst_meeting_lits[inst][m_idx] = []  # sentinel: unconditional
+                inst_meeting_lits[inst][m_idx] = []
         else:
             opt_bools = meeting_option_bools[m_idx]
             for opt_idx, insts in enumerate(opts):
@@ -737,15 +755,13 @@ def prepare_model(
                     inst_meeting_lits[inst][m_idx].append(opt_bools[opt_idx])
 
     inst_teaches_m: dict[str, dict[int, cp_model.IntVar | int]] = {}
-    inst_excess_vars: list[cp_model.IntVar] = []
-    inst_excess_opportunities = 0
     for inst, per_meeting in inst_meeting_lits.items():
         if not per_meeting:
             continue
         teaches_m: dict[int, cp_model.IntVar | int] = {}
         for m_idx, lits in per_meeting.items():
             if not lits:
-                teaches_m[m_idx] = 1  # unconditional
+                teaches_m[m_idx] = 1
             elif len(lits) == 1:
                 teaches_m[m_idx] = lits[0]
             else:
@@ -753,6 +769,47 @@ def prepare_model(
                 model.add_max_equality(b, lits)
                 teaches_m[m_idx] = b
         inst_teaches_m[inst] = teaches_m
+
+    for inst, teaches_m in inst_teaches_m.items():
+        banned_cells = instructor_banned_cells.get(inst)
+        if not banned_cells:
+            continue
+        for m_idx, tb in teaches_m.items():
+            for day_idx, slot_idx in banned_cells:
+                on_cell = _meeting_on_day_slot(m_idx, day_idx, slot_idx)
+                if isinstance(tb, int):
+                    model.add(on_cell == 0)
+                else:
+                    model.add(tb + on_cell <= 1)
+
+    discouraged_violation_exprs: list[cp_model.LinearExpr | int] = []
+    preference_opportunities = 0
+    for m_idx, m in enumerate(meetings):
+        candidate_instructors = meeting_instructor_ids(m.instructor_options)
+        for inst_id in candidate_instructors:
+            preference_opportunities += sum(instructor_discouraged_weights.get(inst_id, {}).values())
+
+    for inst, teaches_m in inst_teaches_m.items():
+        discouraged_cells = instructor_discouraged_weights.get(inst)
+        if not discouraged_cells:
+            continue
+        for m_idx, tb in teaches_m.items():
+            for (day_idx, slot_idx), weight in discouraged_cells.items():
+                if weight <= 0:
+                    continue
+                on_cell = _meeting_on_day_slot(m_idx, day_idx, slot_idx)
+                viol = model.new_bool_var(f"pref_viol_{inst}_{m_idx}_{day_idx}_{slot_idx}")
+                if isinstance(tb, int):
+                    model.add(viol == on_cell)
+                else:
+                    model.add(viol <= tb)
+                    model.add(viol <= on_cell)
+                    model.add(viol >= tb + on_cell - 1)
+                discouraged_violation_exprs.append(weight * viol)
+
+    inst_excess_vars: list[cp_model.IntVar] = []
+    inst_excess_opportunities = 0
+    for inst, teaches_m in inst_teaches_m.items():
         weekly_terms = [v for v in teaches_m.values()]
         # Linear channeling of "instructor active on day d" avoids O(meetings*days)
         # bool_and/bool_or reifications. `any_on_d` is a bool; LP minimization
@@ -784,6 +841,7 @@ def prepare_model(
     weight_late = 1
     weight_group_excess = 1
     weight_inst_excess = 1
+    weight_instructor_preference = 1
 
     # Each entry is (weight, denom, penalty_expr) where `penalty_expr >= 0`
     # and reaches 0 on a perfect schedule for that term. Objective is
@@ -823,6 +881,8 @@ def prepare_model(
         penalty_terms.append((weight_group_excess, group_excess_opportunities, sum(group_excess_vars)))
     if inst_excess_vars and inst_excess_opportunities > 0:
         penalty_terms.append((weight_inst_excess, inst_excess_opportunities, sum(inst_excess_vars)))
+    if discouraged_violation_exprs and preference_opportunities > 0:
+        penalty_terms.append((weight_instructor_preference, preference_opportunities, sum(discouraged_violation_exprs)))
 
     if penalty_terms:
         # Fixed-K rational scaling instead of LCM. Every term contributes
@@ -1410,6 +1470,8 @@ def solve_schedule(
     late_cutoff = datetime.time(18, 0)
     late_slot_indices = frozenset(i for i, slot in enumerate(cfg.term.time_slots) if slot.end_time > late_cutoff)
 
+    banned_cells, discouraged_weights = resolve_preference_grids_from_config(cfg)
+
     prepared, prepare_error = prepare_model(
         meetings,
         num_days=num_days,
@@ -1421,6 +1483,8 @@ def solve_schedule(
         show_progress=show_progress,
         weekend_day_indices=weekend_day_indices,
         late_slot_indices=late_slot_indices,
+        instructor_banned_cells=banned_cells,
+        instructor_discouraged_weights=discouraged_weights,
     )
     if prepared is None:
         return _empty_result(

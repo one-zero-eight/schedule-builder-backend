@@ -3,7 +3,9 @@ import datetime
 from src.modules.issues.schemas import (
     CapacityIssue,
     GroupIssue,
+    InstructorBannedSlotIssue,
     InstructorIdIssue,
+    InstructorPreferenceIssue,
     OccurrencePlacement,
     OutlookIssue,
     PerWeekIssue,
@@ -157,6 +159,24 @@ def format_per_week_issue_text(issue: PerWeekIssue) -> str:
     )
 
 
+def format_instructor_banned_slot_issue_text(issue: InstructorBannedSlotIssue) -> str:
+    when = format_meeting_when(issue.meeting)
+    return (
+        f"Преподаватель {issue.instructor_id} назначен на запрещённый слот "
+        f"{_WEEKDAY_WHEN_RU[issue.weekday]} в {_format_time(issue.start_time)} "
+        f"для занятия «{issue.meeting.course_name}» ({when})"
+    )
+
+
+def format_instructor_preference_issue_text(issue: InstructorPreferenceIssue) -> str:
+    when = format_meeting_when(issue.meeting)
+    return (
+        f"Преподаватель {issue.instructor_id} назначен на нежелательный слот "
+        f"{_WEEKDAY_WHEN_RU[issue.weekday]} в {_format_time(issue.start_time)} "
+        f"для занятия «{issue.meeting.course_name}» ({when})"
+    )
+
+
 def format_unplaced_issue_text(issue: UnplacedIssue) -> str:
     groups_part = ""
     if issue.student_groups:
@@ -175,7 +195,9 @@ def attach_issue_text(
     | UnbookedIssue
     | GroupIssue
     | StudentIssue
-    | PerWeekIssue,
+    | PerWeekIssue
+    | InstructorBannedSlotIssue
+    | InstructorPreferenceIssue,
 ) -> None:
     if isinstance(issue, CapacityIssue):
         issue.text = format_capacity_issue_text(issue)
@@ -195,5 +217,9 @@ def attach_issue_text(
         issue.text = format_student_issue_text(issue)
     elif isinstance(issue, PerWeekIssue):
         issue.text = format_per_week_issue_text(issue)
+    elif isinstance(issue, InstructorBannedSlotIssue):
+        issue.text = format_instructor_banned_slot_issue_text(issue)
+    elif isinstance(issue, InstructorPreferenceIssue):
+        issue.text = format_instructor_preference_issue_text(issue)
     else:
         issue.text = format_outlook_issue_text(issue)

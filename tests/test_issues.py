@@ -342,7 +342,7 @@ def test_unplaced_issues_from_schedule_config() -> None:
 
 @pytest.fixture
 def issues_repo(tmp_path, monkeypatch: pytest.MonkeyPatch) -> ScheduleConfigRepository:
-    repo = ScheduleConfigRepository(tmp_path / "schedule-config")
+    repo = ScheduleConfigRepository(f"sqlite:///{tmp_path / 'schedule-config.db'}")
     monkeypatch.setattr("src.modules.schedule_config.repository.schedule_config_repository", repo)
     monkeypatch.setattr("src.modules.issues.service.schedule_config_repository", repo)
     return repo
@@ -364,17 +364,14 @@ async def test_issues_check_endpoint(
             ),
         ),
         saved_by="test@test.com",
-        if_match=0,
     )
     issues_repo.set_sections(
         SectionsConfig(students_groups=[StudentsGroups(code="G1", kind="core", estimated_size=10)]),
         saved_by="test@test.com",
-        if_match=0,
     )
     issues_repo.set_rooms(
         RoomConfig(rooms=[RoomConfig.Room(id="107", name="Room 107", capacity=20)]),
         saved_by="test@test.com",
-        if_match=0,
     )
     issues_repo.set_instructors(
         InstructorConfig(
@@ -384,7 +381,6 @@ async def test_issues_check_endpoint(
             ],
         ),
         saved_by="test@test.com",
-        if_match=0,
     )
     issues_repo.set_courses(
         CoursesConfig(
@@ -438,7 +434,6 @@ async def test_issues_check_endpoint(
             ],
         ),
         saved_by="test@test.com",
-        if_match=0,
     )
 
     mock_client = AsyncMock()

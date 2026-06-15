@@ -24,6 +24,7 @@ dependencies = [
     "gunicorn>=26.0.0",
     "python-multipart>=0.0.27",
     "jsonpatch>=1.33",
+    "sqlalchemy>=2.0.46",
 ]
 
 [dependency-groups]

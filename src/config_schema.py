@@ -20,7 +20,7 @@ class Accounts(SettingBaseModel):
 class Booking(SettingBaseModel):
     """Booking API integration settings"""
 
-    api_url: str = "https://api.innohassle.ru/room-booking/staging-v0/"
+    api_url: str = "https://api.innohassle.ru/room-booking/v0/"
     "URL of the Booking API"
     api_key: SecretStr
     "Shared secret for accessing the room-booking API as a service"
@@ -40,8 +40,8 @@ class Settings(SettingBaseModel):
     "Booking API integration settings"
     moderator_emails: list[str] = Field(default_factory=list)
     "Innopolis emails allowed to access moderator-only endpoints"
-    schedule_config_dir: str = "data/schedule-config"
-    "Directory with persisted schedule-assistant configuration resources"
+    database_url: str = "sqlite:///data/schedule-builder.db"
+    "SQLAlchemy database URL for persisted schedule configuration"
 
     @classmethod
     def from_yaml(cls, path: Path) -> "Settings":

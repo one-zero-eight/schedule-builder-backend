@@ -18,7 +18,7 @@ from src.modules.schedule_config.schemas import (
 )
 from src.weekday import Weekday, week_start_for_date
 
-NON_BOOKABLE_ROOM_LABELS = frozenset({"online", "онлайн"})
+VIRTUAL_ROOM_ID = "ONLINE"
 _DAY_NAME_TO_BYDAY = {
     Weekday.MONDAY: "MO",
     Weekday.TUESDAY: "TU",
@@ -63,15 +63,15 @@ def _normalize_room(room: str | None) -> str | None:
     trimmed = room.strip()
     if not trimmed:
         return None
-    if trimmed.lower() in NON_BOOKABLE_ROOM_LABELS:
-        return "online"
+    if trimmed == VIRTUAL_ROOM_ID:
+        return VIRTUAL_ROOM_ID
     return trimmed
 
 
 def _slot_bookable(room: str | None, known_room_ids: set[str]) -> tuple[bool, str | None]:
     if room is None:
         return False, "no room"
-    if room.lower() in NON_BOOKABLE_ROOM_LABELS:
+    if room == VIRTUAL_ROOM_ID:
         return False, "online"
     if room not in known_room_ids:
         return False, "unknown room"

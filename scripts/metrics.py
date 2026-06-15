@@ -128,6 +128,11 @@ sys.path.insert(0, str(ROOT))
 from src.modules.schedule_config.helpers import expand_groups, resolve_selector_map  # noqa: E402
 from src.modules.schedule_config.schemas import CourseConfig, CoursesConfig, ScheduleConfig  # noqa: E402
 from src.modules.solver.helpers import teaching_days  # noqa: E402
+from src.modules.solver.instructor_preferences import (  # noqa: E402
+    count_discouraged_placement_violations,
+    discouraged_opportunities_from_config,
+    list_banned_placement_violations,
+)
 from src.modules.solver.schemas import SolveResult  # noqa: E402
 from src.weekday import Weekday  # noqa: E402
 
@@ -209,6 +214,10 @@ class ScheduleMetrics:
     hatred_instructor_with_bad_days_events_count: int
     hatred_instructor_total_active_days_excess: int
     hatred_instructor_with_excess_day_count: int
+    hatred_instructor_preference_violations_weighted: int
+    hatred_instructor_preference_violations_count: int
+    hatred_instructor_preference_violations_opportunities: int
+    hatred_instructor_with_preference_violations_count: int
 
 
 def _slot_end(start: datetime.time) -> datetime.time:
@@ -562,6 +571,14 @@ def list_conflicts(result: SolveResult, cfg: ScheduleConfig | None = None) -> li
         out.extend(_pairwise_overlap(v, f"instructor {k}"))
     for k, v in by_student.items():
         out.extend(_pairwise_overlap(v, f"student {k}"))
+    preference_meetings = [(e.day, e.instructors, e.start_time) for e in events]
+    out.extend(
+        list_banned_placement_violations(
+            instructors=cfg.instructors,
+            term=cfg.term,
+            meetings=preference_meetings,
+        )
+    )
     return out
 
 
@@ -765,6 +782,20 @@ def calculate_schedule_metrics(result: SolveResult, cfg: ScheduleConfig) -> Sche
         1 for g in cfg.students_groups if str(g.kind).strip().lower() in {"elective", "electives"}
     )
 
+    preference_opportunities = discouraged_opportunities_from_config(cfg)
+    preference_weighted_total = 0
+    preference_violation_count = 0
+    preference_instructors_hit: set[str] = set()
+    if events:
+        preference_meetings = [(e.day, e.instructors, e.start_time) for e in events]
+        preference_weighted_total, preference_violation_count, preference_instructors_hit = (
+            count_discouraged_placement_violations(
+                instructors=cfg.instructors,
+                term=cfg.term,
+                meetings=preference_meetings,
+            )
+        )
+
     return ScheduleMetrics(
         run_status=result.status,
         run_elapsed_seconds=result.stats.elapsed_seconds,
@@ -830,6 +861,10 @@ def calculate_schedule_metrics(result: SolveResult, cfg: ScheduleConfig) -> Sche
         hatred_instructor_with_bad_days_events_count=inst_bad_days_count,
         hatred_instructor_total_active_days_excess=inst_excess_total,
         hatred_instructor_with_excess_day_count=inst_excess_count,
+        hatred_instructor_preference_violations_weighted=preference_weighted_total,
+        hatred_instructor_preference_violations_count=preference_violation_count,
+        hatred_instructor_preference_violations_opportunities=preference_opportunities,
+        hatred_instructor_with_preference_violations_count=len(preference_instructors_hit),
     )
 
 
@@ -988,6 +1023,10 @@ def _print_human_report(metrics: ScheduleMetrics) -> None:
         "- instructor hatred:\n"
         f"  - high-load days (> {INSTRUCTOR_DAILY_EVENT_THRESHOLD} events): days={metrics.hatred_instructor_bad_days_events_total}, instructors affected={metrics.hatred_instructor_with_bad_days_events_count}\n"
         f"  - excess active days: days={metrics.hatred_instructor_total_active_days_excess}, instructors affected={metrics.hatred_instructor_with_excess_day_count}\n"
+        f"  - discouraged-slot placements: weighted={metrics.hatred_instructor_preference_violations_weighted}, "
+        f"violations={metrics.hatred_instructor_preference_violations_count} from "
+        f"{metrics.hatred_instructor_preference_violations_opportunities} opportunities, "
+        f"instructors affected={metrics.hatred_instructor_with_preference_violations_count}\n"
         f"  - room swaps on consecutive class/lab slots: {metrics.room_continuity_instructor_room_swaps_consecutive} from {metrics.room_continuity_instructor_room_swaps_consecutive_possible} possible, "
         f"{metrics.room_continuity_instructor_room_swaps_consecutive_ratio * 100.0:.1f}% incidence"
     )

@@ -14,12 +14,14 @@ from src.modules.schedule_config.schemas import (
     SessionOccurrence,
     StudentsGroups,
     TermConfig,
+    WeeklyPatternSlot,
 )
 from src.modules.schedule_config.validation import (
     ValidationContext,
     validate_courses,
     validate_instructors,
     validate_resource_update,
+    validate_rooms_update,
     validate_sections,
 )
 
@@ -36,7 +38,7 @@ def _minimal_term() -> TermConfig:
 
 @pytest.fixture
 def schedule_config_repo(tmp_path, monkeypatch: pytest.MonkeyPatch) -> ScheduleConfigRepository:
-    repo = ScheduleConfigRepository(tmp_path / "schedule-config")
+    repo = ScheduleConfigRepository(f"sqlite:///{tmp_path / 'schedule-config.db'}")
     monkeypatch.setattr(
         "src.modules.schedule_config.repository.schedule_config_repository",
         repo,
@@ -102,6 +104,136 @@ def test_validate_courses_rejects_unknown_student_group() -> None:
     )
     errors = validate_courses(courses, ctx)
     assert any("unknown group or selector" in error for error in errors)
+
+
+def test_validate_courses_accepts_online_room() -> None:
+    ctx = ValidationContext(
+        sections=SectionsConfig(
+            students_groups=[StudentsGroups(code="SUM26-AAI", kind="elective")],
+        ),
+        rooms=RoomConfig(),
+        instructors=InstructorConfig(
+            instructors=[InstructorConfig.Instructor(id="teacher@innopolis.ru")],
+        ),
+        courses=CoursesConfig(),
+    )
+    courses = CoursesConfig(
+        courses=[
+            CourseConfig(
+                name="Online elective",
+                components=[
+                    CourseConfig.Component(
+                        tag="class",
+                        student_groups=["SUM26-AAI"],
+                        sessions=[
+                            ComponentSessionSeries(
+                                audience=["SUM26-AAI"],
+                                occurrences=[
+                                    SessionOccurrence(
+                                        date=datetime.date(2026, 6, 8),
+                                        start_time=datetime.time(14, 20),
+                                        end_time=datetime.time(15, 50),
+                                        room="ONLINE",
+                                        instructor="teacher@innopolis.ru",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            CourseConfig(
+                name="Online core",
+                components=[
+                    CourseConfig.Component(
+                        tag="lec",
+                        student_groups=["SUM26-AAI"],
+                        sessions=[
+                            ComponentSessionSeries(
+                                audience=["SUM26-AAI"],
+                                weekly_pattern=[
+                                    WeeklyPatternSlot(
+                                        weekday="MONDAY",
+                                        start_time=datetime.time(10, 0),
+                                        end_time=datetime.time(11, 30),
+                                        room="ONLINE",
+                                        instructor="teacher@innopolis.ru",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    errors = validate_courses(courses, ctx)
+    assert errors == []
+
+
+def test_validate_rooms_update_ignores_online_references() -> None:
+    courses = CoursesConfig(
+        courses=[
+            CourseConfig(
+                name="Online elective",
+                components=[
+                    CourseConfig.Component(
+                        tag="class",
+                        sessions=[
+                            ComponentSessionSeries(
+                                occurrences=[
+                                    SessionOccurrence(
+                                        date=datetime.date(2026, 6, 8),
+                                        start_time=datetime.time(14, 20),
+                                        end_time=datetime.time(15, 50),
+                                        room="ONLINE",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    errors = validate_rooms_update(RoomConfig(), RoomConfig(), courses=courses)
+    assert errors == []
+
+
+@pytest.mark.parametrize("invalid_room", ["Online", "Онлайн", "ОНЛАЙН", "online"])
+def test_validate_courses_rejects_non_canonical_online_rooms(invalid_room: str) -> None:
+    ctx = ValidationContext(
+        sections=SectionsConfig(),
+        rooms=RoomConfig(),
+        instructors=InstructorConfig(),
+        courses=CoursesConfig(),
+    )
+    courses = CoursesConfig(
+        courses=[
+            CourseConfig(
+                name="Elective",
+                components=[
+                    CourseConfig.Component(
+                        tag="class",
+                        sessions=[
+                            ComponentSessionSeries(
+                                occurrences=[
+                                    SessionOccurrence(
+                                        date=datetime.date(2026, 6, 8),
+                                        start_time=datetime.time(14, 20),
+                                        end_time=datetime.time(15, 50),
+                                        room=invalid_room,
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+    )
+    errors = validate_courses(courses, ctx)
+    assert any("unknown room" in error for error in errors)
 
 
 def test_validate_courses_rejects_unknown_instructor() -> None:
@@ -189,29 +321,23 @@ async def test_put_courses_returns_422_for_invalid_references(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr("src.api.dependencies.settings.moderator_emails", ["test@test.com"])
-    schedule_config_repo.set_term(_minimal_term(), saved_by="test@test.com", if_match=0)
+    schedule_config_repo.set_term(_minimal_term(), saved_by="test@test.com")
     schedule_config_repo.set_sections(
         SectionsConfig(students_groups=[StudentsGroups(code="SUM26-AAI", kind="elective")]),
         saved_by="test@test.com",
-        if_match=0,
     )
 
-    response = await authenticated_client.put(
+    response = await authenticated_client.post(
         "/schedule-config/courses",
-        json=CoursesConfig(
-            courses=[
-                CourseConfig(
-                    name="Elective",
-                    components=[
-                        CourseConfig.Component(
-                            tag="class",
-                            student_groups=["UNKNOWN-GROUP"],
-                        ),
-                    ],
+        json=CourseConfig(
+            name="Elective",
+            components=[
+                CourseConfig.Component(
+                    tag="class",
+                    student_groups=["UNKNOWN-GROUP"],
                 ),
             ],
         ).model_dump(mode="json"),
-        headers={"If-Match": "0"},
     )
     assert response.status_code == 422
     assert "unknown group or selector" in response.json()["detail"]["errors"][0]

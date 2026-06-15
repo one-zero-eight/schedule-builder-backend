@@ -74,6 +74,8 @@ class GroupedCoreCourse(CustomModel):
 class GroupedElective(CustomModel):
     subject: str
     "Elective title"
+    alias: str | None = None
+    "Elective short alias from spreadsheet (for example, ICD)"
     instructor: str | None = None
     spreadsheet_id: str
     google_sheet_gid: str

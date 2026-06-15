@@ -1,4 +1,5 @@
 import datetime
+from enum import StrEnum
 from pathlib import Path
 from typing import Literal, Self
 
@@ -10,6 +11,22 @@ from src.weekday import Weekday
 
 class SettingBaseModel(BaseModel):
     model_config = ConfigDict(use_attribute_docstrings=True, extra="forbid", populate_by_name=True)
+
+
+class InstructorSlotPreferenceLevel(StrEnum):
+    PREFERRED = "preferred"
+    NEUTRAL = "neutral"
+    DISCOURAGED = "discouraged"
+    BANNED = "banned"
+
+
+class InstructorSlotPreferenceEntry(SettingBaseModel):
+    weekday: Weekday
+    "Teaching weekday for this preference cell"
+    start_time: datetime.time
+    "Slot start time; must match a term time_slots entry"
+    level: InstructorSlotPreferenceLevel
+    "Preference level for this weekday+slot cell"
 
 
 class TermTimeSlot(SettingBaseModel):
@@ -51,6 +68,22 @@ class TermConfig(SettingBaseModel):
         TermTimeSlot(start_time=datetime.time(19, 20), end_time=datetime.time(20, 50)),
     ]
     "Teaching slots for the term"
+    sections: list["SectionConfig"] = Field(default_factory=list)
+    "Section-based hierarchy from dtsn.yaml"
+
+
+class TermPartialUpdate(SettingBaseModel):
+    name: str | None = None
+    semester: TermConfig.DateRange | None = None
+    days: list[Weekday] | None = None
+    starting_day: Weekday | None = None
+    time_slots: list[TermTimeSlot] | None = None
+    sections: list["SectionConfig"] | None = None
+
+
+class TermResourceConfig(SettingBaseModel):
+    term: TermConfig
+    "Term-level configuration"
 
 
 class RoomConfig(SettingBaseModel):
@@ -80,6 +113,8 @@ class InstructorConfig(SettingBaseModel):
         "Short handle or Telegram-style alias from staff roster"
         position: str | None = None
         "Staff position from roster (for example, Professor, Visiting)"
+        slot_preferences: list[InstructorSlotPreferenceEntry] = Field(default_factory=list)
+        "Sparse weekday+slot preference grid; omitted cells are neutral"
 
     instructors: list[Instructor] = Field(default_factory=list)
     "Available instructors"
@@ -243,6 +278,12 @@ class CourseConfig(SettingBaseModel):
 
     name: str
     "Course name"
+    short_name: str | None = None
+    "Short English display name"
+    name_ru: str | None = None
+    "Russian display name"
+    short_name_ru: str | None = None
+    "Short Russian display name"
     course_tags: list[CommonCourseTags | str] = []
     "Course tags (for example, core_course / elective / english)"
     components: list[Component]
@@ -261,17 +302,26 @@ class CoursesConfig(SettingBaseModel):
     "All courses to schedule"
 
 
+class ScheduleConfigUpdate(SettingBaseModel):
+    term: TermPartialUpdate | None = None
+    "Term-level configuration (sections are nested inside term)"
+    rooms: list[RoomConfig.Room] | None = None
+    "Available rooms"
+    instructors: list[InstructorConfig.Instructor] | None = None
+    "Available instructors"
+    students_groups: list[StudentsGroups] | None = None
+    "Student groups entries"
+    courses: list[CourseConfig] | None = None
+    "All courses to schedule"
+
+
 class ScheduleConfig(SettingBaseModel):
-    schema_: str | None = Field(default=None, alias="$schema")
-    "Optional JSON schema reference"
     term: TermConfig
-    "Term-level configuration"
+    "Term-level configuration (sections are nested inside term)"
     rooms: list[RoomConfig.Room] = Field(default_factory=list)
     "Available rooms"
     instructors: list[InstructorConfig.Instructor] = Field(default_factory=list)
     "Available instructors"
-    sections: list[SectionConfig] = Field(default_factory=list)
-    "Section-based hierarchy from dtsn.yaml"
     students_groups: list[StudentsGroups] = Field(default_factory=list)
     "Student groups entries"
     courses: list[CourseConfig] = Field(default_factory=list)
@@ -314,4 +364,6 @@ class ScheduleConfig(SettingBaseModel):
             yaml.dump(cls.openapi_schema(), f, sort_keys=False)
 
 
+TermConfig.model_rebuild()
+TermPartialUpdate.model_rebuild()
 ScheduleConfig.model_rebuild()
