@@ -1,4 +1,7 @@
-# Schedule Builder API | InNoHassle ecosystem
+> [!WARNING]
+> Moved to https://github.com/one-zero-eight/monorepo
+
+# ~~Schedule Builder API | InNoHassle ecosystem~~
 
 > https://api.innohassle.ru/schedule-builder/v0
 
